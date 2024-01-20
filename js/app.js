@@ -1,339 +1,311 @@
-async function setup() {
-    const patchExportURL = "export/patch.export.json";
+/* BEGIN UI initialization */
 
-    // Create AudioContext
-    const WAContext = window.AudioContext || window.webkitAudioContext;
-    const context = new WAContext();
+// create audio context
+const WAContext = window.AudioContext || window.webkitAudioContext;
+const context = new WAContext();
 
-    // Create gain node and connect it to audio output
-    const outputNode = context.createGain();
-    outputNode.connect(context.destination);
-    
-    // Fetch the exported patcher
-    let response, patcher;
-    try {
-        response = await fetch(patchExportURL);
-        patcher = await response.json();
-    
-        if (!window.RNBO) {
-            // Load RNBO script dynamically
-            // Note that you can skip this by knowing the RNBO version of your patch
-            // beforehand and just include it using a <script> tag
-            await loadRNBOScript(patcher.desc.meta.rnboversion);
-        }
+// create workspace DOM elements
+const workspace = document.getElementById('workspace');
+const navBar = document.getElementById('ui-container');
 
-    } catch (err) {
-        const errorContext = {
-            error: err
-        };
-        if (response && (response.status >= 300 || response.status < 200)) {
-            errorContext.header = `Couldn't load patcher export bundle`,
-            errorContext.description = `Check app.js to see what file it's trying to load. Currently it's` +
-            ` trying to load "${patchExportURL}". If that doesn't` + 
-            ` match the name of the file you exported from RNBO, modify` + 
-            ` patchExportURL in app.js.`;
-        }
-        if (typeof guardrails === "function") {
-            guardrails(errorContext);
-        } else {
-            throw err;
-        }
-        return;
+// create dropdown of all WASM devices
+const deviceDropdown = document.createElement('select');
+
+// set of available WASM devices
+const wasmDeviceURLs = [
+    "wasm/cycle~.json",
+    "wasm/tri~.json",
+    "wasm/phasor~.json",
+    "wasm/noise~.json",
+    "wasm/sah~.json",
+    "wasm/*~.json",
+    "wasm/delay~.json",
+    "wasm/speedlim~.json",
+    "wasm/slide~.json",
+    "wasm/number~.json",
+    "wasm/scale~.json"
+];
+
+// load each WASM device into dropdown
+wasmDeviceURLs.forEach((url) => {
+    const option = document.createElement('option');
+    option.value = url;
+    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+    option.innerText = filename;
+    deviceDropdown.appendChild(option);
+});
+
+// add dropdown to navBar
+navBar.appendChild(deviceDropdown);
+
+// create button to select WASM device
+const deviceSelectButton = document.createElement('button');
+deviceSelectButton.innerText = 'Add';
+deviceSelectButton.onclick = async () => {
+    // get selected WASM file
+    const url = deviceDropdown.value;
+    // fetch the patcher
+    const response = await fetch(url);
+    const patcher = await response.json();
+    // create the WASM device
+    const device = await RNBO.createDevice({ context, patcher });
+    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+    // add device to workspace
+    addDeviceToWorkspace(device, filename);
+};
+
+// add button next to dropdown in navBar
+navBar.appendChild(deviceSelectButton);
+
+/* END UI initialization */
+
+let deviceCounts = {};
+let devices = {};
+let sourceDeviceId = null;
+let sourceOutputIndex = null;
+let selectedDevice = null;
+let shiftHeld = false;
+
+
+/* BEGIN audio out device section */
+// TODO: refactor this more, so the output node is a WASM device
+const outputNodeDevice = {
+    device: { node: context.destination },
+    div: document.createElement('div')
+};
+outputNodeDevice.div.id = 'output-node';
+outputNodeDevice.div.className = 'node';
+
+// create an input button for the output node device
+const inputButton = document.createElement('button');
+inputButton.innerText = 'signal in';
+inputButton.onclick = () => finishConnection('output-node');
+inputButton.style.display = 'block';
+
+// insert the input button at the beginning of the output node device
+outputNodeDevice.div.insertBefore(inputButton, outputNodeDevice.div.firstChild);
+
+// add the text to the output node device
+outputNodeDevice.div.appendChild(document.createTextNode('speakers🔊'));
+
+// add the output node device to the workspace
+workspace.appendChild(outputNodeDevice.div);
+
+// make the output node device draggable
+jsPlumb.ready(function() {
+    jsPlumb.draggable(outputNodeDevice.div);
+});
+
+// add the output node device to the devices array so it can be accessed like the WASM devices
+devices['output-node'] = outputNodeDevice;
+/* END audio out device section */
+
+
+/* BEGIN event handlers */
+
+jsPlumb.bind("connectionDetached", function(info) {
+    let sourceDevice = devices[info.sourceId];
+    let targetDevice = devices[info.targetId];
+
+    if (sourceDevice && targetDevice) {
+        sourceDevice.device.node.disconnect(targetDevice.device.node);
     }
-    
-    // (Optional) Fetch the dependencies
-    let dependencies = [];
-    try {
-        const dependenciesResponse = await fetch("export/dependencies.json");
-        dependencies = await dependenciesResponse.json();
+});
 
-        // Prepend "export" to any file dependenciies
-        dependencies = dependencies.map(d => d.file ? Object.assign({}, d, { file: "export/" + d.file }) : d);
-    } catch (e) {}
-
-    // Create the device
-    let device;
-    try {
-        device = await RNBO.createDevice({ context, patcher });
-    } catch (err) {
-        if (typeof guardrails === "function") {
-            guardrails({ error: err });
-        } else {
-            throw err;
-        }
-        return;
+document.addEventListener('keydown', function(event) {
+    // delete the selected device when the Delete / Backspace key is pressed
+    if ((event.key === 'Delete' || event.key === 'Backspace') && selectedDevice) {
+        jsPlumb.removeAllEndpoints(selectedDevice);
+        removeDeviceFromWorkspace(selectedDevice.id);
+        selectedDevice.remove();
+        selectedDevice = null;
     }
+});
 
-    // (Optional) Load the samples
-    if (dependencies.length)
-        await device.loadDataBufferDependencies(dependencies);
-
-    // Connect the device to the web audio graph
-    device.node.connect(outputNode);
-
-    // (Optional) Extract the name and rnbo version of the patcher from the description
-    document.getElementById("patcher-title").innerText = (patcher.desc.meta.filename || "Unnamed Patcher") + " (v" + patcher.desc.meta.rnboversion + ")";
-
-    // (Optional) Automatically create sliders for the device parameters
-    makeSliders(device);
-
-    // (Optional) Create a form to send messages to RNBO inputs
-    makeInportForm(device);
-
-    // (Optional) Attach listeners to outports so you can log messages from the RNBO patcher
-    attachOutports(device);
-
-    // (Optional) Load presets, if any
-    loadPresets(device, patcher);
-
-    // (Optional) Connect MIDI inputs
-    makeMIDIKeyboard(device);
-
-    document.body.onclick = () => {
-        context.resume();
+// listen for the keydown event
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Shift') {
+        shiftHeld = true;
     }
+});
 
-    // Skip if you're not using guardrails.js
-    if (typeof guardrails === "function")
-        guardrails();
-}
+// listen for the keyup event
+window.addEventListener('keyup', (event) => {
+    if (event.key === 'Shift') {
+        shiftHeld = false;
+        jsPlumb.clearDragSelection();
+    }
+});
 
-function loadRNBOScript(version) {
-    return new Promise((resolve, reject) => {
-        if (/^\d+\.\d+\.\d+-dev$/.test(version)) {
-            throw new Error("Patcher exported with a Debug Version!\nPlease specify the correct RNBO version to use in the code.");
+
+/* END event handlers */
+
+/* BEGIN functions */
+
+function addDeviceToWorkspace(device, deviceType) {
+    // get count for this device type and increment it
+    const count = deviceCounts[deviceType] || 0;
+    deviceCounts[deviceType] = count + 1;
+
+    // create a new div for the device
+    const deviceDiv = document.createElement('div');
+    deviceDiv.id = `${deviceType}-${count}`;
+    deviceDiv.className = 'node';
+    deviceDiv.innerText = `${deviceType}`;
+    deviceDiv.style.backgroundColor = 'lightgray';
+
+    // store the device and its div
+    devices[deviceDiv.id] = { device, div: deviceDiv };
+
+    const hrElement = document.createElement('hr');
+    // append the <hr> element to deviceDiv
+    deviceDiv.appendChild(hrElement);
+
+    // create an inport form for the device
+    const inportForm = addInputsForDevice(device);
+
+    inportForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+    });
+
+    deviceDiv.appendChild(inportForm);
+
+    // create a container for the output buttons
+    const outputContainer = document.createElement('div');
+    outputContainer.className = 'output-container';
+    deviceDiv.appendChild(outputContainer);
+
+    // create a delete button for the device
+    const deleteButton = document.createElement('button');
+    deleteButton.innerText = 'x';
+    deleteButton.className = 'delete-button';
+    deleteButton.addEventListener('click', function() {
+        // get all connections of the device
+        let deviceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+        // delete each connection which will trigger the 'connectionDetached' event
+        deviceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        // remove the device div
+        deviceDiv.remove();
+    });
+    deviceDiv.appendChild(deleteButton);
+
+    // create an output button for the device
+    device.it.T.outlets.forEach((output, index) => {
+        const outputButton = document.createElement('button');
+        outputButton.innerText = `${output.comment}`;
+        outputButton.onclick = () => startConnection(deviceDiv.id, index);
+        outputContainer.appendChild(outputButton);
+    });
+
+    // create a container for the input buttons
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'input-container';
+    deviceDiv.appendChild(inputContainer);
+
+    // create an input button for each input
+    device.it.T.inlets.forEach((input, index) => {
+        const inputButton = document.createElement('button');
+        inputButton.innerText = `${input.comment}`;
+        inputButton.onclick = () => finishConnection(deviceDiv.id, index);
+        inputContainer.appendChild(inputButton);
+    });
+
+    // add the div to the workspace
+    workspace.appendChild(deviceDiv);
+
+    jsPlumb.draggable(deviceDiv);
+
+    // select multiple devices when shift is held
+    deviceDiv.addEventListener('mousedown', (event) => {
+        if (shiftHeld) {
+            jsPlumb.addToDragSelection(deviceDiv);
         }
-        const el = document.createElement("script");
-        el.src = "https://c74-public.nyc3.digitaloceanspaces.com/rnbo/" + encodeURIComponent(version) + "/rnbo.min.js";
-        el.onload = resolve;
-        el.onerror = function(err) {
-            console.log(err);
-            reject(new Error("Failed to load rnbo.js v" + version));
-        };
-        document.body.append(el);
     });
 }
 
-function makeSliders(device) {
-    let pdiv = document.getElementById("rnbo-parameter-sliders");
-    let noParamLabel = document.getElementById("no-param-label");
-    if (noParamLabel && device.numParameters > 0) pdiv.removeChild(noParamLabel);
+function removeDeviceFromWorkspace(deviceId) {
+    const { device, div } = devices[deviceId];
 
-    // This will allow us to ignore parameter update events while dragging the slider.
-    let isDraggingSlider = false;
-    let uiElements = {};
+    // remove the device div from the workspace
+    div.parentNode.removeChild(div);
 
-    device.parameters.forEach(param => {
-        // Subpatchers also have params. If we want to expose top-level
-        // params only, the best way to determine if a parameter is top level
-        // or not is to exclude parameters with a '/' in them.
-        // You can uncomment the following line if you don't want to include subpatcher params
-        
-        //if (param.id.includes("/")) return;
+    // disconnect the device from the web audio graph
+    device.node.disconnect();
 
-        // Create a label, an input slider and a value display
-        let label = document.createElement("label");
-        let slider = document.createElement("input");
-        let text = document.createElement("input");
-        let sliderContainer = document.createElement("div");
-        sliderContainer.appendChild(label);
-        sliderContainer.appendChild(slider);
-        sliderContainer.appendChild(text);
-
-        // Add a name for the label
-        label.setAttribute("name", param.name);
-        label.setAttribute("for", param.name);
-        label.setAttribute("class", "param-label");
-        label.textContent = `${param.name}: `;
-
-        // Make each slider reflect its parameter
-        slider.setAttribute("type", "range");
-        slider.setAttribute("class", "param-slider");
-        slider.setAttribute("id", param.id);
-        slider.setAttribute("name", param.name);
-        slider.setAttribute("min", param.min);
-        slider.setAttribute("max", param.max);
-        if (param.steps > 1) {
-            slider.setAttribute("step", (param.max - param.min) / (param.steps - 1));
-        } else {
-            slider.setAttribute("step", (param.max - param.min) / 1000.0);
-        }
-        slider.setAttribute("value", param.value);
-
-        // Make a settable text input display for the value
-        text.setAttribute("value", param.value.toFixed(1));
-        text.setAttribute("type", "text");
-
-        // Make each slider control its parameter
-        slider.addEventListener("pointerdown", () => {
-            isDraggingSlider = true;
-        });
-        slider.addEventListener("pointerup", () => {
-            isDraggingSlider = false;
-            slider.value = param.value;
-            text.value = param.value.toFixed(1);
-        });
-        slider.addEventListener("input", () => {
-            let value = Number.parseFloat(slider.value);
-            param.value = value;
-        });
-
-        // Make the text box input control the parameter value as well
-        text.addEventListener("keydown", (ev) => {
-            if (ev.key === "Enter") {
-                let newValue = Number.parseFloat(text.value);
-                if (isNaN(newValue)) {
-                    text.value = param.value;
-                } else {
-                    newValue = Math.min(newValue, param.max);
-                    newValue = Math.max(newValue, param.min);
-                    text.value = newValue;
-                    param.value = newValue;
-                }
-            }
-        });
-
-        // Store the slider and text by name so we can access them later
-        uiElements[param.id] = { slider, text };
-
-        // Add the slider element
-        pdiv.appendChild(sliderContainer);
-    });
-
-    // Listen to parameter changes from the device
-    device.parameterChangeEvent.subscribe(param => {
-        if (!isDraggingSlider)
-            uiElements[param.id].slider.value = param.value;
-        uiElements[param.id].text.value = param.value.toFixed(1);
-    });
+    // remove the device from storage
+    delete devices[deviceId];
 }
 
-function makeInportForm(device) {
-    const idiv = document.getElementById("rnbo-inports");
-    const inportSelect = document.getElementById("inport-select");
-    const inportText = document.getElementById("inport-text");
-    const inportForm = document.getElementById("inport-form");
+function addInputsForDevice(device) {
+    const inportForm = document.createElement('form');
+    const inportContainer = document.createElement('div');
     let inportTag = null;
-    
-    // Device messages correspond to inlets/outlets or inports/outports
-    // You can filter for one or the other using the "type" of the message
+
     const messages = device.messages;
     const inports = messages.filter(message => message.type === RNBO.MessagePortType.Inport);
 
-    if (inports.length === 0) {
-        idiv.removeChild(document.getElementById("inport-form"));
-        return;
-    } else {
-        idiv.removeChild(document.getElementById("no-inports-label"));
+    if (inports.length > 0) {
         inports.forEach(inport => {
-            const option = document.createElement("option");
-            option.innerText = inport.tag;
-            inportSelect.appendChild(option);
-        });
-        inportSelect.onchange = () => inportTag = inportSelect.value;
-        inportTag = inportSelect.value;
+            const inportLabel = document.createElement("label");
+            inportLabel.innerText = inport.tag;
 
-        inportForm.onsubmit = (ev) => {
-            // Do this or else the page will reload
-            ev.preventDefault();
+            const inportText = document.createElement('input');
+            inportText.type = 'text';
+            inportText.style.width = '8em';
+            inportText.addEventListener('change', function() {
+                const values = this.value.split(/\s+/).map(s => parseFloat(s));
+                let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
+                device.scheduleEvent(messageEvent);
+            });
 
-            // Turn the text into a list of numbers (RNBO messages must be numbers, not text)
-            const values = inportText.value.split(/\s+/).map(s => parseFloat(s));
-            
-            // Send the message event to the RNBO device
-            let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inportTag, values);
-            device.scheduleEvent(messageEvent);
-        }
-    }
-}
-
-function attachOutports(device) {
-    const outports = device.outports;
-    if (outports.length < 1) {
-        document.getElementById("rnbo-console").removeChild(document.getElementById("rnbo-console-div"));
-        return;
-    }
-
-    document.getElementById("rnbo-console").removeChild(document.getElementById("no-outports-label"));
-    device.messageEvent.subscribe((ev) => {
-
-        // Ignore message events that don't belong to an outport
-        if (outports.findIndex(elt => elt.tag === ev.tag) < 0) return;
-
-        // Message events have a tag as well as a payload
-        console.log(`${ev.tag}: ${ev.payload}`);
-
-        document.getElementById("rnbo-console-readout").innerText = `${ev.tag}: ${ev.payload}`;
-    });
-}
-
-function loadPresets(device, patcher) {
-    let presets = patcher.presets || [];
-    if (presets.length < 1) {
-        document.getElementById("rnbo-presets").removeChild(document.getElementById("preset-select"));
-        return;
-    }
-
-    document.getElementById("rnbo-presets").removeChild(document.getElementById("no-presets-label"));
-    let presetSelect = document.getElementById("preset-select");
-    presets.forEach((preset, index) => {
-        const option = document.createElement("option");
-        option.innerText = preset.name;
-        option.value = index;
-        presetSelect.appendChild(option);
-    });
-    presetSelect.onchange = () => device.setPreset(presets[presetSelect.value].preset);
-}
-
-function makeMIDIKeyboard(device) {
-    let mdiv = document.getElementById("rnbo-clickable-keyboard");
-    if (device.numMIDIInputPorts === 0) return;
-
-    mdiv.removeChild(document.getElementById("no-midi-label"));
-
-    const midiNotes = [49, 52, 56, 63];
-    midiNotes.forEach(note => {
-        const key = document.createElement("div");
-        const label = document.createElement("p");
-        label.textContent = note;
-        key.appendChild(label);
-        key.addEventListener("pointerdown", () => {
-            let midiChannel = 0;
-
-            // Format a MIDI message paylaod, this constructs a MIDI on event
-            let noteOnMessage = [
-                144 + midiChannel, // Code for a note on: 10010000 & midi channel (0-15)
-                note, // MIDI Note
-                100 // MIDI Velocity
-            ];
-        
-            let noteOffMessage = [
-                128 + midiChannel, // Code for a note off: 10000000 & midi channel (0-15)
-                note, // MIDI Note
-                0 // MIDI Velocity
-            ];
-        
-            // Including rnbo.min.js (or the unminified rnbo.js) will add the RNBO object
-            // to the global namespace. This includes the TimeNow constant as well as
-            // the MIDIEvent constructor.
-            let midiPort = 0;
-            let noteDurationMs = 250;
-        
-            // When scheduling an event to occur in the future, use the current audio context time
-            // multiplied by 1000 (converting seconds to milliseconds) for now.
-            let noteOnEvent = new RNBO.MIDIEvent(device.context.currentTime * 1000, midiPort, noteOnMessage);
-            let noteOffEvent = new RNBO.MIDIEvent(device.context.currentTime * 1000 + noteDurationMs, midiPort, noteOffMessage);
-        
-            device.scheduleEvent(noteOnEvent);
-            device.scheduleEvent(noteOffEvent);
-
-            key.classList.add("clicked");
+            inportLabel.appendChild(inportText);
+            inportContainer.appendChild(inportLabel);
         });
 
-        key.addEventListener("pointerup", () => key.classList.remove("clicked"));
-
-        mdiv.appendChild(key);
-    });
+        inportForm.appendChild(inportContainer);
+    }
+    return inportForm;
 }
 
-setup();
+function startConnection(deviceId, outputIndex) {
+    sourceDeviceId = deviceId;
+    sourceOutputIndex = outputIndex;
+}
+
+function finishConnection(deviceId, inputIndex) {
+    if (sourceDeviceId) {
+        const sourceDevice = devices[sourceDeviceId].device;
+        const targetDevice = devices[deviceId].device;
+
+        // connect the source device to the target device in the web audio API
+        sourceDevice.node.connect(targetDevice.node, sourceOutputIndex, inputIndex);
+
+        // visualize the connection
+        const connection = jsPlumb.connect({
+            source: sourceDeviceId,
+            target: deviceId,
+            anchors: [
+                ["Perimeter", { shape: "Rectangle", anchorCount: 50 }],
+                ["Perimeter", { shape: "Rectangle", anchorCount: 50 }]
+            ],
+            endpoint: ["Dot", { radius: 20 }],
+            paintStyle: { stroke: "lightgray", strokeWidth: 3, fill: "transparent" },
+            endpointStyle: { fill: "lightgray", outlineStroke: "transparent", outlineWidth: 12 },
+            connector: ["Flowchart", { cornerRadius: 5 }],
+            overlays: [
+                ["Arrow", { width: 12, length: 12, location: 1 }],
+                ["Custom", {
+                    create: function() {
+                        return document.createElement("div");
+                    },
+                    location: 0.5,
+                    id: "customOverlay"
+                }]
+            ],
+        });
+        sourceDeviceId = null;
+        sourceOutputIndex = null;
+    }
+}
+
+/* END functions */

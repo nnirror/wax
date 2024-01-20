@@ -1,54 +1,27 @@
-html, body {
-    margin: 0;
-    padding: 0;
-}
-#rnbo-root {
-    height: 100vh;
-    width: 100vw;
-}
-#background {
+.node {
+    border: 1px solid black;
     position: absolute;
-    z-index: -1;
+    padding: 30px 10px;
+    background-color: lightgray;
+    display: inline-block;
+    min-width: 12em;
+    --webkit-user-select: none;
+    user-select: none;
 }
-
-h2, em {
+.input-container {
+    position: absolute;
+    top: 4px;
+}
+.output-container {
+    position: absolute;
+    bottom: 4px;
     width: 100%;
 }
-
-#rnbo-root {
-    margin: auto;
-    max-width: 540px;
+.delete-button {
+    position: absolute;
+    top: 0px;
+    right: 0px;
 }
-
-#rnbo-clickable-keyboard {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-#rnbo-clickable-keyboard > div {
-    margin: 2px;
-    border: solid black 1px;
-    min-height: 50px;
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#rnbo-clickable-keyboard > div.clicked {
-    background: #222222;
-    color: #dddddd;
-}
-
-#rnbo-parameter-sliders {
-    display: flex;
-    flex-direction: column;
-}
-
-#rnbo-parameter-sliders > div {
-    display: flex;
-}
-
-#rnbo-parameter-sliders > div > input:first-of-type {
-    flex-grow: 1;
+body {
+    font-family: 'Monaco', monospace;
 }

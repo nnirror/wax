@@ -1,0 +1,22 @@
+{
+  "name": "rnbo.example.webpage",
+  "version": "1.0.0",
+  "description": "This example shows you how to add dynamic audio to a webpage, using the web export feature of RNBO, part of [Max 8](https://cycling74.com/products/max) made by [Cycling '74](https://cycling74.com).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cycling74/rnbo.example.webpage.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cycling74/rnbo.example.webpage/issues"
+  },
+  "homepage": "https://github.com/Cycling74/rnbo.example.webpage#readme",
+  "dependencies": {
+    "@rnbo/js": "^1.2.4"
+  }
+}
