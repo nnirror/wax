@@ -47,7 +47,7 @@ wasmDeviceURLs.sort().forEach((url) => {
     let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
     option.innerText = filename;
     deviceDropdown.appendChild(option);
-}); g
+});
 
 // add dropdown to navBar
 navBar.appendChild(deviceDropdown);
