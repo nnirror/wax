@@ -36,7 +36,8 @@ const wasmDeviceURLs = [
     "wasm/lpf~.json",
     "wasm/hpf~.json",
     "wasm/bpf~.json",
-    "wasm/line~.json"
+    "wasm/line~.json",
+    "wasm/skipper~.json"
 ];
 
 // load each WASM device into dropdown
@@ -374,6 +375,15 @@ function finishConnection(deviceId, inputIndex) {
         devices[sourceDeviceId].connections.push({ id: connectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex });
         devices[sourceDeviceId].splitter = splitter;
 
+        let targetDeviceInputName;
+        if (deviceId == 'output-node') {
+            targetDeviceInputName = 'speakers';
+        }
+        else {
+            targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
+        }
+        let sourceDeviceOutputName = devices[sourceDeviceId].device.it.T.outlets[sourceOutputIndex].comment;
+
         // visualize the connection
         const connection = jsPlumb.connect({
             source: sourceDeviceId,
@@ -385,7 +395,7 @@ function finishConnection(deviceId, inputIndex) {
             endpoint: ["Dot", { radius: 4 }],
             paintStyle: { stroke: "black", strokeWidth: 3, fill: "transparent" },
             endpointStyle: { fill: "black", outlineStroke: "transparent", outlineWidth: 12 },
-            connector: ["Straight"],
+            connector: ["StateMachine"],
             overlays: [
                 ["Arrow", { width: 12, length: 12, location: 1 }],
                 ["Custom", {
@@ -394,6 +404,10 @@ function finishConnection(deviceId, inputIndex) {
                     },
                     location: 0.5,
                     id: "customOverlay"
+                }],
+                ["Label", {
+                    label: `${sourceDeviceOutputName} -> ${targetDeviceInputName}`,
+                    cssClass: "aLabelClass"
                 }]
             ],
         });

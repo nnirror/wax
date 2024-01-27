@@ -5,6 +5,7 @@
     background-color: lightgray;
     display: inline-block;
     min-width: 14em;
+    min-height: 2em;
     --webkit-user-select: none;
     user-select: none;
     width: auto;
@@ -33,4 +34,7 @@
 }
 body {
     font-family: 'Monaco', monospace;
+}
+.aLabelClass {
+    margin-left: 120px;
 }
