@@ -59,22 +59,9 @@ deviceSelectButton.onclick = async () => {
     await context.resume();
     // get selected WASM file
     const url = deviceDropdown.value;
-    if (url === "mic") {
-        // TODO: fix intermittent garbled microphone audio
-        // get access to the microphone
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // create a source node from the stream
-        const source = context.createMediaStreamSource(stream);
-        // create a wrapper object for the source
-        const device = {
-            node: source,
-            it: {
-                T: {
-                    outlets: [{ comment: 'microphone output' }], // these need to exist so they work like the other WASM modules built with RNBO
-                    inlets: [{ comment: 'microphone input' }]
-                }
-            }
-        };
+    if ( url === "mic" ) {
+        // special handling for mic input as it's not a WASM / RNBO device
+        const device = await createMicrophoneDevice();
         // add device to workspace
         addDeviceToWorkspace(device, "microphone input");
     } else {
@@ -105,10 +92,7 @@ let shiftHeld = false;
 /* BEGIN audio i/o devices section */
 // TODO: refactor this more, so the output node is a WASM device
 // create microphone input module
-const micInputOption = document.createElement('option');
-micInputOption.value = "mic";
-micInputOption.innerText = "Microphone Input";
-deviceDropdown.appendChild(micInputOption);
+addMicrophoneInputDeviceToDropdown(deviceDropdown);
 
 const outputNodeDevice = {
     device: { node: context.destination },
@@ -178,6 +162,32 @@ window.addEventListener('keyup', (event) => {
 /* END event handlers */
 
 /* BEGIN functions */
+
+function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
+    const micInputOption = document.createElement('option');
+    micInputOption.value = "mic";
+    micInputOption.innerText = "Microphone Input";
+    deviceDropdown.appendChild(micInputOption);
+}
+
+async function createMicrophoneDevice() {
+    // TODO: look into / fix occasional garbled mic input
+    // get access to the microphone
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // create a source node from the stream
+    const source = context.createMediaStreamSource(stream);
+    // create a wrapper object for the source
+    const device = {
+        node: source,
+        it: {
+            T: {
+                outlets: [{ comment: 'microphone output' }], // these need to exist so they work like the other WASM modules built with RNBO
+                inlets: [{ comment: 'microphone input' }]
+            }
+        }
+    };
+    return device;
+}
 
 function addDeviceToWorkspace(device, deviceType) {
     // get count for this device type and increment it
