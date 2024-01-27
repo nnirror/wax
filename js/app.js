@@ -43,7 +43,7 @@ const wasmDeviceURLs = [
 // load each WASM device into dropdown
 wasmDeviceURLs.sort().forEach((url) => {
     const option = document.createElement('option');
-    option.value = url;z
+    option.value = url;
     let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
     option.innerText = filename;
     deviceDropdown.appendChild(option);
