@@ -4,13 +4,22 @@
     padding: 30px 10px;
     background-color: lightgray;
     display: inline-block;
-    min-width: 12em;
+    min-width: 14em;
     --webkit-user-select: none;
     user-select: none;
+    width: auto;
+}
+#ui-container {
+    margin-top: 100px;
+}
+.node input {
+    float: right;
 }
 .input-container {
     position: absolute;
     top: 4px;
+    white-space: nowrap;
+    overflow-x: auto;
 }
 .output-container {
     position: absolute;

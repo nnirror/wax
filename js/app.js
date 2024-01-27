@@ -4,6 +4,13 @@
 const WAContext = window.AudioContext || window.webkitAudioContext;
 const context = new WAContext();
 
+// set channelCount to maximum amount of channels available
+context.destination.channelCount = context.destination.maxChannelCount;
+// set channelCountMode to "explicit"
+context.destination.channelCountMode = "explicit";
+// set channelInterpretation to "discrete"
+context.destination.channelInterpretation = "discrete";
+
 // create workspace DOM elements
 const workspace = document.getElementById('workspace');
 const navBar = document.getElementById('ui-container');
@@ -13,6 +20,7 @@ const deviceDropdown = document.createElement('select');
 
 // set of available WASM devices
 const wasmDeviceURLs = [
+    "wasm/allpass~.json",
     "wasm/cycle~.json",
     "wasm/tri~.json",
     "wasm/phasor~.json",
@@ -23,11 +31,16 @@ const wasmDeviceURLs = [
     "wasm/speedlim~.json",
     "wasm/slide~.json",
     "wasm/number~.json",
-    "wasm/scale~.json"
+    "wasm/scale~.json",
+    "wasm/clock_divider~.json",
+    "wasm/lpf~.json",
+    "wasm/hpf~.json",
+    "wasm/bpf~.json",
+    "wasm/line~.json"
 ];
 
 // load each WASM device into dropdown
-wasmDeviceURLs.forEach((url) => {
+wasmDeviceURLs.sort().forEach((url) => {
     const option = document.createElement('option');
     option.value = url;
     let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
@@ -44,14 +57,34 @@ deviceSelectButton.innerText = 'Add';
 deviceSelectButton.onclick = async () => {
     // get selected WASM file
     const url = deviceDropdown.value;
-    // fetch the patcher
-    const response = await fetch(url);
-    const patcher = await response.json();
-    // create the WASM device
-    const device = await RNBO.createDevice({ context, patcher });
-    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-    // add device to workspace
-    addDeviceToWorkspace(device, filename);
+    if (url === "mic") {
+        // TODO: fix intermittent garbled microphone audio
+        // get access to the microphone
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // create a source node from the stream
+        const source = context.createMediaStreamSource(stream);
+        // create a wrapper object for the source
+        const device = {
+            node: source,
+            it: {
+                T: {
+                    outlets: [{ comment: 'microphone output' }], // these need to exist so they work like the other WASM modules built with RNBO
+                    inlets: [{ comment: 'microphone input' }]
+                }
+            }
+        };
+        // add device to workspace
+        addDeviceToWorkspace(device, "microphone input");
+    } else {
+        // fetch the patcher
+        const response = await fetch(url);
+        const patcher = await response.json();
+        // create the WASM device
+        const device = await RNBO.createDevice({ context, patcher });
+        let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+        // add device to workspace
+        addDeviceToWorkspace(device, filename);
+    }
 };
 
 // add button next to dropdown in navBar
@@ -67,14 +100,21 @@ let selectedDevice = null;
 let shiftHeld = false;
 
 
-/* BEGIN audio out device section */
+/* BEGIN audio i/o devices section */
 // TODO: refactor this more, so the output node is a WASM device
+// create microphone input module
+const micInputOption = document.createElement('option');
+micInputOption.value = "mic";
+micInputOption.innerText = "Microphone Input";
+deviceDropdown.appendChild(micInputOption);
+
 const outputNodeDevice = {
     device: { node: context.destination },
     div: document.createElement('div')
 };
 outputNodeDevice.div.id = 'output-node';
 outputNodeDevice.div.className = 'node';
+outputNodeDevice.div.style.bottom = '50%';
 
 // create an input button for the output node device
 const inputButton = document.createElement('button');
@@ -107,18 +147,14 @@ jsPlumb.bind("connectionDetached", function(info) {
     let sourceDevice = devices[info.sourceId];
     let targetDevice = devices[info.targetId];
 
-    if (sourceDevice && targetDevice) {
-        sourceDevice.device.node.disconnect(targetDevice.device.node);
-    }
-});
-
-document.addEventListener('keydown', function(event) {
-    // delete the selected device when the Delete / Backspace key is pressed
-    if ((event.key === 'Delete' || event.key === 'Backspace') && selectedDevice) {
-        jsPlumb.removeAllEndpoints(selectedDevice);
-        removeDeviceFromWorkspace(selectedDevice.id);
-        selectedDevice.remove();
-        selectedDevice = null;
+    if (sourceDevice && targetDevice && sourceDevice.connections) {
+        let connection = sourceDevice.connections.find(conn => conn.target === info.targetId);
+        if (connection) {
+            sourceDevice.device.node.disconnect(connection.splitter);
+            connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
+            // remove the connection from the list
+            sourceDevice.connections = sourceDevice.connections.filter(conn => conn !== connection);
+        }
     }
 });
 
@@ -136,7 +172,6 @@ window.addEventListener('keyup', (event) => {
         jsPlumb.clearDragSelection();
     }
 });
-
 
 /* END event handlers */
 
@@ -180,13 +215,17 @@ function addDeviceToWorkspace(device, deviceType) {
     deleteButton.innerText = 'x';
     deleteButton.className = 'delete-button';
     deleteButton.addEventListener('click', function() {
-        // get all connections of the device
-        let deviceConnections = jsPlumb.getConnections({source: deviceDiv.id});
-        // delete each connection which will trigger the 'connectionDetached' event
-        deviceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        // remove the device div
-        deviceDiv.remove();
-    });
+    // get all connections where the device is the source
+    let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+    // get all connections where the device is the target
+    let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
+    // delete each source connection
+    sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+    // delete each target connection
+    targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+    // remove the device div
+    deviceDiv.remove();
+});
     deviceDiv.appendChild(deleteButton);
 
     // create an output button for the device
@@ -202,14 +241,19 @@ function addDeviceToWorkspace(device, deviceType) {
     inputContainer.className = 'input-container';
     deviceDiv.appendChild(inputContainer);
 
-    // create an input button for each input
+    // initialize totalLength to 0
+    let deviceWidth = 0;
+
     device.it.T.inlets.forEach((input, index) => {
         const inputButton = document.createElement('button');
         inputButton.innerText = `${input.comment}`;
         inputButton.onclick = () => finishConnection(deviceDiv.id, index);
         inputContainer.appendChild(inputButton);
+        deviceWidth += input.comment.length;
     });
 
+    // set the width of the deviceDiv to be based on the width of the input buttons
+    deviceDiv.style.width = `${deviceWidth/2}em`;
     // add the div to the workspace
     workspace.appendChild(deviceDiv);
 
@@ -220,6 +264,29 @@ function addDeviceToWorkspace(device, deviceType) {
         if (shiftHeld) {
             jsPlumb.addToDragSelection(deviceDiv);
         }
+    });
+
+    attachOutports(device,deviceDiv);
+}
+
+function attachOutports(device,deviceDiv) {
+    const outports = device.outports;
+    if (outports.length < 1) {
+        return;
+    }
+    // listen on outports for any "regen" events to regenerate its parameters
+    device.messageEvent.subscribe((ev) => {
+        // ignore message events that don't belong to an outport
+        if (outports.findIndex(elt => elt.tag === ev.tag) < 0) return;
+
+        // select all input elements within the deviceDiv
+        const inputElements = deviceDiv.querySelectorAll('input');
+
+        inputElements.forEach((inputElement) => {
+            // create/trigger a change event
+            const event = new Event('change');
+            inputElement.dispatchEvent(event);
+        });
     });
 }
 
@@ -240,9 +307,12 @@ function addInputsForDevice(device) {
     const inportForm = document.createElement('form');
     const inportContainer = document.createElement('div');
     let inportTag = null;
+    let inports = [];
 
     const messages = device.messages;
-    const inports = messages.filter(message => message.type === RNBO.MessagePortType.Inport);
+    if (typeof messages !== 'undefined') {
+        inports = messages.filter(message => message.type === RNBO.MessagePortType.Inport);
+    }
 
     if (inports.length > 0) {
         inports.forEach(inport => {
@@ -253,11 +323,14 @@ function addInputsForDevice(device) {
             inportText.type = 'text';
             inportText.style.width = '8em';
             inportText.addEventListener('change', function() {
-                const values = this.value.split(/\s+/).map(s => parseFloat(s));
-                let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
-                device.scheduleEvent(messageEvent);
+                scheduleDeviceEvent(device, inport, this.value);
             });
 
+            inportText.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    scheduleDeviceEvent(device, inport, this.value);
+                }
+            });
             inportLabel.appendChild(inportText);
             inportContainer.appendChild(inportLabel);
         });
@@ -265,6 +338,16 @@ function addInputsForDevice(device) {
         inportForm.appendChild(inportContainer);
     }
     return inportForm;
+}
+
+function scheduleDeviceEvent(device, inport, value) {
+    try {
+        const values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+        let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
+        device.scheduleEvent(messageEvent);
+    } catch (error) {
+        console.error('An error occurred:', error);
+    }
 }
 
 function startConnection(deviceId, outputIndex) {
@@ -277,8 +360,19 @@ function finishConnection(deviceId, inputIndex) {
         const sourceDevice = devices[sourceDeviceId].device;
         const targetDevice = devices[deviceId].device;
 
-        // connect the source device to the target device in the web audio API
-        sourceDevice.node.connect(targetDevice.node, sourceOutputIndex, inputIndex);
+        // create channel splitter
+        let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
+
+        // connect source device's output to the splitter
+        sourceDevice.node.connect(splitter);
+
+        // connect desired output channel to target device's input
+        splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
+
+        let connectionId = Date.now();
+        devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
+        devices[sourceDeviceId].connections.push({ id: connectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex });
+        devices[sourceDeviceId].splitter = splitter;
 
         // visualize the connection
         const connection = jsPlumb.connect({
@@ -288,10 +382,10 @@ function finishConnection(deviceId, inputIndex) {
                 ["Perimeter", { shape: "Rectangle", anchorCount: 50 }],
                 ["Perimeter", { shape: "Rectangle", anchorCount: 50 }]
             ],
-            endpoint: ["Dot", { radius: 20 }],
-            paintStyle: { stroke: "lightgray", strokeWidth: 3, fill: "transparent" },
-            endpointStyle: { fill: "lightgray", outlineStroke: "transparent", outlineWidth: 12 },
-            connector: ["Flowchart", { cornerRadius: 5 }],
+            endpoint: ["Dot", { radius: 4 }],
+            paintStyle: { stroke: "black", strokeWidth: 3, fill: "transparent" },
+            endpointStyle: { fill: "black", outlineStroke: "transparent", outlineWidth: 12 },
+            connector: ["Straight"],
             overlays: [
                 ["Arrow", { width: 12, length: 12, location: 1 }],
                 ["Custom", {
