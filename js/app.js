@@ -43,11 +43,11 @@ const wasmDeviceURLs = [
 // load each WASM device into dropdown
 wasmDeviceURLs.sort().forEach((url) => {
     const option = document.createElement('option');
-    option.value = url;
+    option.value = url;z
     let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
     option.innerText = filename;
     deviceDropdown.appendChild(option);
-});
+}); g
 
 // add dropdown to navBar
 navBar.appendChild(deviceDropdown);
@@ -56,6 +56,7 @@ navBar.appendChild(deviceDropdown);
 const deviceSelectButton = document.createElement('button');
 deviceSelectButton.innerText = 'Add';
 deviceSelectButton.onclick = async () => {
+    await context.resume();
     // get selected WASM file
     const url = deviceDropdown.value;
     if (url === "mic") {
