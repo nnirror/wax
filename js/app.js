@@ -18,91 +18,18 @@ channelMerger.connect(context.destination);
 const workspace = document.getElementById('workspace');
 const navBar = document.getElementById('ui-container');
 
-// create dropdown of all WASM devices
-const deviceDropdown = document.createElement('select');
-
-// set of available WASM devices
-const wasmDeviceURLs = [
-    "wasm/allpass~.json",
-    "wasm/cycle~.json",
-    "wasm/tri~.json",
-    "wasm/phasor~.json",
-    "wasm/noise~.json",
-    "wasm/sah~.json",
-    "wasm/*~.json",
-    "wasm/delay~.json",
-    "wasm/speedlim~.json",
-    "wasm/slide~.json",
-    "wasm/number~.json",
-    "wasm/scale~.json",
-    "wasm/clock_divider~.json",
-    "wasm/lpf~.json",
-    "wasm/hpf~.json",
-    "wasm/bpf~.json",
-    "wasm/line~.json",
-    "wasm/skipper~.json",
-    "wasm/pattern~.json"
-
-];
-
-// load each WASM device into dropdown
-wasmDeviceURLs.sort().forEach((url) => {
-    const option = document.createElement('option');
-    option.value = url;
-    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-    option.innerText = filename;
-    deviceDropdown.appendChild(option);
-});
-
-// add dropdown to navBar
-navBar.appendChild(deviceDropdown);
-
-// create button to select WASM device
-const deviceSelectButton = document.createElement('button');
-deviceSelectButton.innerText = 'Add device';
-deviceSelectButton.onclick = async () => {
-    await context.resume();
-    // get selected WASM file
-    const url = deviceDropdown.value;
-    if ( url === "mic" ) {
-        // special handling for mic input as it's not a WASM / RNBO device
-        const device = await createMicrophoneDevice();
-        // add device to workspace
-        addDeviceToWorkspace(device, "microphone input");
-    } else {
-        // fetch the patcher
-        const response = await fetch(url);
-        const patcher = await response.json();
-        // create the WASM device
-        const device = await RNBO.createDevice({ context, patcher });
-        let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-        // add device to workspace
-        addDeviceToWorkspace(device, filename);
-    }
-};
-
-// add button next to dropdown in navBar
-navBar.appendChild(deviceSelectButton);
-
-/* END UI initialization */
-
-let deviceCounts = {};
-let devices = {};
-let sourceDeviceId = null;
-let sourceOutputIndex = null;
-let selectedDevice = null;
-let shiftHeld = false;
-
 // create a button that adds an output channel node instance to the DOM
 const addButton = document.createElement('button');
-addButton.innerText = 'Add output channel';
+addButton.innerText = 'Add speaker channel';
+addButton.style.position = 'fixed';
+addButton.style.top = '10px';
+addButton.style.zIndex = '1000';
 addButton.id = 'add-output';
 addButton.onclick = () => {
     // create a new div for the node
     const div = document.createElement('div');
     div.id = `output-node-${Date.now()}`;
     div.className = 'node';
-    div.style.bottom = '50%';
 
     // create a new button for the output channel node
     const button = document.createElement('button');
@@ -154,9 +81,89 @@ addButton.onclick = () => {
     };
 };
 
+// add the new button to the navbar
+navBar.appendChild(addButton);
 
-// add the new button to the DOM
-document.body.appendChild(addButton);
+// create button to select WASM device
+const deviceSelectButton = document.createElement('button');
+deviceSelectButton.innerText = 'Add device';
+deviceSelectButton.style.position = 'fixed';
+deviceSelectButton.style.top = '40px';
+deviceSelectButton.style.zIndex = '1000';
+deviceSelectButton.onclick = async () => {
+    await context.resume();
+    // get selected WASM file
+    const url = deviceDropdown.value;
+    if ( url === "mic" ) {
+        // special handling for mic input as it's not a WASM / RNBO device
+        const device = await createMicrophoneDevice();
+        // add device to workspace
+        addDeviceToWorkspace(device, "microphone input");
+    } else {
+        // fetch the patcher
+        const response = await fetch(url);
+        const patcher = await response.json();
+        // create the WASM device
+        const device = await RNBO.createDevice({ context, patcher });
+        let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+        // add device to workspace
+        addDeviceToWorkspace(device, filename);
+    }
+};
+
+// add button next to dropdown in navBar
+navBar.appendChild(deviceSelectButton);
+
+// create dropdown of all WASM devices
+const deviceDropdown = document.createElement('select');
+deviceDropdown.style.position = 'fixed';
+deviceDropdown.style.top = '70px';
+deviceDropdown.style.zIndex = '1000';
+
+// set of available WASM devices
+const wasmDeviceURLs = [
+    "wasm/allpass~.json",
+    "wasm/cycle~.json",
+    "wasm/tri~.json",
+    "wasm/phasor~.json",
+    "wasm/noise~.json",
+    "wasm/sah~.json",
+    "wasm/*~.json",
+    "wasm/delay~.json",
+    "wasm/speedlim~.json",
+    "wasm/slide~.json",
+    "wasm/number~.json",
+    "wasm/scale~.json",
+    "wasm/clock_divider~.json",
+    "wasm/lpf~.json",
+    "wasm/hpf~.json",
+    "wasm/bpf~.json",
+    "wasm/line~.json",
+    "wasm/skipper~.json",
+    "wasm/pattern~.json"
+
+];
+
+// load each WASM device into dropdown
+wasmDeviceURLs.sort().forEach((url) => {
+    const option = document.createElement('option');
+    option.value = url;
+    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+    option.innerText = filename;
+    deviceDropdown.appendChild(option);
+});
+
+// add dropdown to navBar
+navBar.appendChild(deviceDropdown);
+
+/* END UI initialization */
+
+let deviceCounts = {};
+let devices = {};
+let sourceDeviceId = null;
+let sourceOutputIndex = null;
+let selectedDevice = null;
+let shiftHeld = false;
 
 /* BEGIN audio i/o devices section */
 // TODO: refactor this more, so the output node is a WASM device
@@ -237,6 +244,14 @@ function addDeviceToWorkspace(device, deviceType) {
     deviceDiv.className = 'node';
     deviceDiv.innerText = `${deviceType}`;
     deviceDiv.style.backgroundColor = 'lightgray';
+
+    // get the current scroll position
+    const [scrollX, scrollY] = document.getScroll();
+
+    // position the deviceDiv based on the scroll position
+    deviceDiv.style.position = 'absolute';
+    deviceDiv.style.left = (scrollX + 100) + 'px'; // 100px to the right of the current scroll position
+    deviceDiv.style.top = (scrollY + 100) + 'px'; // 100px down from the current scroll position
 
     // store the device and its div
     devices[deviceDiv.id] = { device, div: deviceDiv };
@@ -391,12 +406,17 @@ function addInputsForDevice(device) {
 
 function scheduleDeviceEvent(device, inport, value) {
     try {
+        // TODO: prevent evalation if input element is focused, or some way of stopping evaluation becuase
+        // if i'm in the middle of composing a pattern and it evaluates something in the interim, it can 
+        // crash the system or cause undesired behavior
         let values;
         // TODO: pretty hacky but functioning - evaluation of the inport of a pattern~ device should 
         // produces an array of data for a wavetable. the array going into the inport needs to be 
         // prepended with the length of the array so the buffer can be reallocated in RNBO
         if (device.dataBufferIds == 'pattern') {
-            values = eval(value);
+            // anonymous facet pattern replacement
+            value = value.replace(/_\./g, '$().');
+            values = eval(value).data;
             values.unshift(values.length);
         }
         else {
@@ -440,7 +460,7 @@ function finishConnection(deviceId, inputIndex) {
 
         let targetDeviceInputName;
         if (deviceId.startsWith('output-node')) {
-            targetDeviceInputName = `output channel🔊 ${parseInt(deviceId.split('-')[2]) + 1}`;
+            targetDeviceInputName = `speaker channel`;
         }
         else {
             targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
@@ -476,6 +496,20 @@ function finishConnection(deviceId, inputIndex) {
         });
         sourceDeviceId = null;
         sourceOutputIndex = null;
+    }
+}
+
+document.getScroll = function() {
+    // forked from: https://stackoverflow.com/a/2481776
+    if (window.pageYOffset != undefined) {
+        return [pageXOffset, pageYOffset];
+    } else {
+        var sx, sy, d = document,
+            r = d.documentElement,
+            b = d.body;
+        sx = r.scrollLeft || b.scrollLeft || 0;
+        sy = r.scrollTop || b.scrollTop || 0;
+        return [sx, sy];
     }
 }
 

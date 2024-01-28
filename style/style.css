@@ -10,13 +10,6 @@
     user-select: none;
     width: auto;
 }
-#ui-container {
-    margin-top: 100px;
-}
-#add-output {
-    position: absolute;
-    bottom: 50%;
-}
 .node input {
     float: right;
 }
@@ -41,4 +34,10 @@ body {
 }
 .aLabelClass {
     margin-left: 120px;
+}
+#workspace {
+    width: 10000px;
+    height: 10000px;
+    position: relative;
+    overflow: auto;
 }
