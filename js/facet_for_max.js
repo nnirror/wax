@@ -19,9 +19,25 @@ function choose (list) {
 }
 
 function turing(length) {
-	let s = "";
+	let s = [];
 	for (let i = 0; i < length; i++) {
-		s += choose(["0","1"]);
+		s.push(choose([0,1]));
+	}
+	return s;
+}
+
+function sine ( frequency, length ) {
+	let s = [];
+	for (let i = 0; i < length; i++) {
+		s.push(Math.sin(2*Math.PI*frequency*i/length));
+	}
+	return s;
+}
+
+function noise (length) {
+	let s = [];
+	for (let i = 0; i < length; i++) {
+		s.push(Math.random()*2-1);
 	}
 	return s;
 }

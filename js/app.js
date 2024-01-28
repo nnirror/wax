@@ -40,7 +40,9 @@ const wasmDeviceURLs = [
     "wasm/hpf~.json",
     "wasm/bpf~.json",
     "wasm/line~.json",
-    "wasm/skipper~.json"
+    "wasm/skipper~.json",
+    "wasm/pattern~.json"
+
 ];
 
 // load each WASM device into dropdown
@@ -91,7 +93,7 @@ let sourceOutputIndex = null;
 let selectedDevice = null;
 let shiftHeld = false;
 
-// create a new button that adds an output channel node instance to the DOM
+// create a button that adds an output channel node instance to the DOM
 const addButton = document.createElement('button');
 addButton.innerText = 'Add output channel';
 addButton.id = 'add-output';
@@ -112,19 +114,30 @@ addButton.onclick = () => {
     numberInput.type = 'number';
     numberInput.min = 0;
     numberInput.max = context.destination.channelCount;
-    numberInput.onchange = () => {
-        // TODO: changing the output channel number directly in the DOM doesn't work rihgt -
-        // you need to manually remove and then reconnect the connections after changing the output channel number.
-        // ideally it would change channels and reconfigure the connections properly.
-        // remove any onclick events from the button
-        button.onclick = null;
-        button.onclick = () => finishConnection(div.id, Number(numberInput.value)-1);
-    };
+    button.onclick = () => finishConnection(div.id, Number(numberInput.value)-1);
 
     // add the button and the number input to the div
     div.insertBefore(button, div.firstChild);
     div.appendChild(numberInput);
     div.appendChild(document.createTextNode(`speakers🔊`));
+
+    // create a delete button for the device
+    const deleteButton = document.createElement('button');
+    deleteButton.innerText = 'x';
+    deleteButton.className = 'delete-button';
+    deleteButton.addEventListener('click', function() {
+        // get all connections where the device is the source
+        let sourceConnections = jsPlumb.getConnections({source: div.id});
+        // get all connections where the device is the target
+        let targetConnections = jsPlumb.getConnections({target: div.id});
+        // delete each source connection
+        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        // delete each target connection
+        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        // remove the device div
+        div.remove();
+    });
+    div.appendChild(deleteButton);
 
     // add the div to the workspace
     workspace.appendChild(div);
@@ -378,7 +391,17 @@ function addInputsForDevice(device) {
 
 function scheduleDeviceEvent(device, inport, value) {
     try {
-        const values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+        let values;
+        // TODO: pretty hacky but functioning - evaluation of the inport of a pattern~ device should 
+        // produces an array of data for a wavetable. the array going into the inport needs to be 
+        // prepended with the length of the array so the buffer can be reallocated in RNBO
+        if (device.dataBufferIds == 'pattern') {
+            values = eval(value);
+            values.unshift(values.length);
+        }
+        else {
+            values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+        }
         let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
         device.scheduleEvent(messageEvent);
     } catch (error) {
@@ -417,7 +440,7 @@ function finishConnection(deviceId, inputIndex) {
 
         let targetDeviceInputName;
         if (deviceId.startsWith('output-node')) {
-            targetDeviceInputName = `speakers🔊 ${parseInt(deviceId.split('-')[2]) + 1}`;
+            targetDeviceInputName = `output channel🔊 ${parseInt(deviceId.split('-')[2]) + 1}`;
         }
         else {
             targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
