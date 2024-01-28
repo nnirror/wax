@@ -119,7 +119,7 @@ addButton.onclick = () => {
     // add the button and the number input to the div
     div.insertBefore(button, div.firstChild);
     div.appendChild(numberInput);
-    div.appendChild(document.createTextNode(`speakers🔊`));
+    div.appendChild(document.createTextNode(`speaker channel🔊`));
 
     // create a delete button for the device
     const deleteButton = document.createElement('button');
