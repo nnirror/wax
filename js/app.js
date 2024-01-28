@@ -57,7 +57,7 @@ navBar.appendChild(deviceDropdown);
 
 // create button to select WASM device
 const deviceSelectButton = document.createElement('button');
-deviceSelectButton.innerText = 'Add';
+deviceSelectButton.innerText = 'Add device';
 deviceSelectButton.onclick = async () => {
     await context.resume();
     // get selected WASM file
@@ -91,27 +91,59 @@ let sourceOutputIndex = null;
 let selectedDevice = null;
 let shiftHeld = false;
 
-
-
-for (let i = 0; i < context.destination.channelCount; ++i) {
+// create a new button that adds an output channel node instance to the DOM
+const addButton = document.createElement('button');
+addButton.innerText = 'Add output channel';
+addButton.id = 'add-output';
+addButton.onclick = () => {
+    // create a new div for the node
     const div = document.createElement('div');
-    div.id = `output-node-${i}`;
+    div.id = `output-node-${Date.now()}`;
     div.className = 'node';
     div.style.bottom = '50%';
 
+    // create a new button for the output channel node
     const button = document.createElement('button');
     button.innerText = 'signal in';
-    button.onclick = () => finishConnection(div.id, i);
     button.style.display = 'block';
 
-    div.insertBefore(button, div.firstChild);
-    div.appendChild(document.createTextNode(`speakers🔊 ${i + 1}`));
+    // create a new number input for the node
+    const numberInput = document.createElement('input');
+    numberInput.type = 'number';
+    numberInput.min = 0;
+    numberInput.max = context.destination.channelCount;
+    numberInput.onchange = () => {
+        // TODO: changing the output channel number directly in the DOM doesn't work rihgt -
+        // you need to manually remove and then reconnect the connections after changing the output channel number.
+        // ideally it would change channels and reconfigure the connections properly.
+        // remove any onclick events from the button
+        button.onclick = null;
+        button.onclick = () => finishConnection(div.id, Number(numberInput.value)-1);
+    };
 
+    // add the button and the number input to the div
+    div.insertBefore(button, div.firstChild);
+    div.appendChild(numberInput);
+    div.appendChild(document.createTextNode(`speakers🔊`));
+
+    // add the div to the workspace
     workspace.appendChild(div);
 
-    // Make the div draggable using jsPlumb
+    // make the div draggable using jsPlumb
     jsPlumb.draggable(div);
-}
+
+    // add an entry for the node to the devices object
+    devices[div.id] = {
+        device: {
+            node: channelMerger
+        },
+        connections: []
+    };
+};
+
+
+// add the new button to the DOM
+document.body.appendChild(addButton);
 
 /* BEGIN audio i/o devices section */
 // TODO: refactor this more, so the output node is a WASM device
@@ -125,7 +157,6 @@ addMicrophoneInputDeviceToDropdown(deviceDropdown);
 jsPlumb.bind("connectionDetached", function(info) {
     let sourceDevice = devices[info.sourceId];
     let targetDevice = devices[info.targetId];
-
     if (sourceDevice && targetDevice && sourceDevice.connections) {
         let connection = sourceDevice.connections.find(conn => conn.target === info.targetId);
         if (connection) {

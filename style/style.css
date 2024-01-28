@@ -13,6 +13,10 @@
 #ui-container {
     margin-top: 100px;
 }
+#add-output {
+    position: absolute;
+    bottom: 50%;
+}
 .node input {
     float: right;
 }
