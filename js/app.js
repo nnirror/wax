@@ -11,6 +11,9 @@ context.destination.channelCountMode = "explicit";
 // set channelInterpretation to "discrete"
 context.destination.channelInterpretation = "discrete";
 
+const channelMerger = context.createChannelMerger(context.destination.channelCount);
+channelMerger.connect(context.destination);
+
 // create workspace DOM elements
 const workspace = document.getElementById('workspace');
 const navBar = document.getElementById('ui-container');
@@ -89,41 +92,31 @@ let selectedDevice = null;
 let shiftHeld = false;
 
 
+
+for (let i = 0; i < context.destination.channelCount; ++i) {
+    const div = document.createElement('div');
+    div.id = `output-node-${i}`;
+    div.className = 'node';
+    div.style.bottom = '50%';
+
+    const button = document.createElement('button');
+    button.innerText = 'signal in';
+    button.onclick = () => finishConnection(div.id, i);
+    button.style.display = 'block';
+
+    div.insertBefore(button, div.firstChild);
+    div.appendChild(document.createTextNode(`speakers🔊 ${i + 1}`));
+
+    workspace.appendChild(div);
+
+    // Make the div draggable using jsPlumb
+    jsPlumb.draggable(div);
+}
+
 /* BEGIN audio i/o devices section */
 // TODO: refactor this more, so the output node is a WASM device
 // create microphone input module
 addMicrophoneInputDeviceToDropdown(deviceDropdown);
-
-const outputNodeDevice = {
-    device: { node: context.destination },
-    div: document.createElement('div')
-};
-outputNodeDevice.div.id = 'output-node';
-outputNodeDevice.div.className = 'node';
-outputNodeDevice.div.style.bottom = '50%';
-
-// create an input button for the output node device
-const inputButton = document.createElement('button');
-inputButton.innerText = 'signal in';
-inputButton.onclick = () => finishConnection('output-node');
-inputButton.style.display = 'block';
-
-// insert the input button at the beginning of the output node device
-outputNodeDevice.div.insertBefore(inputButton, outputNodeDevice.div.firstChild);
-
-// add the text to the output node device
-outputNodeDevice.div.appendChild(document.createTextNode('speakers🔊'));
-
-// add the output node device to the workspace
-workspace.appendChild(outputNodeDevice.div);
-
-// make the output node device draggable
-jsPlumb.ready(function() {
-    jsPlumb.draggable(outputNodeDevice.div);
-});
-
-// add the output node device to the devices array so it can be accessed like the WASM devices
-devices['output-node'] = outputNodeDevice;
 /* END audio out device section */
 
 
@@ -370,7 +363,7 @@ function startConnection(deviceId, outputIndex) {
 function finishConnection(deviceId, inputIndex) {
     if (sourceDeviceId) {
         const sourceDevice = devices[sourceDeviceId].device;
-        const targetDevice = devices[deviceId].device;
+        const targetDevice = devices[deviceId] ? devices[deviceId].device : null;
 
         // create channel splitter
         let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
@@ -378,8 +371,13 @@ function finishConnection(deviceId, inputIndex) {
         // connect source device's output to the splitter
         sourceDevice.node.connect(splitter);
 
-        // connect desired output channel to target device's input
-        splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
+        if (targetDevice) {
+            // If the target device is a regular device, connect it as usual
+            splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
+        } else {
+            // If the target device is one of the special divs, connect it to the channelMerger
+            splitter.connect(channelMerger, sourceOutputIndex, inputIndex);
+        }
 
         let connectionId = Date.now();
         devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
@@ -387,8 +385,8 @@ function finishConnection(deviceId, inputIndex) {
         devices[sourceDeviceId].splitter = splitter;
 
         let targetDeviceInputName;
-        if (deviceId == 'output-node') {
-            targetDeviceInputName = 'speakers';
+        if (deviceId.startsWith('output-node')) {
+            targetDeviceInputName = `speakers🔊 ${parseInt(deviceId.split('-')[2]) + 1}`;
         }
         else {
             targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
