@@ -1,43 +1,38 @@
 .node {
     border: 1px solid black;
     position: absolute;
-    padding: 30px 10px;
+    padding: 30px 10px 5px 10px;
     background-color: lightgray;
-    display: inline-block;
-    min-width: 14em;
-    min-height: 2em;
+    display: inline-grid;
+    min-width: 5.5em;
     --webkit-user-select: none;
     user-select: none;
     width: auto;
 }
 .node input {
-    float: right;
+    float: left;
 }
 .input-container {
     position: absolute;
     top: 4px;
+    margin-left: 4px;
+    width: 100%;
     white-space: nowrap;
     overflow-x: auto;
-}
-.output-container {
-    position: absolute;
-    bottom: 4px;
-    width: 100%;
-}
-.delete-button {
-    position: absolute;
-    top: 0px;
-    right: 0px;
 }
 body {
     font-family: 'Monaco', monospace;
 }
-.aLabelClass {
-    margin-left: 120px;
-}
 #workspace {
-    width: 10000px;
+    width: 5000px;
     height: 10000px;
     position: relative;
     overflow: auto;
+}
+.delete-button {
+    float: right;
+    margin-right: 8px;
+}
+.aLabelClass {
+    font-size: 0.8em;
 }

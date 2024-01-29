@@ -34,19 +34,18 @@ addButton.onclick = () => {
     // create a new button for the output channel node
     const button = document.createElement('button');
     button.innerText = 'signal in';
-    button.style.display = 'block';
 
     // create a new number input for the node
     const numberInput = document.createElement('input');
-    numberInput.type = 'number';
-    numberInput.min = 0;
-    numberInput.max = context.destination.channelCount;
+    numberInput.type = 'text';
+    numberInput.style.width = '2em';
     button.onclick = () => finishConnection(div.id, Number(numberInput.value)-1);
 
-    // add the button and the number input to the div
-    div.insertBefore(button, div.firstChild);
-    div.appendChild(numberInput);
-    div.appendChild(document.createTextNode(`speaker channel🔊`));
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'input-container';
+
+    // add the button to the div
+    inputContainer.insertBefore(button, div.firstChild);
 
     // create a delete button for the device
     const deleteButton = document.createElement('button');
@@ -64,7 +63,18 @@ addButton.onclick = () => {
         // remove the device div
         div.remove();
     });
-    div.appendChild(deleteButton);
+    inputContainer.appendChild(deleteButton);
+
+    div.append(inputContainer);
+    div.appendChild(document.createTextNode(`speaker channel🔊`));
+    div.appendChild(numberInput);
+
+    const [scrollX, scrollY] = document.getScroll();
+
+    // position the deviceDiv based on the scroll position
+    div.style.position = 'absolute';
+    div.style.left = (scrollX + 100) + 'px'; // 100px to the right of the current scroll position
+    div.style.top = (scrollY + 100) + 'px'; // 100px down from the current scroll position
 
     // add the div to the workspace
     workspace.appendChild(div);
@@ -256,9 +266,10 @@ function addDeviceToWorkspace(device, deviceType) {
     // store the device and its div
     devices[deviceDiv.id] = { device, div: deviceDiv };
 
-    const hrElement = document.createElement('hr');
-    // append the <hr> element to deviceDiv
-    deviceDiv.appendChild(hrElement);
+    // create a container for the input buttons
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'input-container';
+    deviceDiv.appendChild(inputContainer);
 
     // create an inport form for the device
     const inportForm = addInputsForDevice(device);
@@ -290,7 +301,6 @@ function addDeviceToWorkspace(device, deviceType) {
     // remove the device div
     deviceDiv.remove();
 });
-    deviceDiv.appendChild(deleteButton);
 
     // create an output button for the device
     device.it.T.outlets.forEach((output, index) => {
@@ -299,11 +309,6 @@ function addDeviceToWorkspace(device, deviceType) {
         outputButton.onclick = () => startConnection(deviceDiv.id, index);
         outputContainer.appendChild(outputButton);
     });
-
-    // create a container for the input buttons
-    const inputContainer = document.createElement('div');
-    inputContainer.className = 'input-container';
-    deviceDiv.appendChild(inputContainer);
 
     // initialize totalLength to 0
     let deviceWidth = 0;
@@ -316,8 +321,16 @@ function addDeviceToWorkspace(device, deviceType) {
         deviceWidth += input.comment.length;
     });
 
+    inputContainer.appendChild(deleteButton);
+
     // set the width of the deviceDiv to be based on the width of the input buttons
-    deviceDiv.style.width = `${deviceWidth/2}em`;
+    deviceDiv.style.width = `${(deviceWidth/2)+1.5}em`;
+
+    // if the device has inports, make the deviceDiv wider
+    if (inportForm.elements.length > 0) {
+        deviceDiv.style.minWidth = '10em';
+    }
+
     // add the div to the workspace
     workspace.appendChild(deviceDiv);
 
@@ -380,9 +393,6 @@ function addInputsForDevice(device) {
 
     if (inports.length > 0) {
         inports.forEach(inport => {
-            const inportLabel = document.createElement("label");
-            inportLabel.innerText = inport.tag;
-
             const inportText = document.createElement('input');
             inportText.type = 'text';
             inportText.style.width = '8em';
@@ -395,8 +405,7 @@ function addInputsForDevice(device) {
                     scheduleDeviceEvent(device, inport, this.value);
                 }
             });
-            inportLabel.appendChild(inportText);
-            inportContainer.appendChild(inportLabel);
+            inportContainer.appendChild(inportText);
         });
 
         inportForm.appendChild(inportContainer);
@@ -476,7 +485,7 @@ function finishConnection(deviceId, inputIndex) {
                 ["Perimeter", { shape: "Rectangle", anchorCount: 50 }]
             ],
             endpoint: ["Dot", { radius: 4 }],
-            paintStyle: { stroke: "black", strokeWidth: 3, fill: "transparent" },
+            paintStyle: { stroke: "grey", strokeWidth: 2, fill: "transparent" },
             endpointStyle: { fill: "black", outlineStroke: "transparent", outlineWidth: 12 },
             connector: ["StateMachine"],
             overlays: [
@@ -485,12 +494,12 @@ function finishConnection(deviceId, inputIndex) {
                     create: function() {
                         return document.createElement("div");
                     },
-                    location: 0.5,
                     id: "customOverlay"
                 }],
                 ["Label", {
-                    label: `${sourceDeviceOutputName} -> ${targetDeviceInputName}`,
-                    cssClass: "aLabelClass"
+                    label: `${sourceDeviceOutputName}`,
+                    cssClass: "aLabelClass",
+                    location: 0.85
                 }]
             ],
         });
