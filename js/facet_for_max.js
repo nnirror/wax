@@ -2639,6 +2639,60 @@ grow2d(iterations, prob, threshold = 0, mode = 0) {
     gain = Math.pow(0.5 / gain, order);
     return { gain: gain, roots: roots };
   }
+
+  parseKeyAndScale(key_letter = "C", key_scale = "major") {
+    let chroma_key;
+    key_letter = key_letter.toLowerCase();
+    // if key_string is facet_pattern, create chroma_key from that
+    if ( this.isFacetPattern(key_scale ) ) {
+      if ( key_scale.data.length < 12 ) {
+        key_scale.append(new FacetPattern().from(0).dup(11)).truncate(12);
+      }
+      chroma_key = key_scale.data.join();
+      chroma_key = chroma_key.replace(/,/g, "");
+    }
+    else {
+      chroma_key = Tonal.Scale.get(key_scale).chroma;
+    }
+
+    if ( key_letter == 'a' ) {
+      chroma_key = this.stringLeftRotate(chroma_key,3);
+    }
+    else if ( key_letter == 'a#' ) {
+      chroma_key = this.stringLeftRotate(chroma_key,2);
+    }
+    else if ( key_letter == 'b' ) {
+      chroma_key = this.stringLeftRotate(chroma_key,1);
+    }
+    else if ( key_letter == 'c' ) {
+      // no rotation needed, chroma defaults to c at root
+    }
+    else if ( key_letter == 'c#' ) {
+      chroma_key = this.stringRightRotate(chroma_key,1);
+    }
+    else if ( key_letter == 'd' ) {
+      chroma_key = this.stringRightRotate(chroma_key,2);
+    }
+    else if ( key_letter == 'd#' ) {
+      chroma_key = this.stringRightRotate(chroma_key,3);
+    }
+    else if ( key_letter == 'e' ) {
+      chroma_key = this.stringRightRotate(chroma_key,4);
+    }
+    else if ( key_letter == 'f' ) {
+      chroma_key = this.stringRightRotate(chroma_key,5);
+    }
+    else if ( key_letter == 'f#' ) {
+      chroma_key = this.stringRightRotate(chroma_key,6);
+    }
+    else if ( key_letter == 'g' ) {
+      chroma_key = this.stringRightRotate(chroma_key,7);
+    }
+    else if ( key_letter == 'g#' ) {
+      chroma_key = this.stringRightRotate(chroma_key,8);
+    }
+    return chroma_key;
+  }
   
   getMaximumValue () {
     let max = Math.max.apply(Math, this.data);

@@ -497,7 +497,7 @@ function finishConnection(deviceId, inputIndex) {
                     id: "customOverlay"
                 }],
                 ["Label", {
-                    label: `${sourceDeviceOutputName}`,
+                    label: `${sourceDeviceOutputName} -> ${targetDeviceInputName}`,
                     cssClass: "aLabelClass",
                     location: 0.85
                 }]
