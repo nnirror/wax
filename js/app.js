@@ -1,189 +1,63 @@
-/* BEGIN UI initialization */
-
+/* BEGIN audio context initialization */
 // create audio context
 const WAContext = window.AudioContext || window.webkitAudioContext;
 const context = new WAContext();
-
 // set channelCount to maximum amount of channels available
 context.destination.channelCount = context.destination.maxChannelCount;
 // set channelCountMode to "explicit"
 context.destination.channelCountMode = "explicit";
 // set channelInterpretation to "discrete"
 context.destination.channelInterpretation = "discrete";
-
+// create channel merger for speaker output
 const channelMerger = context.createChannelMerger(context.destination.channelCount);
 channelMerger.connect(context.destination);
+/* END audio context initialization */
 
+/* BEGIN UI initialization */
 // create workspace DOM elements
 const workspace = document.getElementById('workspace');
 const navBar = document.getElementById('ui-container');
+// create dropdown of all audio devices
+let deviceDropdown = createDropdownofAllDevices();
 
-// create a button that adds an output channel node instance to the DOM
-const addButton = document.createElement('button');
-addButton.innerText = 'Add speaker channel';
-addButton.style.position = 'fixed';
-addButton.style.top = '10px';
-addButton.style.zIndex = '1000';
-addButton.id = 'add-output';
-addButton.onclick = () => {
-    // create a new div for the node
-    const div = document.createElement('div');
-    div.id = `output-node-${Date.now()}`;
-    div.className = 'node';
+// create a button for adding speaker channel devices to the workspace
+createButtonForNavBar(
+    'Add speaker channel',
+    'addSpeakerChannel',
+    () => addDeviceToWorkspace(null, 'output-node', true)
+);
 
-    // create a new button for the output channel node
-    const button = document.createElement('button');
-    button.innerText = 'signal in';
-
-    // create a new number input for the node
-    const numberInput = document.createElement('input');
-    numberInput.type = 'text';
-    numberInput.style.width = '2em';
-    button.onclick = () => finishConnection(div.id, Number(numberInput.value)-1);
-
-    const inputContainer = document.createElement('div');
-    inputContainer.className = 'input-container';
-
-    // add the button to the div
-    inputContainer.insertBefore(button, div.firstChild);
-
-    // create a delete button for the device
-    const deleteButton = document.createElement('button');
-    deleteButton.innerText = 'x';
-    deleteButton.className = 'delete-button';
-    deleteButton.addEventListener('click', function() {
-        // get all connections where the device is the source
-        let sourceConnections = jsPlumb.getConnections({source: div.id});
-        // get all connections where the device is the target
-        let targetConnections = jsPlumb.getConnections({target: div.id});
-        // delete each source connection
-        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        // delete each target connection
-        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        // remove the device div
-        div.remove();
-    });
-    inputContainer.appendChild(deleteButton);
-
-    div.append(inputContainer);
-    div.appendChild(document.createTextNode(`speaker channel🔊`));
-    div.appendChild(numberInput);
-
-    const [scrollX, scrollY] = document.getScroll();
-
-    // position the deviceDiv based on the scroll position
-    div.style.position = 'absolute';
-    div.style.left = (scrollX + 100) + 'px'; // 100px to the right of the current scroll position
-    div.style.top = (scrollY + 100) + 'px'; // 100px down from the current scroll position
-
-    // add the div to the workspace
-    workspace.appendChild(div);
-
-    // make the div draggable using jsPlumb
-    jsPlumb.draggable(div);
-
-    // add an entry for the node to the devices object
-    devices[div.id] = {
-        device: {
-            node: channelMerger
-        },
-        connections: []
-    };
-};
-
-// add the new button to the navbar
-navBar.appendChild(addButton);
-
-// create button to select WASM device
-const deviceSelectButton = document.createElement('button');
-deviceSelectButton.innerText = 'Add device';
-deviceSelectButton.style.position = 'fixed';
-deviceSelectButton.style.top = '40px';
-deviceSelectButton.style.zIndex = '1000';
-deviceSelectButton.onclick = async () => {
-    await context.resume();
-    // get selected WASM file
-    const url = deviceDropdown.value;
-    if ( url === "mic" ) {
-        // special handling for mic input as it's not a WASM / RNBO device
-        const device = await createMicrophoneDevice();
-        // add device to workspace
-        addDeviceToWorkspace(device, "microphone input");
-    } else {
-        // fetch the patcher
-        const response = await fetch(url);
-        const patcher = await response.json();
-        // create the WASM device
-        const device = await RNBO.createDevice({ context, patcher });
-        let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-        // add device to workspace
-        addDeviceToWorkspace(device, filename);
+// create a button for adding audio devices to the workspace
+createButtonForNavBar(
+    'Add device',
+    'deviceSelectButton',
+    async () => {
+        await context.resume();
+        const url = deviceDropdown.value;
+        if (url === "mic") {
+            const device = await createMicrophoneDevice();
+            addDeviceToWorkspace(device, "microphone input");
+        } else {
+            const response = await fetch(url);
+            const patcher = await response.json();
+            const device = await RNBO.createDevice({ context, patcher });
+            let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+            addDeviceToWorkspace(device, filename);
+        }
     }
-};
-
-// add button next to dropdown in navBar
-navBar.appendChild(deviceSelectButton);
-
-// create dropdown of all WASM devices
-const deviceDropdown = document.createElement('select');
-deviceDropdown.style.position = 'fixed';
-deviceDropdown.style.top = '70px';
-deviceDropdown.style.zIndex = '1000';
-
-// set of available WASM devices
-const wasmDeviceURLs = [
-    "wasm/allpass~.json",
-    "wasm/cycle~.json",
-    "wasm/tri~.json",
-    "wasm/phasor~.json",
-    "wasm/noise~.json",
-    "wasm/sah~.json",
-    "wasm/*~.json",
-    "wasm/delay~.json",
-    "wasm/speedlim~.json",
-    "wasm/slide~.json",
-    "wasm/number~.json",
-    "wasm/scale~.json",
-    "wasm/clock_divider~.json",
-    "wasm/lpf~.json",
-    "wasm/hpf~.json",
-    "wasm/bpf~.json",
-    "wasm/line~.json",
-    "wasm/skipper~.json",
-    "wasm/pattern~.json"
-
-];
-
-// load each WASM device into dropdown
-wasmDeviceURLs.sort().forEach((url) => {
-    const option = document.createElement('option');
-    option.value = url;
-    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-    option.innerText = filename;
-    deviceDropdown.appendChild(option);
-});
-
-// add dropdown to navBar
-navBar.appendChild(deviceDropdown);
-
+);
 /* END UI initialization */
 
+/* BEGIN globally acessible objects */
 let deviceCounts = {};
 let devices = {};
 let sourceDeviceId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let shiftHeld = false;
-
-/* BEGIN audio i/o devices section */
-// TODO: refactor this more, so the output node is a WASM device
-// create microphone input module
-addMicrophoneInputDeviceToDropdown(deviceDropdown);
-/* END audio out device section */
-
+/* END globally acessible objects */
 
 /* BEGIN event handlers */
-
 jsPlumb.bind("connectionDetached", function(info) {
     let sourceDevice = devices[info.sourceId];
     let targetDevice = devices[info.targetId];
@@ -197,14 +71,12 @@ jsPlumb.bind("connectionDetached", function(info) {
         }
     }
 });
-
 // listen for the keydown event
 window.addEventListener('keydown', (event) => {
     if (event.key === 'Shift') {
         shiftHeld = true;
     }
 });
-
 // listen for the keyup event
 window.addEventListener('keyup', (event) => {
     if (event.key === 'Shift') {
@@ -212,11 +84,9 @@ window.addEventListener('keyup', (event) => {
         jsPlumb.clearDragSelection();
     }
 });
-
 /* END event handlers */
 
 /* BEGIN functions */
-
 function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
     const micInputOption = document.createElement('option');
     micInputOption.value = "mic";
@@ -241,109 +111,6 @@ async function createMicrophoneDevice() {
         }
     };
     return device;
-}
-
-function addDeviceToWorkspace(device, deviceType) {
-    // get count for this device type and increment it
-    const count = deviceCounts[deviceType] || 0;
-    deviceCounts[deviceType] = count + 1;
-
-    // create a new div for the device
-    const deviceDiv = document.createElement('div');
-    deviceDiv.id = `${deviceType}-${count}`;
-    deviceDiv.className = 'node';
-    deviceDiv.innerText = `${deviceType}`;
-    deviceDiv.style.backgroundColor = 'lightgray';
-
-    // get the current scroll position
-    const [scrollX, scrollY] = document.getScroll();
-
-    // position the deviceDiv based on the scroll position
-    deviceDiv.style.position = 'absolute';
-    deviceDiv.style.left = (scrollX + 100) + 'px'; // 100px to the right of the current scroll position
-    deviceDiv.style.top = (scrollY + 100) + 'px'; // 100px down from the current scroll position
-
-    // store the device and its div
-    devices[deviceDiv.id] = { device, div: deviceDiv };
-
-    // create a container for the input buttons
-    const inputContainer = document.createElement('div');
-    inputContainer.className = 'input-container';
-    deviceDiv.appendChild(inputContainer);
-
-    // create an inport form for the device
-    const inportForm = addInputsForDevice(device);
-
-    inportForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-    });
-
-    deviceDiv.appendChild(inportForm);
-
-    // create a container for the output buttons
-    const outputContainer = document.createElement('div');
-    outputContainer.className = 'output-container';
-    deviceDiv.appendChild(outputContainer);
-
-    // create a delete button for the device
-    const deleteButton = document.createElement('button');
-    deleteButton.innerText = 'x';
-    deleteButton.className = 'delete-button';
-    deleteButton.addEventListener('click', function() {
-    // get all connections where the device is the source
-    let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
-    // get all connections where the device is the target
-    let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
-    // delete each source connection
-    sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-    // delete each target connection
-    targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-    // remove the device div
-    deviceDiv.remove();
-});
-
-    // create an output button for the device
-    device.it.T.outlets.forEach((output, index) => {
-        const outputButton = document.createElement('button');
-        outputButton.innerText = `${output.comment}`;
-        outputButton.onclick = () => startConnection(deviceDiv.id, index);
-        outputContainer.appendChild(outputButton);
-    });
-
-    // initialize totalLength to 0
-    let deviceWidth = 0;
-
-    device.it.T.inlets.forEach((input, index) => {
-        const inputButton = document.createElement('button');
-        inputButton.innerText = `${input.comment}`;
-        inputButton.onclick = () => finishConnection(deviceDiv.id, index);
-        inputContainer.appendChild(inputButton);
-        deviceWidth += input.comment.length;
-    });
-
-    inputContainer.appendChild(deleteButton);
-
-    // set the width of the deviceDiv to be based on the width of the input buttons
-    deviceDiv.style.width = `${(deviceWidth/2)+1.5}em`;
-
-    // if the device has inports, make the deviceDiv wider
-    if (inportForm.elements.length > 0) {
-        deviceDiv.style.minWidth = '10em';
-    }
-
-    // add the div to the workspace
-    workspace.appendChild(deviceDiv);
-
-    jsPlumb.draggable(deviceDiv);
-
-    // select multiple devices when shift is held
-    deviceDiv.addEventListener('mousedown', (event) => {
-        if (shiftHeld) {
-            jsPlumb.addToDragSelection(deviceDiv);
-        }
-    });
-
-    attachOutports(device,deviceDiv);
 }
 
 function attachOutports(device,deviceDiv) {
@@ -520,6 +287,117 @@ document.getScroll = function() {
         sy = r.scrollTop || b.scrollTop || 0;
         return [sx, sy];
     }
+}
+
+function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false) {
+    const count = deviceCounts[deviceType] || 0;
+    deviceCounts[deviceType] = count + 1;
+    const deviceDiv = document.createElement('div');
+    
+    deviceDiv.id = isSpeakerChannelDevice ? `output-node-${Date.now()}` : `${deviceType}-${count}`;
+    deviceDiv.className = 'node';
+    deviceDiv.style.backgroundColor = 'lightgray';
+    deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : `${deviceType}`;
+    
+    const [scrollX, scrollY] = document.getScroll();
+    deviceDiv.style.position = 'absolute';
+    deviceDiv.style.left = (scrollX + 100) + 'px';
+    deviceDiv.style.top = (scrollY + 100) + 'px';
+
+    devices[deviceDiv.id] = { device: isSpeakerChannelDevice ? { node: channelMerger } : device , div: deviceDiv };
+    
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'input-container';
+    deviceDiv.appendChild(inputContainer);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.innerText = 'x';
+    deleteButton.className = 'delete-button';
+    deleteButton.addEventListener('click', function() {
+        let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+        let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
+        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        deviceDiv.remove();
+    });
+
+    if(isSpeakerChannelDevice){
+        const button = document.createElement('button');
+        button.innerText = 'signal in';
+        const numberInput = document.createElement('input');
+        numberInput.type = 'text';
+        numberInput.style.width = '2em';
+        button.onclick = () => finishConnection(deviceDiv.id, Number(numberInput.value)-1);
+        inputContainer.appendChild(button);
+        inputContainer.appendChild(deleteButton);
+        deviceDiv.append(inputContainer);
+        deviceDiv.appendChild(numberInput);
+    } else {
+        const inportForm = addInputsForDevice(device);
+        inportForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+        });
+        deviceDiv.appendChild(inportForm);
+        const outputContainer = document.createElement('div');
+        outputContainer.className = 'output-container';
+        deviceDiv.appendChild(outputContainer);
+        let deviceWidth = 0;
+        device.it.T.outlets.forEach((output, index) => {
+            const outputButton = document.createElement('button');
+            outputButton.innerText = `${output.comment}`;
+            outputButton.onclick = () => startConnection(deviceDiv.id, index);
+            outputContainer.appendChild(outputButton);
+        });
+        device.it.T.inlets.forEach((input, index) => {
+            const inputButton = document.createElement('button');
+            inputButton.innerText = `${input.comment}`;
+            inputButton.onclick = () => finishConnection(deviceDiv.id, index);
+            inputContainer.appendChild(inputButton);
+            deviceWidth += input.comment.length;
+        });
+        inputContainer.appendChild(deleteButton);
+        deviceDiv.style.width = `${(deviceWidth/2)+1.5}em`;
+        if (inportForm.elements.length > 0) {
+            deviceDiv.style.minWidth = '10em';
+        }
+        deviceDiv.addEventListener('mousedown', (event) => {
+            if (shiftHeld) {
+                jsPlumb.addToDragSelection(deviceDiv);
+            }
+        });
+        attachOutports(device,deviceDiv);
+    }
+
+    workspace.appendChild(deviceDiv);
+    jsPlumb.draggable(deviceDiv);
+}
+
+function createDropdownofAllDevices () {
+    const deviceDropdown = document.createElement('select');
+    deviceDropdown.className = 'deviceDropdown';
+
+    // load each WASM device into dropdown
+    wasmDeviceURLs.sort().forEach((url) => {
+        const option = document.createElement('option');
+        option.value = url;
+        let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+        option.innerText = filename;
+        deviceDropdown.appendChild(option);
+    });
+
+    // add dropdown to navBar
+    navBar.appendChild(deviceDropdown);
+    // create microphone input module
+    addMicrophoneInputDeviceToDropdown(deviceDropdown);
+    return deviceDropdown;
+}
+
+function createButtonForNavBar(text, className, clickHandler) {
+    const button = document.createElement('button');
+    button.innerText = text;
+    button.className = className;
+    button.onclick = clickHandler;
+    navBar.appendChild(button);
 }
 
 /* END functions */

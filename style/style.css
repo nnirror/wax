@@ -36,3 +36,18 @@ body {
 .aLabelClass {
     font-size: 0.8em;
 }
+.addSpeakerChannel {
+    position: fixed;
+    top: 10px;
+    z-index: 1000; /* TODO check if this line is necessary */
+}
+.deviceSelectButton {
+    position: fixed;
+    top: 40px;
+    z-index: 1000;
+}
+.deviceDropdown {
+    position: fixed;
+    top: 70px;
+    z-index: 1000;
+}
