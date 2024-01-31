@@ -24,7 +24,7 @@ let deviceDropdown = createDropdownofAllDevices();
 createButtonForNavBar(
     'Add speaker channel',
     'addSpeakerChannel',
-    () => addDeviceToWorkspace(null, 'output-node', true)
+    () => addDeviceToWorkspace(null, 'outputnode', true)
 );
 
 // create a button for adding audio devices to the workspace
@@ -140,8 +140,10 @@ function removeDeviceFromWorkspace(deviceId) {
     // remove the device div from the workspace
     div.parentNode.removeChild(div);
 
-    // disconnect the device from the web audio graph
-    device.node.disconnect();
+    if (!deviceId.startsWith('outputnode')) {
+        // disconnect the device from the web audio graph
+        device.node.disconnect();
+    }
 
     // remove the device from storage
     delete devices[deviceId];
@@ -152,6 +154,7 @@ function addInputsForDevice(device) {
     const inportContainer = document.createElement('div');
     let inportTag = null;
     let inports = [];
+    // TODO get inport labels working again
 
     const messages = device.messages;
     if (typeof messages !== 'undefined') {
@@ -162,7 +165,7 @@ function addInputsForDevice(device) {
         inports.forEach(inport => {
             const inportText = document.createElement('input');
             inportText.type = 'text';
-            inportText.style.width = '8em';
+            inportText.className = 'deviceInport'
             inportText.addEventListener('change', function() {
                 scheduleDeviceEvent(device, inport, this.value);
             });
@@ -235,7 +238,7 @@ function finishConnection(deviceId, inputIndex) {
         devices[sourceDeviceId].splitter = splitter;
 
         let targetDeviceInputName;
-        if (deviceId.startsWith('output-node')) {
+        if (deviceId.startsWith('outputnode')) {
             targetDeviceInputName = `speaker channel`;
         }
         else {
@@ -294,13 +297,11 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     deviceCounts[deviceType] = count + 1;
     const deviceDiv = document.createElement('div');
     
-    deviceDiv.id = isSpeakerChannelDevice ? `output-node-${Date.now()}` : `${deviceType}-${count}`;
+    deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.style.backgroundColor = 'lightgray';
     deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : `${deviceType}`;
     
     const [scrollX, scrollY] = document.getScroll();
-    deviceDiv.style.position = 'absolute';
     deviceDiv.style.left = (scrollX + 100) + 'px';
     deviceDiv.style.top = (scrollY + 100) + 'px';
 
@@ -318,20 +319,21 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
         sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
         targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        removeDeviceFromWorkspace(deviceDiv.id);
         deviceDiv.remove();
     });
 
     if(isSpeakerChannelDevice){
         const button = document.createElement('button');
         button.innerText = 'signal in';
-        const numberInput = document.createElement('input');
-        numberInput.type = 'text';
-        numberInput.style.width = '2em';
-        button.onclick = () => finishConnection(deviceDiv.id, Number(numberInput.value)-1);
+        const speakerChannelSelectorInput = document.createElement('input');
+        speakerChannelSelectorInput.type = 'text';
+        speakerChannelSelectorInput.className = 'speakerChannelSelectorInput';
+        button.onclick = () => finishConnection(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1);
         inputContainer.appendChild(button);
         inputContainer.appendChild(deleteButton);
         deviceDiv.append(inputContainer);
-        deviceDiv.appendChild(numberInput);
+        deviceDiv.appendChild(speakerChannelSelectorInput);
     } else {
         const inportForm = addInputsForDevice(device);
         inportForm.addEventListener('submit', function(event) {
@@ -370,6 +372,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 
     workspace.appendChild(deviceDiv);
     jsPlumb.draggable(deviceDiv);
+    return deviceDiv;
 }
 
 function createDropdownofAllDevices () {
@@ -401,3 +404,74 @@ function createButtonForNavBar(text, className, clickHandler) {
 }
 
 /* END functions */
+
+function saveWorkspaceState() {
+    let workspaceState = [];
+
+    for (let id in devices) {
+        let device = devices[id];
+        let deviceElement = document.getElementById(id); // get the DOM element for the device
+        let deviceState = {
+            id: id,
+            connections: device.connections,
+            device: device.device,
+            splitter: device.splitter,
+            left: deviceElement.style.left, // save the left and top CSS properties
+            top: deviceElement.style.top,
+            inputs: {} // object to save the values of the input elements
+        };
+
+        // save the values of the input elements
+        let inputs = deviceElement.getElementsByTagName('input');
+        for (let input of inputs) {
+            deviceState.inputs[input.name] = input.value;
+        }
+
+        workspaceState.push(deviceState);
+    }
+
+    return workspaceState;
+}
+
+function reconstructWorkspaceState(workspaceState) {
+    if (!Array.isArray(workspaceState)) {
+        console.error('Invalid argument: workspaceState must be an array');
+        return;
+    }
+
+    let newIds = {}; // object to keep track of the new IDs
+
+    // add all devices to the workspace
+    for (let deviceState of workspaceState) {
+        let deviceType = deviceState.id.split('-')[0];
+        let isSpeakerChannelDevice = deviceState.device.node instanceof ChannelMergerNode;
+        let deviceDiv = addDeviceToWorkspace(deviceState.device, deviceType, isSpeakerChannelDevice);
+        deviceDiv.style.left = deviceState.left;
+        deviceDiv.style.top = deviceState.top;
+
+        newIds[deviceState.id] = deviceDiv.id; // save the new ID
+
+        // restore the values of the input elements
+        let inputs = deviceDiv.getElementsByTagName('input');
+        for (let input of inputs) {
+            if (deviceState.inputs[input.name]) {
+                input.value = deviceState.inputs[input.name];
+            }
+        }
+    }
+
+    // make all connections using the new IDs
+    for (let deviceState of workspaceState) {
+        if (!Array.isArray(deviceState.connections)) {
+            continue;
+        }
+        for (let connection of deviceState.connections) {
+            let newSourceId = newIds[deviceState.id]; // get the new source ID
+            let newTargetId = newIds[connection.target]; // get the new target ID
+            startConnection(newSourceId, connection.output);
+            finishConnection(newTargetId, connection.input);
+        }
+    }
+    
+    jsPlumb.repaintEverything();
+}

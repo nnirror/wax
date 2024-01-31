@@ -51,3 +51,9 @@ body {
     top: 70px;
     z-index: 1000;
 }
+.deviceInport {
+    width: 8em;
+}
+.speakerChannelSelectorInput {
+    width: 2em;
+}
