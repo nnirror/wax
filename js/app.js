@@ -63,7 +63,7 @@ createButtonForNavBar(
 );
 
 // create a button for saving workspace state
-createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{saveWorkspaceState});
+createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{saveWorkspaceState()});
 
 // create a button for reloading workspace state
 createButtonForNavBar('Reload State', 'reloadStateButton navbarButton', async () => {
