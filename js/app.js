@@ -13,6 +13,21 @@ const channelMerger = context.createChannelMerger(context.destination.channelCou
 channelMerger.connect(context.destination);
 /* END audio context initialization */
 
+/* BEGIN IndexedDB */
+let db;
+let request = indexedDB.open('myDatabase', 1);
+request.onupgradeneeded = function(e) {
+    db = e.target.result;
+    db.createObjectStore('workspaceState', { autoIncrement: true });
+};
+request.onsuccess = function(e) {
+    db = e.target.result;
+};
+request.onerror = function(e) {
+    console.error('Unable to open database.', e);
+};
+/* END IndexedDB */
+
 /* BEGIN UI initialization */
 // create workspace DOM elements
 const workspace = document.getElementById('workspace');
@@ -23,14 +38,14 @@ let deviceDropdown = createDropdownofAllDevices();
 // create a button for adding speaker channel devices to the workspace
 createButtonForNavBar(
     'Add speaker channel',
-    'addSpeakerChannel',
+    'addSpeakerChannel navbarButton',
     () => addDeviceToWorkspace(null, 'outputnode', true)
 );
 
 // create a button for adding audio devices to the workspace
 createButtonForNavBar(
     'Add device',
-    'deviceSelectButton',
+    'deviceSelectButton navbarButton',
     async () => {
         await context.resume();
         const url = deviceDropdown.value;
@@ -46,6 +61,14 @@ createButtonForNavBar(
         }
     }
 );
+
+// create a button for saving workspace state
+createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{saveWorkspaceState});
+
+// create a button for reloading workspace state
+createButtonForNavBar('Reload State', 'reloadStateButton navbarButton', async () => {
+    await reconstructWorkspaceState();
+});
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -377,7 +400,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 
 function createDropdownofAllDevices () {
     const deviceDropdown = document.createElement('select');
-    deviceDropdown.className = 'deviceDropdown';
+    deviceDropdown.className = 'deviceDropdown navbarButton';
 
     // load each WASM device into dropdown
     wasmDeviceURLs.sort().forEach((url) => {
@@ -410,15 +433,23 @@ function saveWorkspaceState() {
 
     for (let id in devices) {
         let device = devices[id];
-        let deviceElement = document.getElementById(id); // get the DOM element for the device
+        let deviceElement = document.getElementById(id);
+
+        let connections = [];
+        if (Array.isArray(device.connections)) {
+            // create a new array of connections without the splitter property which cannot be serialized
+            connections = device.connections.map(connection => {
+                let { splitter, ...connectionWithoutSplitter } = connection;
+                return connectionWithoutSplitter;
+            });
+        }
+
         let deviceState = {
             id: id,
-            connections: device.connections,
-            device: device.device,
-            splitter: device.splitter,
-            left: deviceElement.style.left, // save the left and top CSS properties
+            connections: connections,
+            left: deviceElement.style.left,
             top: deviceElement.style.top,
-            inputs: {} // object to save the values of the input elements
+            inputs: {}
         };
 
         // save the values of the input elements
@@ -430,48 +461,80 @@ function saveWorkspaceState() {
         workspaceState.push(deviceState);
     }
 
-    return workspaceState;
+    let transaction = db.transaction(['workspaceState'], 'readwrite');
+    let store = transaction.objectStore('workspaceState');
+    store.clear().onsuccess = function() {
+        store.add(workspaceState);
+    };
 }
 
-function reconstructWorkspaceState(workspaceState) {
-    if (!Array.isArray(workspaceState)) {
-        console.error('Invalid argument: workspaceState must be an array');
-        return;
-    }
+async function reconstructWorkspaceState() {
+    let transaction = db.transaction(['workspaceState'], 'readonly');
+    let store = transaction.objectStore('workspaceState');
+    store.openCursor().onsuccess = async function(e) {
+        let cursor = e.target.result;
+        if (cursor) {
+            let deviceStates = cursor.value;
+            let connectionsToMake = [];
+            let idMap = {};
 
-    let newIds = {}; // object to keep track of the new IDs
+            for (let deviceState of deviceStates) {
+                let deviceName = deviceState.id.split('-')[0];
+                let device;                
+                let deviceElement;
+                // TODO this and up above where devies are created should be abstracted into a function
+                if (deviceName.startsWith('outputnode')) {
+                    deviceElement = addDeviceToWorkspace(null, 'outputnode', true);
+                } else if (deviceName.startsWith('microphone')) {
+                    device = await createMicrophoneDevice();
+                    deviceElement = addDeviceToWorkspace(device, "microphone input");
+                } else {
+                    const url = `wasm/${deviceName}.json`;
+                    const response = await fetch(url);
+                    const patcher = await response.json();
+                    device = await RNBO.createDevice({ context, patcher });
+                    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+                    deviceElement = addDeviceToWorkspace(device, filename);
+                }
 
-    // add all devices to the workspace
-    for (let deviceState of workspaceState) {
-        let deviceType = deviceState.id.split('-')[0];
-        let isSpeakerChannelDevice = deviceState.device.node instanceof ChannelMergerNode;
-        let deviceDiv = addDeviceToWorkspace(deviceState.device, deviceType, isSpeakerChannelDevice);
-        deviceDiv.style.left = deviceState.left;
-        deviceDiv.style.top = deviceState.top;
+                // move the device to its previous position
+                deviceElement.style.left = deviceState.left;
+                deviceElement.style.top = deviceState.top;
 
-        newIds[deviceState.id] = deviceDiv.id; // save the new ID
+                // set the values of its input elements
+                let inputs = deviceElement.getElementsByTagName('input');
+                for (let input of inputs) {
+                    if (deviceState.inputs[input.name]) {
+                        input.value = deviceState.inputs[input.name];
+                        input.dispatchEvent(new Event('change'));
+                    }
+                }
 
-        // restore the values of the input elements
-        let inputs = deviceDiv.getElementsByTagName('input');
-        for (let input of inputs) {
-            if (deviceState.inputs[input.name]) {
-                input.value = deviceState.inputs[input.name];
+                  // store the new ID in the idMap
+                  idMap[deviceState.id] = deviceElement.id;
+
+                  // if deviceState has connection data, store it for later
+                  if (deviceState.connections) {
+                      for (let connection of deviceState.connections) {
+                          connectionsToMake.push({
+                              source: deviceState.id,
+                              target: connection.target,
+                              output: connection.output,
+                              input: connection.input
+                          });
+                      }
+                  }
             }
-        }
-    }
 
-    // make all connections using the new IDs
-    for (let deviceState of workspaceState) {
-        if (!Array.isArray(deviceState.connections)) {
-            continue;
+            // now make the connections
+            for (let connection of connectionsToMake) {
+                startConnection(idMap[connection.source], connection.output);
+                finishConnection(idMap[connection.target], connection.input);
+                // Pass any other necessary data
+            }
+
+            // repaint everything after all devices have been added
+            jsPlumb.repaintEverything();
         }
-        for (let connection of deviceState.connections) {
-            let newSourceId = newIds[deviceState.id]; // get the new source ID
-            let newTargetId = newIds[connection.target]; // get the new target ID
-            startConnection(newSourceId, connection.output);
-            finishConnection(newTargetId, connection.input);
-        }
-    }
-    
-    jsPlumb.repaintEverything();
+    };
 }
