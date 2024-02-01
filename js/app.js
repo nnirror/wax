@@ -606,6 +606,7 @@ function checkForQueryStringParams() {
 
         // load the workspace state
         reconstructWorkspaceState(workspaceState);
+        context.resume();
     }
 }
 
