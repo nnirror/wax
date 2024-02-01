@@ -432,7 +432,18 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         device.it.T.inlets.forEach((input, index) => {
             const inputButton = document.createElement('button');
             inputButton.innerText = `${input.comment}`;
-            inputButton.onclick = () => finishConnection(deviceDiv.id, index);
+            inputButton.onclick = () => {
+                if (input.comment == 'regen') {
+                    // clicking a 'regen' button triggers a change event in all of the device's inputs
+                    const inputElements = deviceDiv.querySelectorAll('input');
+                    inputElements.forEach((inputElement) => {
+                        // create/trigger a change event
+                        const event = new Event('change');
+                        inputElement.dispatchEvent(event);
+                    });
+                }
+                finishConnection(deviceDiv.id, index);
+            };
             inputContainer.appendChild(inputButton);
             deviceWidth += input.comment.length;
         });
