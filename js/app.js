@@ -35,6 +35,13 @@ const navBar = document.getElementById('ui-container');
 // create dropdown of all audio devices
 let deviceDropdown = createDropdownofAllDevices();
 
+// create a button for starting audio
+createButtonForNavBar(
+    'Start Audio',
+    'startAudioButton navbarButton',
+    () => context.resume()
+);
+
 // create a button for adding speaker channel devices to the workspace
 createButtonForNavBar(
     'Add speaker channel',
@@ -606,7 +613,6 @@ function checkForQueryStringParams() {
 
         // load the workspace state
         reconstructWorkspaceState(workspaceState);
-        context.resume();
     }
 }
 

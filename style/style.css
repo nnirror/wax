@@ -52,6 +52,10 @@ body {
     top: 40px;
     right: 10px;
 }
+.startAudioButton {
+    top: 100px;
+    left: 10px;
+}
 .navbarButton {
     position: fixed;
     z-index: 1000;
