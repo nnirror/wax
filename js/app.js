@@ -46,7 +46,7 @@ createButtonForNavBar(
 createButtonForNavBar(
     'Add speaker channel',
     'addSpeakerChannel navbarButton',
-    () => addDeviceToWorkspace(null, 'outputnode', true)
+    () => createDeviceByName('outputnode')
 );
 
 // create a button for adding audio devices to the workspace
@@ -55,17 +55,8 @@ createButtonForNavBar(
     'deviceSelectButton navbarButton',
     async () => {
         await context.resume();
-        const url = deviceDropdown.value;
-        if (url === "mic") {
-            const device = await createMicrophoneDevice();
-            addDeviceToWorkspace(device, "microphone input");
-        } else {
-            const response = await fetch(url);
-            const patcher = await response.json();
-            const device = await RNBO.createDevice({ context, patcher });
-            let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-            addDeviceToWorkspace(device, filename);
-        }
+        const filename = deviceDropdown.value;
+        createDeviceByName(filename);
     }
 );
 
@@ -361,6 +352,25 @@ document.getScroll = function() {
     }
 }
 
+async function createDeviceByName(filename) {
+    let deviceDiv;
+    if (filename === "mic") {
+        const device = await createMicrophoneDevice();
+        deviceDiv = addDeviceToWorkspace(device, "microphone input");
+    }
+    else if ( filename.startsWith('outputnode') ) {
+        deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);   
+    }
+    else {
+        const response = await fetch(`wasm/${filename}.json`);
+        const patcher = await response.json();
+        const device = await RNBO.createDevice({ context, patcher });
+        deviceDiv = addDeviceToWorkspace(device, filename);
+    }
+    return deviceDiv;
+}
+
+
 function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false) {
     const count = deviceCounts[deviceType] || 0;
     deviceCounts[deviceType] = count + 1;
@@ -449,10 +459,9 @@ function createDropdownofAllDevices () {
     deviceDropdown.className = 'deviceDropdown navbarButton';
 
     // load each WASM device into dropdown
-    wasmDeviceURLs.sort().forEach((url) => {
+    wasmDeviceURLs.sort().forEach((filename) => {
         const option = document.createElement('option');
-        option.value = url;
-        let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+        option.value = filename;
         option.innerText = filename;
         deviceDropdown.appendChild(option);
     });
@@ -540,23 +549,9 @@ async function reconstructWorkspaceState(workspaceState = null) {
     }
 
     for (let deviceState of deviceStates) {
-        let deviceName = deviceState.id.split('-')[0];
-        let device;                
+        let deviceName = deviceState.id.split('-')[0];            
         let deviceElement;
-        // TODO: this is duplicate code from above where devices are created and should be abstracted into a function.. although the else statement is a bit different
-        if (deviceName.startsWith('outputnode')) {
-            deviceElement = addDeviceToWorkspace(null, 'outputnode', true);
-        } else if (deviceName.startsWith('microphone')) {
-            device = await createMicrophoneDevice();
-            deviceElement = addDeviceToWorkspace(device, "microphone input");
-        } else {
-            const url = `wasm/${deviceName}.json`;
-            const response = await fetch(url);
-            const patcher = await response.json();
-            device = await RNBO.createDevice({ context, patcher });
-            let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-            deviceElement = addDeviceToWorkspace(device, filename);
-        }
+        deviceElement = await createDeviceByName(deviceName);
 
         // move the device to its previous position
         deviceElement.style.left = deviceState.left;
