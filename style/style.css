@@ -10,7 +10,7 @@
     width: auto;
 }
 .node input {
-    float: left;
+    display: block;
 }
 .input-container {
     position: absolute;
@@ -44,6 +44,10 @@ body {
     top: 10px;
     right: 10px;
 }
+.copyStateButton {
+    top: 70px;
+    right: 10px;
+}
 .reloadStateButton {
     top: 40px;
     right: 10px;
@@ -60,9 +64,9 @@ body {
     left: 10px;
     top: 70px;
 }
-.deviceInport {
-    width: 8em;
-}
 .speakerChannelSelectorInput {
     width: 2em;
+}
+.deviceInportLabel {
+    display: block;
 }

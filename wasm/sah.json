@@ -38,7 +38,8 @@
         "type": "signal",
         "index": 1,
         "tag": "out1",
-        "meta": ""
+        "meta": "",
+        "comment": "signal out"
       }
     ],
     "paramConversion": {
@@ -53,7 +54,7 @@
     "presetid": "rnbo",
     "meta": {
       "architecture": "x64",
-      "filename": "sah~.maxpat",
+      "filename": "sah.maxpat",
       "rnboobjname": "rnbomatic",
       "maxversion": "8.5.7",
       "rnboversion": "1.2.3",

@@ -63,12 +63,41 @@ createButtonForNavBar(
 );
 
 // create a button for saving workspace state
-createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{saveWorkspaceState()});
+createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
 
 // create a button for reloading workspace state
-createButtonForNavBar('Reload State', 'reloadStateButton navbarButton', async () => {
+createButtonForNavBar('Retrieve State', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
 });
+
+createButtonForNavBar('Copy State', 'copyStateButton navbarButton', async () => {
+    // get the workspace state
+    let workspaceState = getWorkspaceState();
+    
+    // serialize the workspace state
+    let serializedState = JSON.stringify(workspaceState);
+    
+    // encode the serialized state as a URI component
+    let encodedState = encodeURIComponent(serializedState);
+    
+    // format as a query string
+    let queryString = `state=${encodedState}`;
+    
+    // get the current URL without query parameters
+    let currentUrl = window.location.origin + window.location.pathname;
+    
+    // combine the current URL with the query string
+    let fullUrl = `${currentUrl}?${queryString}`;
+    
+    // copy to clipboard
+    navigator.clipboard.writeText(fullUrl).then(function() {
+        alert('successfully copied to clipboard!');
+    }, function(err) {
+        // TODO: error handling
+    });
+});
+
+checkForQueryStringParams();
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -138,7 +167,7 @@ async function createMicrophoneDevice() {
 
 function attachOutports(device,deviceDiv) {
     const outports = device.outports;
-    if (outports.length < 1) {
+    if (typeof outports =='undefined' || outports.length < 1) {
         return;
     }
     // listen on outports for any "regen" events to regenerate its parameters
@@ -177,7 +206,6 @@ function addInputsForDevice(device) {
     const inportContainer = document.createElement('div');
     let inportTag = null;
     let inports = [];
-    // TODO get inport labels working again
 
     const messages = device.messages;
     if (typeof messages !== 'undefined') {
@@ -188,19 +216,29 @@ function addInputsForDevice(device) {
         inports.forEach(inport => {
             const inportText = document.createElement('input');
             inportText.type = 'text';
+            inportText.id = inport.tag;
             inportText.className = 'deviceInport'
             inportText.addEventListener('change', function() {
                 scheduleDeviceEvent(device, inport, this.value);
             });
-
+    
             inportText.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     scheduleDeviceEvent(device, inport, this.value);
                 }
             });
+    
+            // create a label for the input
+            const inportLabel = document.createElement('label');
+            inportLabel.htmlFor = inportText.id;
+            inportLabel.textContent = inport.tag;
+            inportLabel.className = 'deviceInportLabel';
+    
+            // append the label and input to the inportContainer
+            inportContainer.appendChild(inportLabel);
             inportContainer.appendChild(inportText);
         });
-
+    
         inportForm.appendChild(inportContainer);
     }
     return inportForm;
@@ -426,9 +464,7 @@ function createButtonForNavBar(text, className, clickHandler) {
     navBar.appendChild(button);
 }
 
-/* END functions */
-
-function saveWorkspaceState() {
+function getWorkspaceState(saveToDB = false) {
     let workspaceState = [];
 
     for (let id in devices) {
@@ -461,80 +497,117 @@ function saveWorkspaceState() {
         workspaceState.push(deviceState);
     }
 
-    let transaction = db.transaction(['workspaceState'], 'readwrite');
-    let store = transaction.objectStore('workspaceState');
-    store.clear().onsuccess = function() {
-        store.add(workspaceState);
-    };
+    if (saveToDB) {
+        let transaction = db.transaction(['workspaceState'], 'readwrite');
+        let store = transaction.objectStore('workspaceState');
+        store.clear().onsuccess = function() {
+            store.add(workspaceState);
+        };
+    }
+    return workspaceState;
 }
 
-async function reconstructWorkspaceState() {
-    let transaction = db.transaction(['workspaceState'], 'readonly');
-    let store = transaction.objectStore('workspaceState');
-    store.openCursor().onsuccess = async function(e) {
-        let cursor = e.target.result;
-        if (cursor) {
-            let deviceStates = cursor.value;
-            let connectionsToMake = [];
-            let idMap = {};
+async function reconstructWorkspaceState(workspaceState = null) {
+    let deviceStates;
+    let connectionsToMake = [];
+    let idMap = {};
 
-            for (let deviceState of deviceStates) {
-                let deviceName = deviceState.id.split('-')[0];
-                let device;                
-                let deviceElement;
-                // TODO this and up above where devies are created should be abstracted into a function
-                if (deviceName.startsWith('outputnode')) {
-                    deviceElement = addDeviceToWorkspace(null, 'outputnode', true);
-                } else if (deviceName.startsWith('microphone')) {
-                    device = await createMicrophoneDevice();
-                    deviceElement = addDeviceToWorkspace(device, "microphone input");
-                } else {
-                    const url = `wasm/${deviceName}.json`;
-                    const response = await fetch(url);
-                    const patcher = await response.json();
-                    device = await RNBO.createDevice({ context, patcher });
-                    let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
-                    deviceElement = addDeviceToWorkspace(device, filename);
-                }
+    if (workspaceState) {
+        // if a workspaceState object was provided, use it
+        deviceStates = workspaceState;
+    } else {
+        // otherwise, load the state from IndexedDB
+        let transaction = db.transaction(['workspaceState'], 'readonly');
+        let store = transaction.objectStore('workspaceState');
 
-                // move the device to its previous position
-                deviceElement.style.left = deviceState.left;
-                deviceElement.style.top = deviceState.top;
-
-                // set the values of its input elements
-                let inputs = deviceElement.getElementsByTagName('input');
-                for (let input of inputs) {
-                    if (deviceState.inputs[input.name]) {
-                        input.value = deviceState.inputs[input.name];
-                        input.dispatchEvent(new Event('change'));
-                    }
-                }
-
-                  // store the new ID in the idMap
-                  idMap[deviceState.id] = deviceElement.id;
-
-                  // if deviceState has connection data, store it for later
-                  if (deviceState.connections) {
-                      for (let connection of deviceState.connections) {
-                          connectionsToMake.push({
-                              source: deviceState.id,
-                              target: connection.target,
-                              output: connection.output,
-                              input: connection.input
-                          });
-                      }
-                  }
+        deviceStates = await new Promise((resolve, reject) => {
+            let request = store.openCursor();
+            request.onsuccess = function(e) {
+                resolve(e.target.result.value);
             }
-
-            // now make the connections
-            for (let connection of connectionsToMake) {
-                startConnection(idMap[connection.source], connection.output);
-                finishConnection(idMap[connection.target], connection.input);
-                // Pass any other necessary data
+            request.onerror = function(e) {
+                reject(e.target.error);
             }
+        });
+    }
 
-            // repaint everything after all devices have been added
-            jsPlumb.repaintEverything();
+    for (let deviceState of deviceStates) {
+        let deviceName = deviceState.id.split('-')[0];
+        let device;                
+        let deviceElement;
+        // TODO: this is duplicate code from above where devices are created and should be abstracted into a function.. although the else statement is a bit different
+        if (deviceName.startsWith('outputnode')) {
+            deviceElement = addDeviceToWorkspace(null, 'outputnode', true);
+        } else if (deviceName.startsWith('microphone')) {
+            device = await createMicrophoneDevice();
+            deviceElement = addDeviceToWorkspace(device, "microphone input");
+        } else {
+            const url = `wasm/${deviceName}.json`;
+            const response = await fetch(url);
+            const patcher = await response.json();
+            device = await RNBO.createDevice({ context, patcher });
+            let filename = url.replace(/wasm\//, '').replace(/\.json$/, '');
+            deviceElement = addDeviceToWorkspace(device, filename);
         }
-    };
+
+        // move the device to its previous position
+        deviceElement.style.left = deviceState.left;
+        deviceElement.style.top = deviceState.top;
+
+        // set the values of its input elements
+        let inputs = deviceElement.getElementsByTagName('input');
+        for (let input of inputs) {
+            if (deviceState.inputs[input.name]) {
+                input.value = deviceState.inputs[input.name];
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // map the old id to the new id
+        idMap[deviceState.id] = deviceElement.id;
+
+        // if deviceState has connection data, store it for later
+        if (deviceState.connections) {
+            for (let connection of deviceState.connections) {
+                connectionsToMake.push({
+                    source: deviceState.id,
+                    target: connection.target,
+                    output: connection.output,
+                    input: connection.input
+                });
+            }
+        }
+    }
+    // make the connections
+    for (let connection of connectionsToMake) {
+        console.log(idMap[connection.source], connection.output);
+        console.log(idMap[connection.target], connection.input);
+        startConnection(idMap[connection.source], connection.output);
+        finishConnection(idMap[connection.target], connection.input);
+    }
+
+    // repaint everything after all devices have been added
+    jsPlumb.repaintEverything();
 }
+
+function checkForQueryStringParams() {
+    // get the query string from the current URL
+    let params = new URLSearchParams(window.location.search);
+
+    // check if the 'state' parameter is present
+    if (params.has('state')) {
+        // get the 'state' parameter
+        let encodedState = params.get('state');
+
+        // decode the state
+        let serializedState = decodeURIComponent(encodedState);
+
+        // parse the state
+        let workspaceState = JSON.parse(serializedState);
+
+        // load the workspace state
+        reconstructWorkspaceState(workspaceState);
+    }
+}
+
+/* END functions */

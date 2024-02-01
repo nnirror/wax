@@ -66,7 +66,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : ""
+								"comment" : "signal out"
 							}
  ]
 					}
@@ -234,14 +234,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 311.0, 295.0, 43.0, 23.0 ],
+									"patching_rect" : [ 311.0, 295.0, 160.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
-										"meta" : "",
-										"comment" : ""
+										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-3",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -306,7 +305,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "",
+												"displayName" : "signal out",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -320,7 +319,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1"
+									"text" : "out~ 1 @comment signal out"
 								}
 
 							}
@@ -670,7 +669,7 @@
 		"dependency_cache" : [ 			{
 				"name" : "untitled_20240118_3.maxsnap",
 				"bootpath" : "~/Documents/Max 8/Snapshots",
-				"patcherrelativepath" : "../../../../../../Users/cella/Documents/Max 8/Snapshots",
+				"patcherrelativepath" : "../../../../../Users/cella/Documents/Max 8/Snapshots",
 				"type" : "mx@s",
 				"implicit" : 1
 			}
