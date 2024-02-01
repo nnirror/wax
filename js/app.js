@@ -68,6 +68,7 @@ createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWork
 // create a button for reloading workspace state
 createButtonForNavBar('Retrieve State', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
+    context.resume();
 });
 
 createButtonForNavBar('Copy State', 'copyStateButton navbarButton', async () => {
@@ -580,8 +581,6 @@ async function reconstructWorkspaceState(workspaceState = null) {
     }
     // make the connections
     for (let connection of connectionsToMake) {
-        console.log(idMap[connection.source], connection.output);
-        console.log(idMap[connection.target], connection.input);
         startConnection(idMap[connection.source], connection.output);
         finishConnection(idMap[connection.target], connection.input);
     }
