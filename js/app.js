@@ -410,6 +410,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         const speakerChannelSelectorInput = document.createElement('input');
         speakerChannelSelectorInput.type = 'text';
         speakerChannelSelectorInput.className = 'speakerChannelSelectorInput';
+        speakerChannelSelectorInput.id = 'output_channel';
         button.onclick = () => finishConnection(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1);
         inputContainer.appendChild(button);
         inputContainer.appendChild(deleteButton);
