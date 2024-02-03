@@ -11,6 +11,7 @@
 }
 .node input {
     display: block;
+    width: 100%
 }
 .input-container {
     position: absolute;

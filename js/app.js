@@ -232,10 +232,12 @@ function addInputsForDevice(device) {
             inportText.type = 'text';
             inportText.id = inport.tag;
             inportText.className = 'deviceInport'
-            inportText.addEventListener('change', function() {
-                scheduleDeviceEvent(device, inport, this.value);
+            inportText.addEventListener('change', function(event) {
+                if (document.activeElement !== event.target) {
+                    scheduleDeviceEvent(device, inport, this.value);
+                }
             });
-    
+            
             inportText.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     scheduleDeviceEvent(device, inport, this.value);

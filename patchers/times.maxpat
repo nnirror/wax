@@ -450,7 +450,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "*~.json"
+									"file_name" : "times.json"
 								}
 
 							}
@@ -547,7 +547,7 @@
 		"dependency_cache" : [ 			{
 				"name" : "untitled_20240118_4.maxsnap",
 				"bootpath" : "~/Documents/Max 8/Snapshots",
-				"patcherrelativepath" : "../../../../../../Users/cella/Documents/Max 8/Snapshots",
+				"patcherrelativepath" : "../../../../../Users/cella/Documents/Max 8/Snapshots",
 				"type" : "mx@s",
 				"implicit" : 1
 			}
