@@ -54,9 +54,9 @@ createButtonForNavBar(
     'Add device',
     'deviceSelectButton navbarButton',
     async () => {
-        await context.resume();
         const filename = deviceDropdown.value;
-        createDeviceByName(filename);
+        await createDeviceByName(filename);
+        await context.resume();
     }
 );
 
@@ -96,7 +96,20 @@ createButtonForNavBar('Copy State', 'copyStateButton navbarButton', async () => 
     });
 });
 
-checkForQueryStringParams();
+document.getScroll = function() {
+    // forked from: https://stackoverflow.com/a/2481776
+    if (window.pageYOffset != undefined) {
+        return [pageXOffset, pageYOffset];
+    } else {
+        var sx, sy, d = document,
+            r = d.documentElement,
+            b = d.body;
+        sx = r.scrollLeft || b.scrollLeft || 0;
+        sy = r.scrollTop || b.scrollTop || 0;
+        return [sx, sy];
+    }
+}
+
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -107,6 +120,8 @@ let sourceOutputIndex = null;
 let selectedDevice = null;
 let shiftHeld = false;
 /* END globally acessible objects */
+
+checkForQueryStringParams();
 
 /* BEGIN event handlers */
 jsPlumb.bind("connectionDetached", function(info) {
@@ -336,20 +351,7 @@ function finishConnection(deviceId, inputIndex) {
         sourceDeviceId = null;
         sourceOutputIndex = null;
     }
-}
-
-document.getScroll = function() {
-    // forked from: https://stackoverflow.com/a/2481776
-    if (window.pageYOffset != undefined) {
-        return [pageXOffset, pageYOffset];
-    } else {
-        var sx, sy, d = document,
-            r = d.documentElement,
-            b = d.body;
-        sx = r.scrollLeft || b.scrollLeft || 0;
-        sy = r.scrollTop || b.scrollTop || 0;
-        return [sx, sy];
-    }
+    jsPlumb.repaintEverything();
 }
 
 async function createDeviceByName(filename) {
@@ -519,12 +521,11 @@ function getWorkspaceState(saveToDB = false) {
         // save the values of the input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
-            deviceState.inputs[input.name] = input.value;
+            deviceState.inputs[input.id] = input.value;
         }
 
         workspaceState.push(deviceState);
     }
-
     if (saveToDB) {
         let transaction = db.transaction(['workspaceState'], 'readwrite');
         let store = transaction.objectStore('workspaceState');
@@ -571,8 +572,8 @@ async function reconstructWorkspaceState(workspaceState = null) {
         // set the values of its input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
-            if (deviceState.inputs[input.name]) {
-                input.value = deviceState.inputs[input.name];
+            if (deviceState.inputs[input.id]) {
+                input.value = deviceState.inputs[input.id];
                 input.dispatchEvent(new Event('change'));
             }
         }

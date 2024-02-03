@@ -49,7 +49,7 @@
     "presetid": "rnbo",
     "meta": {
       "architecture": "x64",
-      "filename": "*~.maxpat",
+      "filename": "*.maxpat",
       "rnboobjname": "rnbomatic",
       "maxversion": "8.5.7",
       "rnboversion": "1.2.3",

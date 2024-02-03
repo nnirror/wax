@@ -230,11 +230,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 507.0, 449.0, 134.0, 23.0 ],
+									"patching_rect" : [ 507.0, 449.0, 133.0, 23.0 ],
 									"rnbo_classname" : "swanramp~",
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "swanramp~_obj-8",
-									"text" : "swanramp~ @ramp 500"
+									"text" : "swanramp~ @ramp 128"
 								}
 
 							}
