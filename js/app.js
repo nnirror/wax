@@ -77,7 +77,7 @@ createButtonForNavBar('Copy State', 'copyStateButton navbarButton', async () => 
     let serializedState = JSON.stringify(workspaceState);
     
     // encode the serialized state as a URI component
-    let encodedState = encodeURIComponent(serializedState);
+    let encodedState = LZString.compressToEncodedURIComponent(serializedState);
     
     // format as a query string
     let queryString = `state=${encodedState}`;
@@ -616,7 +616,7 @@ function checkForQueryStringParams() {
         let encodedState = params.get('state');
 
         // decode the state
-        let serializedState = decodeURIComponent(encodedState);
+        let serializedState = LZString.decompressFromEncodedURIComponent(encodedState);
 
         // parse the state
         let workspaceState = JSON.parse(serializedState);
