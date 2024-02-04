@@ -9,10 +9,6 @@
     user-select: none;
     width: auto;
 }
-.node input {
-    display: block;
-    width: 100%
-}
 .input-container {
     position: absolute;
     top: 4px;
@@ -20,6 +16,9 @@
     width: 100%;
     white-space: nowrap;
     overflow-x: auto;
+}
+.output-container {
+    margin-top: 8px;
 }
 body {
     font-family: 'Monaco', monospace;
@@ -73,5 +72,11 @@ body {
     width: 2em;
 }
 .deviceInportLabel {
-    display: block;
+    display: inline-block;
+    width: 45%;
+    font-size: 0.75em;
+}
+.deviceInport {
+    width: 50%;
+    display: inline-block;
 }

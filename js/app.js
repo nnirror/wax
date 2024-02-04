@@ -269,9 +269,9 @@ function scheduleDeviceEvent(device, inport, value) {
         // TODO: pretty hacky but functioning - evaluation of the inport of a pattern~ device should 
         // produces an array of data for a wavetable. the array going into the inport needs to be 
         // prepended with the length of the array so the buffer can be reallocated in RNBO
+        value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
             // anonymous facet pattern replacement
-            value = value.replace(/_\./g, '$().');
             values = eval(value).data;
             values.unshift(values.length);
         }
