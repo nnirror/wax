@@ -80,3 +80,23 @@ body {
     width: 50%;
     display: inline-block;
 }
+#bpm {
+    position: fixed;
+    top: 130px;
+    left: 10px;
+    z-index: 1;
+}
+#bpm input {
+    z-index: 1;
+    margin-right: 1em;
+    width: 5em;
+}
+.awesomplete {
+    position: fixed;
+    top: 170px;
+    left: 10px;
+    z-index: 1;
+}
+.awesomplete span {
+    display: none !important;
+}

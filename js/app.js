@@ -96,25 +96,40 @@ createButtonForNavBar('Copy State', 'copyStateButton navbarButton', async () => 
     });
 });
 
-document.getScroll = function() {
-    // forked from: https://stackoverflow.com/a/2481776
-    if (window.pageYOffset != undefined) {
-        return [pageXOffset, pageYOffset];
-    } else {
-        var sx, sy, d = document,
-            r = d.documentElement,
-            b = d.body;
-        sx = r.scrollLeft || b.scrollLeft || 0;
-        sy = r.scrollTop || b.scrollTop || 0;
-        return [sx, sy];
-    }
-}
+let container = document.createElement("div");
+let label = document.createElement("span");
+label.textContent = "bpm";
+
+let numberInput = document.createElement("input");
+numberInput.type = "number";
+numberInput.min = "1";
+numberInput.max = "1000";
+numberInput.value = "120";
+numberInput.id = "bpm-input";
+numberInput;
+let debounceTimer;
+numberInput.onchange = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        const inputElements = workspace.querySelectorAll('input');
+        inputElements.forEach((inputElement) => {
+            // create/trigger a change event
+            const event = new Event('change');
+            inputElement.dispatchEvent(event);
+        });
+    }, 250); // 250ms delay
+};
+container.id = "bpm";
+container.append(numberInput);
+container.append(label);
+navBar.append(container);
 
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
 let deviceCounts = {};
 let devices = {};
+let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
@@ -150,6 +165,13 @@ window.addEventListener('keyup', (event) => {
         jsPlumb.clearDragSelection();
     }
 });
+
+document.addEventListener('mousemove', function(event) {
+    mousePosition.x = event.clientX;
+    mousePosition.y = event.clientY;
+});
+
+initializeAwesomplete();
 /* END event handlers */
 
 /* BEGIN functions */
@@ -158,6 +180,84 @@ function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
     micInputOption.value = "mic";
     micInputOption.innerText = "Microphone Input";
     deviceDropdown.appendChild(micInputOption);
+}
+
+function initializeAwesomplete () {
+    document.addEventListener('keydown', function(event) {
+        // check if 'n' key is pressed and no input is focused
+        if (event.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input') {
+            event.preventDefault();
+    
+            // get the dropdown element
+            var dropdown = document.querySelector('.deviceDropdown');
+            
+            // get the options from the dropdown
+            var list = Array.from(dropdown.options).map(function(option) {
+                return option.text;
+            });
+    
+            // create a new div element for autocomplete
+            var div = document.createElement('div');
+            div.className = 'awesomplete';
+    
+            // create a new input element for autocomplete
+            var input = document.createElement('input');
+            div.appendChild(input);
+            document.body.appendChild(div);
+    
+            // initialize autocomplete with the input and list
+            var awesomplete = new Awesomplete(input, {
+                list: list,
+                minChars: 1
+            });
+    
+            // focus the input
+            input.focus();
+    
+            // function for hiding the Awesomplete widget
+            var hideAwesomplete = function() {
+                if (!awesomplete.selected) {
+                    awesomplete.close();
+                    div.style.display = 'none';
+                }
+            };
+    
+            // add event listener for keydown event on the input
+            input.addEventListener('keydown', async function(event) {
+                // if enter key is pressed, call the createDeviceByName function
+                if (event.key === 'Enter') {
+                    // if there's only one result in the autocomplete list, use that result
+                    if (awesomplete.ul.childNodes.length === 1) {
+                        if ( awesomplete.ul.childNodes[0].textContent == 'Microphone Input' ) {
+                            await createDeviceByName('mic');
+                        }
+                        else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
+                            await createDeviceByName('outputnode');
+                        }
+                        else {
+                            await createDeviceByName(awesomplete.ul.childNodes[0].textContent);
+                        }
+                    } else {
+                        // use exactly what the user typed
+                        if ( input.value == 'speaker' ) {
+                            await createDeviceByName('outputnode');
+                        }
+                        else {
+                            await createDeviceByName(input.value);
+                        }
+    
+                    }
+                }
+                // if escape key is pressed, hide autocomplete
+                else if (event.key === 'Escape') {
+                    hideAwesomplete();
+                }
+            });
+    
+            // add event listener for blur event to also hide the autocomplete
+            input.addEventListener('blur', hideAwesomplete);
+        }
+    });
 }
 
 async function createMicrophoneDevice() {
@@ -260,7 +360,17 @@ function addInputsForDevice(device) {
     return inportForm;
 }
 
+function calculateNoteValues(bpm) {
+    let out = '';
+    for (var i = 1; i <= 128; i++) {
+      let calculated_nv = Math.round((((60000/bpm)/i)*4)*(44100*0.001));
+      out += `var n${i} = ${calculated_nv};`;
+    }
+    return out;
+}
+
 function scheduleDeviceEvent(device, inport, value) {
+    eval(calculateNoteValues(numberInput.value));
     try {
         // TODO: prevent evalation if input element is focused, or some way of stopping evaluation becuase
         // if i'm in the middle of composing a pattern and it evaluates something in the interim, it can 
@@ -360,20 +470,19 @@ async function createDeviceByName(filename) {
     let deviceDiv;
     if (filename === "mic") {
         const device = await createMicrophoneDevice();
-        deviceDiv = addDeviceToWorkspace(device, "microphone input");
+        deviceDiv = addDeviceToWorkspace(device, "microphone input", false);
     }
     else if ( filename.startsWith('outputnode') ) {
-        deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);   
+        deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
     }
     else {
         const response = await fetch(`wasm/${filename}.json`);
         const patcher = await response.json();
         const device = await RNBO.createDevice({ context, patcher });
-        deviceDiv = addDeviceToWorkspace(device, filename);
+        deviceDiv = addDeviceToWorkspace(device, filename, false);
     }
     return deviceDiv;
 }
-
 
 function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false) {
     const count = deviceCounts[deviceType] || 0;
@@ -384,9 +493,9 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     deviceDiv.className = 'node';
     deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : `${deviceType}`;
     
-    const [scrollX, scrollY] = document.getScroll();
-    deviceDiv.style.left = (scrollX + 100) + 'px';
-    deviceDiv.style.top = (scrollY + 100) + 'px';
+    // place the object at the mouse's last position
+    deviceDiv.style.left = mousePosition.x + 'px';
+    deviceDiv.style.top = mousePosition.y + 'px';
 
     devices[deviceDiv.id] = { device: isSpeakerChannelDevice ? { node: channelMerger } : device , div: deviceDiv };
     

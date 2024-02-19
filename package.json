@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Cycling74/rnbo.example.webpage#readme",
   "dependencies": {
     "@rnbo/js": "^1.2.3",
+    "awesomplete": "^1.1.5",
     "jsplumb": "^2.15.6",
     "lz-string": "^1.5.0"
   }
