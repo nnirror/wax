@@ -19,9 +19,10 @@
 }
 .output-container {
     margin-top: 8px;
+    margin-left: -6px;
 }
 body {
-    font-family: 'Monaco', monospace;
+    font-family: Arial, sans-serif;
 }
 #workspace {
     width: 5000px;
@@ -36,10 +37,6 @@ body {
 .aLabelClass {
     font-size: 0.8em;
 }
-.addSpeakerChannel {
-    left: 10px;
-    top: 10px;
-}
 .saveStateButton {
     top: 10px;
     right: 10px;
@@ -53,20 +50,19 @@ body {
     right: 10px;
 }
 .startAudioButton {
-    top: 100px;
+    top: 10px;
+    left: 10px;
+}
+.deviceSelectButton {
+    top: 40px;
     left: 10px;
 }
 .navbarButton {
     position: fixed;
     z-index: 1000;
 }
-.deviceSelectButton {
-    left: 10px;
-    top: 40px;
-}
 .deviceDropdown {
-    left: 10px;
-    top: 70px;
+    display: none;
 }
 .speakerChannelSelectorInput {
     width: 2em;
@@ -82,7 +78,7 @@ body {
 }
 #bpm {
     position: fixed;
-    top: 130px;
+    bottom: 10px;
     left: 10px;
     z-index: 1;
 }
@@ -92,11 +88,23 @@ body {
     width: 5em;
 }
 .awesomplete {
-    position: fixed;
-    top: 170px;
-    left: 10px;
     z-index: 1;
 }
-.awesomplete span {
-    display: none !important;
+.awesomplete-submit {
+    position: absolute;
+    left: 9em;
+    top: 50px;
+}
+.awesomplete input {
+    width: 8em !important;
+}
+
+.awesomplete .awesomplete-highlight {
+    background-color: #bde4ff;
+}
+
+mark{
+    background-color:lightblue !important;
+    padding:0;
+    margin:0;
 }

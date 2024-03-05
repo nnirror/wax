@@ -42,21 +42,12 @@ createButtonForNavBar(
     () => context.resume()
 );
 
-// create a button for adding speaker channel devices to the workspace
-createButtonForNavBar(
-    'Add speaker channel',
-    'addSpeakerChannel navbarButton',
-    () => createDeviceByName('outputnode')
-);
-
 // create a button for adding audio devices to the workspace
 createButtonForNavBar(
     'Add device',
     'deviceSelectButton navbarButton',
-    async () => {
-        const filename = deviceDropdown.value;
-        await createDeviceByName(filename);
-        await context.resume();
+    () => {
+        openAwesompleteUI(true);
     }
 );
 
@@ -167,8 +158,8 @@ window.addEventListener('keyup', (event) => {
 });
 
 document.addEventListener('mousemove', function(event) {
-    mousePosition.x = event.clientX;
-    mousePosition.y = event.clientY;
+    mousePosition.x = event.pageX;
+    mousePosition.y = event.pageY;
 });
 
 initializeAwesomplete();
@@ -178,8 +169,105 @@ initializeAwesomplete();
 function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
     const micInputOption = document.createElement('option');
     micInputOption.value = "mic";
-    micInputOption.innerText = "Microphone Input";
+    micInputOption.innerText = "microphone input";
     deviceDropdown.appendChild(micInputOption);
+}
+
+function openAwesompleteUI(fromButtonClick) {
+    // get the dropdown element
+    var dropdown = document.querySelector('.deviceDropdown');
+    
+    // get the options from the dropdown
+    var list = Array.from(dropdown.options).map(function(option) {
+        return option.text;
+    });
+
+    var p = document.createElement('p');
+    p.textContent = "Type to select a device...";
+
+    // create a new div element for autocomplete
+    var div = document.createElement('div');
+    div.className = 'awesomplete';
+    div.style.position = 'absolute';
+    div.style.left = fromButtonClick ? '10px' : mousePosition.x + 'px';
+    div.style.top = fromButtonClick ? '70px' : mousePosition.y + 'px';
+
+    div.appendChild(p);
+
+    // create a new input element for autocomplete
+    var input = document.createElement('input');
+    div.appendChild(input);
+    document.body.appendChild(div);
+
+    // initialize autocomplete with the input and list
+    var awesomplete = new Awesomplete(input, {
+        list: list,
+        minChars: 1
+    });
+
+    // focus the input
+    input.focus();
+
+    // function for hiding the Awesomplete widget
+    var hideAwesomplete = function() {
+        if (!awesomplete.selected) {
+            awesomplete.close();
+            div.style.display = 'none';
+        }
+    };
+
+    // create a new button element
+    var button = document.createElement('button');
+    button.textContent = 'add';
+    button.className = 'awesomplete-submit';
+    div.appendChild(button);
+
+    // function to handle the creation of the device by name
+    async function handleCreateDeviceByName() {
+        // if there's only one result in the autocomplete list, use that result
+        if (awesomplete.ul.childNodes.length === 1) {
+            if ( awesomplete.ul.childNodes[0].textContent == 'microphone input' ) {
+                await createDeviceByName('mic');
+            }
+            else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
+                await createDeviceByName('outputnode');
+            }
+            else {
+                await createDeviceByName(awesomplete.ul.childNodes[0].textContent);
+            }
+        } else {
+            // use exactly what the user typed
+            if ( input.value == 'speaker' ) {
+                await createDeviceByName('outputnode');
+            }
+            else {
+                await createDeviceByName(input.value);
+            }
+        }
+    }
+
+    // add event listener for click event on the button
+    button.addEventListener('mousedown', function(event) {
+        event.preventDefault();
+        handleCreateDeviceByName();
+    });
+
+    // add event listener for keydown event on the input
+    input.addEventListener('keydown', async function(event) {
+        // if enter key is pressed, call the createDeviceByName function
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            await handleCreateDeviceByName();
+            hideAwesomplete();
+        }
+        // if escape key is pressed, hide autocomplete
+        else if (event.key === 'Escape') {
+            hideAwesomplete();
+        }
+    });
+
+    // add event listener for blur event to also hide the autocomplete
+    input.addEventListener('blur', hideAwesomplete);
 }
 
 function initializeAwesomplete () {
@@ -187,75 +275,7 @@ function initializeAwesomplete () {
         // check if 'n' key is pressed and no input is focused
         if (event.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input') {
             event.preventDefault();
-    
-            // get the dropdown element
-            var dropdown = document.querySelector('.deviceDropdown');
-            
-            // get the options from the dropdown
-            var list = Array.from(dropdown.options).map(function(option) {
-                return option.text;
-            });
-    
-            // create a new div element for autocomplete
-            var div = document.createElement('div');
-            div.className = 'awesomplete';
-    
-            // create a new input element for autocomplete
-            var input = document.createElement('input');
-            div.appendChild(input);
-            document.body.appendChild(div);
-    
-            // initialize autocomplete with the input and list
-            var awesomplete = new Awesomplete(input, {
-                list: list,
-                minChars: 1
-            });
-    
-            // focus the input
-            input.focus();
-    
-            // function for hiding the Awesomplete widget
-            var hideAwesomplete = function() {
-                if (!awesomplete.selected) {
-                    awesomplete.close();
-                    div.style.display = 'none';
-                }
-            };
-    
-            // add event listener for keydown event on the input
-            input.addEventListener('keydown', async function(event) {
-                // if enter key is pressed, call the createDeviceByName function
-                if (event.key === 'Enter') {
-                    // if there's only one result in the autocomplete list, use that result
-                    if (awesomplete.ul.childNodes.length === 1) {
-                        if ( awesomplete.ul.childNodes[0].textContent == 'Microphone Input' ) {
-                            await createDeviceByName('mic');
-                        }
-                        else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
-                            await createDeviceByName('outputnode');
-                        }
-                        else {
-                            await createDeviceByName(awesomplete.ul.childNodes[0].textContent);
-                        }
-                    } else {
-                        // use exactly what the user typed
-                        if ( input.value == 'speaker' ) {
-                            await createDeviceByName('outputnode');
-                        }
-                        else {
-                            await createDeviceByName(input.value);
-                        }
-    
-                    }
-                }
-                // if escape key is pressed, hide autocomplete
-                else if (event.key === 'Escape') {
-                    hideAwesomplete();
-                }
-            });
-    
-            // add event listener for blur event to also hide the autocomplete
-            input.addEventListener('blur', hideAwesomplete);
+            openAwesompleteUI();
         }
     });
 }
@@ -522,6 +542,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         speakerChannelSelectorInput.type = 'text';
         speakerChannelSelectorInput.className = 'speakerChannelSelectorInput';
         speakerChannelSelectorInput.id = 'output_channel';
+        speakerChannelSelectorInput.value = 1;
         button.onclick = () => finishConnection(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1);
         inputContainer.appendChild(button);
         inputContainer.appendChild(deleteButton);
