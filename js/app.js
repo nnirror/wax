@@ -55,36 +55,9 @@ createButtonForNavBar(
 createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
 
 // create a button for reloading workspace state
-createButtonForNavBar('Retrieve State', 'reloadStateButton navbarButton', async () => {
+createButtonForNavBar('Load State', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
     context.resume();
-});
-
-createButtonForNavBar('Copy State', 'copyStateButton navbarButton', async () => {
-    // get the workspace state
-    let workspaceState = getWorkspaceState();
-    
-    // serialize the workspace state
-    let serializedState = JSON.stringify(workspaceState);
-    
-    // encode the serialized state as a URI component
-    let encodedState = LZString.compressToEncodedURIComponent(serializedState);
-    
-    // format as a query string
-    let queryString = `state=${encodedState}`;
-    
-    // get the current URL without query parameters
-    let currentUrl = window.location.origin + window.location.pathname;
-    
-    // combine the current URL with the query string
-    let fullUrl = `${currentUrl}?${queryString}`;
-    
-    // copy to clipboard
-    navigator.clipboard.writeText(fullUrl).then(function() {
-        alert('successfully copied to clipboard!');
-    }, function(err) {
-        // TODO: error handling
-    });
 });
 
 let container = document.createElement("div");
@@ -627,7 +600,7 @@ function createButtonForNavBar(text, className, clickHandler) {
     navBar.appendChild(button);
 }
 
-function getWorkspaceState(saveToDB = false) {
+function getWorkspaceState(saveToFile = false) {
     let workspaceState = [];
 
     for (let id in devices) {
@@ -659,81 +632,82 @@ function getWorkspaceState(saveToDB = false) {
 
         workspaceState.push(deviceState);
     }
-    if (saveToDB) {
-        let transaction = db.transaction(['workspaceState'], 'readwrite');
-        let store = transaction.objectStore('workspaceState');
-        store.clear().onsuccess = function() {
-            store.add(workspaceState);
-        };
+
+    if (saveToFile) {
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(workspaceState));
+        let downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href",     dataStr);
+        downloadAnchorNode.setAttribute("download", "workspace_state.json");
+        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     }
+
     return workspaceState;
 }
 
-async function reconstructWorkspaceState(workspaceState = null) {
-    let deviceStates;
-    let connectionsToMake = [];
-    let idMap = {};
+async function reconstructWorkspaceState() {
+    let fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
 
-    if (workspaceState) {
-        // if a workspaceState object was provided, use it
-        deviceStates = workspaceState;
-    } else {
-        // otherwise, load the state from IndexedDB
-        let transaction = db.transaction(['workspaceState'], 'readonly');
-        let store = transaction.objectStore('workspaceState');
+    fileInput.onchange = async function(event) {
+        let file = event.target.files[0];
+        let reader = new FileReader();
 
-        deviceStates = await new Promise((resolve, reject) => {
-            let request = store.openCursor();
-            request.onsuccess = function(e) {
-                resolve(e.target.result.value);
+        reader.onload = async function() {
+            let deviceStates = JSON.parse(reader.result);
+            let connectionsToMake = [];
+            let idMap = {};
+
+            for (let deviceState of deviceStates) {
+                let deviceName = deviceState.id.split('-')[0];            
+                let deviceElement;
+                deviceElement = await createDeviceByName(deviceName);
+
+                // move the device to its previous position
+                deviceElement.style.left = deviceState.left;
+                deviceElement.style.top = deviceState.top;
+
+                // set the values of its input elements
+                let inputs = deviceElement.getElementsByTagName('input');
+                for (let input of inputs) {
+                    if (deviceState.inputs[input.id]) {
+                        input.value = deviceState.inputs[input.id];
+                        input.dispatchEvent(new Event('change'));
+                    }
+                }
+
+                // map the old id to the new id
+                idMap[deviceState.id] = deviceElement.id;
+
+                // if deviceState has connection data, store it for later
+                if (deviceState.connections) {
+                    for (let connection of deviceState.connections) {
+                        connectionsToMake.push({
+                            source: deviceState.id,
+                            target: connection.target,
+                            output: connection.output,
+                            input: connection.input
+                        });
+                    }
+                }
             }
-            request.onerror = function(e) {
-                reject(e.target.error);
+
+            // make the connections
+            for (let connection of connectionsToMake) {
+                startConnection(idMap[connection.source], connection.output);
+                finishConnection(idMap[connection.target], connection.input);
             }
-        });
-    }
 
-    for (let deviceState of deviceStates) {
-        let deviceName = deviceState.id.split('-')[0];            
-        let deviceElement;
-        deviceElement = await createDeviceByName(deviceName);
+            // repaint everything after all devices have been added
+            jsPlumb.repaintEverything();
+        };
 
-        // move the device to its previous position
-        deviceElement.style.left = deviceState.left;
-        deviceElement.style.top = deviceState.top;
+        reader.readAsText(file);
+    };
 
-        // set the values of its input elements
-        let inputs = deviceElement.getElementsByTagName('input');
-        for (let input of inputs) {
-            if (deviceState.inputs[input.id]) {
-                input.value = deviceState.inputs[input.id];
-                input.dispatchEvent(new Event('change'));
-            }
-        }
-
-        // map the old id to the new id
-        idMap[deviceState.id] = deviceElement.id;
-
-        // if deviceState has connection data, store it for later
-        if (deviceState.connections) {
-            for (let connection of deviceState.connections) {
-                connectionsToMake.push({
-                    source: deviceState.id,
-                    target: connection.target,
-                    output: connection.output,
-                    input: connection.input
-                });
-            }
-        }
-    }
-    // make the connections
-    for (let connection of connectionsToMake) {
-        startConnection(idMap[connection.source], connection.output);
-        finishConnection(idMap[connection.target], connection.input);
-    }
-
-    // repaint everything after all devices have been added
-    jsPlumb.repaintEverything();
+    fileInput.click();
 }
 
 function checkForQueryStringParams() {
