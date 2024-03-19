@@ -61,6 +61,10 @@ body {
     position: fixed;
     z-index: 1000;
 }
+.allFunctionsButton {
+    top: 70px;
+    left: 10px;
+}
 .deviceDropdown {
     display: none;
 }
@@ -95,6 +99,11 @@ body {
     left: 9em;
     top: 50px;
 }
+.awesomplete-all-functions {
+    position: absolute;
+    left: 12em;
+    top: 50px;   
+}
 .awesomplete input {
     width: 8em !important;
 }
@@ -107,4 +116,17 @@ mark{
     background-color:lightblue !important;
     padding:0;
     margin:0;
+}
+.selectedNode {
+    border: 3px solid black;
+}
+.deviceListModal {
+    position: fixed;
+    top: 50%;
+    left: 5%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border: 1px solid black;
+    z-index: 1000; 
 }

@@ -51,8 +51,18 @@ createButtonForNavBar(
     }
 );
 
+// create a button for listing all functions
+createButtonForNavBar(
+    'All Functions',
+    'allFunctionsButton navbarButton',
+    function(event) {
+        event.stopPropagation();
+        displayAllDevices();
+    }
+);
+
 // create a button for saving workspace state
-createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
+createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true,false)});
 
 // create a button for reloading workspace state
 createButtonForNavBar('Load State', 'reloadStateButton navbarButton', async () => {
@@ -60,34 +70,10 @@ createButtonForNavBar('Load State', 'reloadStateButton navbarButton', async () =
     context.resume();
 });
 
-let container = document.createElement("div");
-let label = document.createElement("span");
-label.textContent = "bpm";
-
-let numberInput = document.createElement("input");
-numberInput.type = "number";
-numberInput.min = "1";
-numberInput.max = "1000";
-numberInput.value = "120";
-numberInput.id = "bpm-input";
-numberInput;
-let debounceTimer;
-numberInput.onchange = () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        const inputElements = workspace.querySelectorAll('input');
-        inputElements.forEach((inputElement) => {
-            // create/trigger a change event
-            const event = new Event('change');
-            inputElement.dispatchEvent(event);
-        });
-    }, 250); // 250ms delay
+// reconstruct the workspace from localStorage when the window loads
+window.onload = function() {
+    reconstructWorkspaceState(true);
 };
-container.id = "bpm";
-container.append(numberInput);
-container.append(label);
-navBar.append(container);
-
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -98,6 +84,9 @@ let sourceDeviceId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let shiftHeld = false;
+let workspaceElement = document.getElementById('workspace');
+let selectionDiv = null;
+let startPoint = null;
 /* END globally acessible objects */
 
 checkForQueryStringParams();
@@ -133,6 +122,99 @@ window.addEventListener('keyup', (event) => {
 document.addEventListener('mousemove', function(event) {
     mousePosition.x = event.pageX;
     mousePosition.y = event.pageY;
+});
+
+setInterval(() => {
+    getWorkspaceState(false, true);
+}, 250);
+
+// listen for mousedown events on the workspaceElement
+workspaceElement.addEventListener('mousedown', (event) => {
+    // only start the selection if the target is the workspaceElement itself
+    if (event.target === workspaceElement) {
+        let rect = workspaceElement.getBoundingClientRect();
+        startPoint = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+        // create the selection div and add it to the workspaceElement
+        selectionDiv = document.createElement('div');
+        selectionDiv.style.position = 'absolute';
+        selectionDiv.style.border = '1px dashed #000';
+        selectionDiv.style.background = 'rgba(0, 0, 0, 0.1)';
+        selectionDiv.style.pointerEvents = 'none'; // Ignore mouse events
+        workspaceElement.appendChild(selectionDiv);
+    }
+});
+
+// listen for mousemove events on the workspaceElement
+workspaceElement.addEventListener('mousemove', (event) => {
+    if (startPoint) {
+        let rect = workspaceElement.getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+
+        // update the size and position of the selection div
+        selectionDiv.style.left = Math.min(x, startPoint.x) + 'px';
+        selectionDiv.style.top = Math.min(y, startPoint.y) + 'px';
+        selectionDiv.style.width = Math.abs(x - startPoint.x) + 'px';
+        selectionDiv.style.height = Math.abs(y - startPoint.y) + 'px';
+    }
+});
+
+// listen for mouseup events on the workspaceElement
+workspaceElement.addEventListener('mouseup', (event) => {
+    if (startPoint) {
+        // check which elements are within the selection div
+        let nodes = document.querySelectorAll('.node');
+        nodes.forEach((node) => {
+            let rect = node.getBoundingClientRect();
+            let selRect = selectionDiv.getBoundingClientRect();
+            if (rect.right > selRect.left && rect.left < selRect.right &&
+                rect.bottom > selRect.top && rect.top < selRect.bottom) {
+                jsPlumb.addToDragSelection(node);
+
+                // add a special CSS class to the selected node
+                node.classList.add('selectedNode');
+            } else {
+                // remove the special class from the node if it's not selected
+                node.classList.remove('selectedNode');
+            }
+        });
+
+        // remove the selection div and reset the start point
+        workspaceElement.removeChild(selectionDiv);
+        selectionDiv = null;
+        startPoint = null;
+    }
+});
+
+workspaceElement.addEventListener('mouseup', (event) => {
+    if (event.target !== workspaceElement) {
+        jsPlumb.clearDragSelection();
+    }
+});
+
+// listen for keydown events on the document
+document.addEventListener('keydown', (event) => {
+    // check if Delete or Backspace key was pressed
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+        // get all selected nodes
+        let nodes = document.querySelectorAll('.node');
+        nodes.forEach((node) => {
+            // check if the node is selected
+            if (node.classList.contains('selectedNode')) {
+                // remove the node from the workspace
+                let sourceConnections = jsPlumb.getConnections({source: node.id});
+                let targetConnections = jsPlumb.getConnections({target: node.id});
+                sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+                targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+                removeDeviceFromWorkspace(node.id);
+                node.remove();
+            }
+        });
+
+        // clear the drag selection
+        jsPlumb.clearDragSelection();
+        jsPlumb.repaintEverything();
+    }
 });
 
 initializeAwesomplete();
@@ -353,17 +435,7 @@ function addInputsForDevice(device) {
     return inportForm;
 }
 
-function calculateNoteValues(bpm) {
-    let out = '';
-    for (var i = 1; i <= 128; i++) {
-      let calculated_nv = Math.round((((60000/bpm)/i)*4)*(44100*0.001));
-      out += `var n${i} = ${calculated_nv};`;
-    }
-    return out;
-}
-
 function scheduleDeviceEvent(device, inport, value) {
-    eval(calculateNoteValues(numberInput.value));
     try {
         // TODO: prevent evalation if input element is focused, or some way of stopping evaluation becuase
         // if i'm in the middle of composing a pattern and it evaluates something in the interim, it can 
@@ -569,7 +641,23 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     }
 
     workspace.appendChild(deviceDiv);
-    jsPlumb.draggable(deviceDiv);
+    // Add a drag event listener to the deviceDiv
+    jsPlumb.draggable(deviceDiv, {
+        start: function(event) {
+            // add the selectedNode class
+            deviceDiv.classList.add('selectedNode');
+        },
+        stop: function(event) {
+            // remove the selectedNode class from all nodes
+            let nodes = document.querySelectorAll('.node');
+            nodes.forEach((node) => {
+                if (node.classList.contains('selectedNode')) {
+                    node.classList.remove('selectedNode');
+                }
+            });
+
+        }
+    });
     return deviceDiv;
 }
 
@@ -600,7 +688,7 @@ function createButtonForNavBar(text, className, clickHandler) {
     navBar.appendChild(button);
 }
 
-function getWorkspaceState(saveToFile = false) {
+function getWorkspaceState(saveToFile = false, saveToLocalStorage = false) {
     let workspaceState = [];
 
     for (let id in devices) {
@@ -643,71 +731,94 @@ function getWorkspaceState(saveToFile = false) {
         downloadAnchorNode.remove();
     }
 
+    if (saveToLocalStorage) {
+        localStorage.setItem('patcherState', JSON.stringify(workspaceState));
+    }
+
     return workspaceState;
 }
 
-async function reconstructWorkspaceState() {
-    let fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
+async function reconstructWorkspaceState(fromLocalStorage = false) {
+    let deviceStates;
 
-    fileInput.onchange = async function(event) {
-        let file = event.target.files[0];
-        let reader = new FileReader();
+    if (fromLocalStorage) {
+        let patcherState = localStorage.getItem('patcherState');
+        if (patcherState) {
+            deviceStates = JSON.parse(patcherState);
+        } else {
+            console.error('No saved state in localStorage');
+            return;
+        }
+    } else {
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
 
-        reader.onload = async function() {
-            let deviceStates = JSON.parse(reader.result);
-            let connectionsToMake = [];
-            let idMap = {};
+        fileInput.onchange = async function(event) {
+            let file = event.target.files[0];
+            let reader = new FileReader();
 
-            for (let deviceState of deviceStates) {
-                let deviceName = deviceState.id.split('-')[0];            
-                let deviceElement;
-                deviceElement = await createDeviceByName(deviceName);
+            reader.onload = async function() {
+                deviceStates = JSON.parse(reader.result);
+                await reconstructDevicesAndConnections(deviceStates);
+            };
 
-                // move the device to its previous position
-                deviceElement.style.left = deviceState.left;
-                deviceElement.style.top = deviceState.top;
-
-                // set the values of its input elements
-                let inputs = deviceElement.getElementsByTagName('input');
-                for (let input of inputs) {
-                    if (deviceState.inputs[input.id]) {
-                        input.value = deviceState.inputs[input.id];
-                        input.dispatchEvent(new Event('change'));
-                    }
-                }
-
-                // map the old id to the new id
-                idMap[deviceState.id] = deviceElement.id;
-
-                // if deviceState has connection data, store it for later
-                if (deviceState.connections) {
-                    for (let connection of deviceState.connections) {
-                        connectionsToMake.push({
-                            source: deviceState.id,
-                            target: connection.target,
-                            output: connection.output,
-                            input: connection.input
-                        });
-                    }
-                }
-            }
-
-            // make the connections
-            for (let connection of connectionsToMake) {
-                startConnection(idMap[connection.source], connection.output);
-                finishConnection(idMap[connection.target], connection.input);
-            }
-
-            // repaint everything after all devices have been added
-            jsPlumb.repaintEverything();
+            reader.readAsText(file);
         };
 
-        reader.readAsText(file);
-    };
+        fileInput.click();
+        return;
+    }
 
-    fileInput.click();
+    await reconstructDevicesAndConnections(deviceStates);
+}
+
+async function reconstructDevicesAndConnections(deviceStates) {
+    let connectionsToMake = [];
+    let idMap = {};
+
+    for (let deviceState of deviceStates) {
+        let deviceName = deviceState.id.split('-')[0];            
+        let deviceElement;
+        deviceElement = await createDeviceByName(deviceName);
+
+        // move the device to its previous position
+        deviceElement.style.left = deviceState.left;
+        deviceElement.style.top = deviceState.top;
+
+        // set the values of its input elements
+        let inputs = deviceElement.getElementsByTagName('input');
+        for (let input of inputs) {
+            if (deviceState.inputs[input.id]) {
+                input.value = deviceState.inputs[input.id];
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // map the old id to the new id
+        idMap[deviceState.id] = deviceElement.id;
+
+        // if deviceState has connection data, store it for later
+        if (deviceState.connections) {
+            for (let connection of deviceState.connections) {
+                connectionsToMake.push({
+                    source: deviceState.id,
+                    target: connection.target,
+                    output: connection.output,
+                    input: connection.input
+                });
+            }
+        }
+    }
+
+    // make the connections
+    for (let connection of connectionsToMake) {
+        startConnection(idMap[connection.source], connection.output);
+        finishConnection(idMap[connection.target], connection.input);
+    }
+
+    // repaint everything after all devices have been added
+    jsPlumb.repaintEverything();
 }
 
 function checkForQueryStringParams() {
@@ -728,6 +839,42 @@ function checkForQueryStringParams() {
         // load the workspace state
         reconstructWorkspaceState(workspaceState);
     }
+}
+
+// display all devices
+function displayAllDevices() {
+    // get the dropdown select
+    var dropdown = document.querySelector('.deviceDropdown');
+
+    // get the options from the dropdown
+    var options = dropdown.options;
+
+    // create a div for the modal
+    var modal = document.createElement('div');
+    modal.className = 'deviceListModal';
+
+    // create a ul for the list
+    var ul = document.createElement('ul');
+
+    // add each option in the dropdown to the list
+    for (var i = 0; i < options.length; i++) {
+        var li = document.createElement('li');
+        li.textContent = options[i].text;
+        ul.appendChild(li);
+    }
+
+    // add the list to the modal
+    modal.appendChild(ul);
+
+    // add the modal to the body
+    document.body.appendChild(modal);
+
+    // add an event listener to the body to remove the modal when clicked
+    document.body.addEventListener('click', function(event) {
+        if (event.target !== modal && !modal.contains(event.target)) {
+            document.body.removeChild(modal);
+        }
+    });
 }
 
 /* END functions */
