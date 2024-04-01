@@ -130,3 +130,7 @@ mark{
     border: 1px solid black;
     z-index: 1000; 
 }
+#audioInputDevicesDropdown {
+    position: absolute;
+    top: 100px;
+}

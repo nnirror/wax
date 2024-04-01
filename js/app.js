@@ -13,21 +13,6 @@ const channelMerger = context.createChannelMerger(context.destination.channelCou
 channelMerger.connect(context.destination);
 /* END audio context initialization */
 
-/* BEGIN IndexedDB */
-let db;
-let request = indexedDB.open('myDatabase', 1);
-request.onupgradeneeded = function(e) {
-    db = e.target.result;
-    db.createObjectStore('workspaceState', { autoIncrement: true });
-};
-request.onsuccess = function(e) {
-    db = e.target.result;
-};
-request.onerror = function(e) {
-    console.error('Unable to open database.', e);
-};
-/* END IndexedDB */
-
 /* BEGIN UI initialization */
 // create workspace DOM elements
 const workspace = document.getElementById('workspace');
@@ -62,7 +47,7 @@ createButtonForNavBar(
 );
 
 // create a button for saving workspace state
-createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true,false)});
+createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
 
 // create a button for reloading workspace state
 createButtonForNavBar('Load State', 'reloadStateButton navbarButton', async () => {
@@ -70,26 +55,25 @@ createButtonForNavBar('Load State', 'reloadStateButton navbarButton', async () =
     context.resume();
 });
 
-// reconstruct the workspace from localStorage when the window loads
-window.onload = function() {
-    reconstructWorkspaceState(true);
+// prevent accidental refreshes which would lose unsaved changes
+window.onbeforeunload = function() {
+    return "Are you sure you want to leave? Unsaved changes will be lost.";
 };
+
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
 let deviceCounts = {};
 let devices = {};
+let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
-let shiftHeld = false;
 let workspaceElement = document.getElementById('workspace');
 let selectionDiv = null;
 let startPoint = null;
 /* END globally acessible objects */
-
-checkForQueryStringParams();
 
 /* BEGIN event handlers */
 jsPlumb.bind("connectionDetached", function(info) {
@@ -105,28 +89,11 @@ jsPlumb.bind("connectionDetached", function(info) {
         }
     }
 });
-// listen for the keydown event
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'Shift') {
-        shiftHeld = true;
-    }
-});
-// listen for the keyup event
-window.addEventListener('keyup', (event) => {
-    if (event.key === 'Shift') {
-        shiftHeld = false;
-        jsPlumb.clearDragSelection();
-    }
-});
 
 document.addEventListener('mousemove', function(event) {
     mousePosition.x = event.pageX;
     mousePosition.y = event.pageY;
 });
-
-setInterval(() => {
-    getWorkspaceState(false, true);
-}, 250);
 
 // listen for mousedown events on the workspaceElement
 workspaceElement.addEventListener('mousedown', (event) => {
@@ -435,20 +402,19 @@ function addInputsForDevice(device) {
     return inportForm;
 }
 
-function scheduleDeviceEvent(device, inport, value) {
+async function scheduleDeviceEvent(device, inport, value) {
     try {
-        // TODO: prevent evalation if input element is focused, or some way of stopping evaluation becuase
-        // if i'm in the middle of composing a pattern and it evaluates something in the interim, it can 
-        // crash the system or cause undesired behavior
         let values;
-        // TODO: pretty hacky but functioning - evaluation of the inport of a pattern~ device should 
-        // produces an array of data for a wavetable. the array going into the inport needs to be 
-        // prepended with the length of the array so the buffer can be reallocated in RNBO
         value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
-            // anonymous facet pattern replacement
             values = eval(value).data;
-            values.unshift(values.length);
+            const float32Array = new Float32Array(values);
+            // create a new AudioBuffer
+            const audioBuffer = context.createBuffer(1, float32Array.length, context.sampleRate);
+            // copy the Float32Array to the AudioBuffer
+            audioBuffer.copyToChannel(float32Array, 0);
+            // set the AudioBuffer as the data buffer for the device
+            await device.setDataBuffer('pattern', audioBuffer);
         }
         else {
             values = value.split(/\s+/).map(s => parseFloat(eval(s)));
@@ -531,7 +497,7 @@ function finishConnection(deviceId, inputIndex) {
     jsPlumb.repaintEverything();
 }
 
-async function createDeviceByName(filename) {
+async function createDeviceByName(filename, audioBuffer = null) {
     let deviceDiv;
     if (filename === "mic") {
         const device = await createMicrophoneDevice();
@@ -545,8 +511,47 @@ async function createDeviceByName(filename) {
         const patcher = await response.json();
         const device = await RNBO.createDevice({ context, patcher });
         deviceDiv = addDeviceToWorkspace(device, filename, false);
+        if ( filename == 'wave' ) {
+            if (audioBuffer) {
+                await device.setDataBuffer('buf', audioBuffer);
+            }
+            createAudioLoader(device, context, deviceDiv);
+        }
     }
     return deviceDiv;
+}
+
+function createAudioLoader(device, context, deviceDiv) {
+    // create a new file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'audio/*';
+
+    // listen for changes
+    fileInput.addEventListener('change', async (event) => {
+        if (event.target.files.length > 0) {
+            const file = event.target.files[0];
+            const arrayBuf = await file.arrayBuffer();    
+            const audioBuf = await context.decodeAudioData(arrayBuf);
+            // store the audio buffer in the global object
+            audioBuffers[file.name] = audioBuf;
+
+            await device.setDataBuffer('buf', audioBuf);
+            deviceDiv.dataset.audioFileName = file.name;
+        }
+    });
+
+    // create a new button
+    const button = document.createElement('button');
+    button.textContent = 'Load audio file';
+
+    // when the button is clicked, simulate a click on the file input
+    button.addEventListener('click', () => fileInput.click());
+
+    // select the form inside the deviceDiv
+    const form = deviceDiv.querySelector('form');
+    // add the button to the form
+    form.appendChild(button);
 }
 
 function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false) {
@@ -632,11 +637,6 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '10em';
         }
-        deviceDiv.addEventListener('mousedown', (event) => {
-            if (shiftHeld) {
-                jsPlumb.addToDragSelection(deviceDiv);
-            }
-        });
         attachOutports(device,deviceDiv);
     }
 
@@ -688,8 +688,9 @@ function createButtonForNavBar(text, className, clickHandler) {
     navBar.appendChild(button);
 }
 
-function getWorkspaceState(saveToFile = false, saveToLocalStorage = false) {
+async function getWorkspaceState(saveToFile = false) {
     let workspaceState = [];
+    let zip = new JSZip();
 
     for (let id in devices) {
         let device = devices[id];
@@ -709,7 +710,8 @@ function getWorkspaceState(saveToFile = false, saveToLocalStorage = false) {
             connections: connections,
             left: deviceElement.style.left,
             top: deviceElement.style.top,
-            inputs: {}
+            inputs: {},
+            audioFileName: deviceElement.dataset.audioFileName
         };
 
         // save the values of the input elements
@@ -718,21 +720,50 @@ function getWorkspaceState(saveToFile = false, saveToLocalStorage = false) {
             deviceState.inputs[input.id] = input.value;
         }
 
+        if (deviceElement.dataset.audioFileName) {
+            let audioBuffer = audioBuffers[deviceElement.dataset.audioFileName];
+            let wav = audioBufferToWav(audioBuffer);
+            let blob = new Blob([wav], { type: 'audio/wav' });
+
+            // Add the .wav file to the .zip file
+            let reader = new FileReader();
+            await new Promise(resolve => {
+                reader.onload = event => {
+                    zip.file(deviceElement.dataset.audioFileName, event.target.result, {binary: true});
+                    resolve();
+                };
+                reader.readAsArrayBuffer(blob);
+            });
+        }
+
         workspaceState.push(deviceState);
     }
 
     if (saveToFile) {
-        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(workspaceState));
-        let downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href",     dataStr);
-        downloadAnchorNode.setAttribute("download", "workspace_state.json");
-        document.body.appendChild(downloadAnchorNode); // required for firefox
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-    }
+        let fileName = prompt("Enter a file name:", `wax_state_${Date.now()}.zip`);
 
-    if (saveToLocalStorage) {
-        localStorage.setItem('patcherState', JSON.stringify(workspaceState));
+        // if the user clicked "cancel", don't save the file
+        if (fileName === null) {
+            return workspaceState;
+        }
+
+        // Add the workspace state to the .zip file
+        let jsonFileName = fileName.replace('.zip', '.json');
+        if (!jsonFileName.endsWith('.json')) {
+            jsonFileName += '.json';
+        }
+        zip.file(jsonFileName, JSON.stringify(workspaceState));
+
+        // generate the .zip file and create a download link for it
+        zip.generateAsync({type: "blob"}).then(function(content) {
+            let url = URL.createObjectURL(content);
+            let downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", fileName);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        });
     }
 
     return workspaceState;
@@ -752,18 +783,15 @@ async function reconstructWorkspaceState(fromLocalStorage = false) {
     } else {
         let fileInput = document.createElement('input');
         fileInput.type = 'file';
-        fileInput.accept = '.json';
+        fileInput.accept = '.zip';
 
         fileInput.onchange = async function(event) {
             let file = event.target.files[0];
-            let reader = new FileReader();
-
-            reader.onload = async function() {
-                deviceStates = JSON.parse(reader.result);
-                await reconstructDevicesAndConnections(deviceStates);
-            };
-
-            reader.readAsText(file);
+            let zip = await JSZip.loadAsync(file);
+            let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
+            let patcherState = await zip.file(jsonFileName).async('string');
+            deviceStates = JSON.parse(patcherState);
+            await reconstructDevicesAndConnections(deviceStates, zip);
         };
 
         fileInput.click();
@@ -773,14 +801,24 @@ async function reconstructWorkspaceState(fromLocalStorage = false) {
     await reconstructDevicesAndConnections(deviceStates);
 }
 
-async function reconstructDevicesAndConnections(deviceStates) {
+async function reconstructDevicesAndConnections(deviceStates, zip) {
     let connectionsToMake = [];
     let idMap = {};
 
     for (let deviceState of deviceStates) {
         let deviceName = deviceState.id.split('-')[0];            
         let deviceElement;
-        deviceElement = await createDeviceByName(deviceName);
+
+        // load any stored audio files
+        if (deviceState.audioFileName && zip ) {
+            let wavFileData = await zip.file(deviceState.audioFileName).async('arraybuffer');
+            let audioBuffer = await context.decodeAudioData(wavFileData);
+            audioBuffers[deviceState.audioFileName] = audioBuffer;
+            deviceElement = await createDeviceByName(deviceName,audioBuffer);
+        }
+        else {
+            deviceElement = await createDeviceByName(deviceName);
+        }
 
         // move the device to its previous position
         deviceElement.style.left = deviceState.left;
@@ -819,26 +857,6 @@ async function reconstructDevicesAndConnections(deviceStates) {
 
     // repaint everything after all devices have been added
     jsPlumb.repaintEverything();
-}
-
-function checkForQueryStringParams() {
-    // get the query string from the current URL
-    let params = new URLSearchParams(window.location.search);
-
-    // check if the 'state' parameter is present
-    if (params.has('state')) {
-        // get the 'state' parameter
-        let encodedState = params.get('state');
-
-        // decode the state
-        let serializedState = LZString.decompressFromEncodedURIComponent(encodedState);
-
-        // parse the state
-        let workspaceState = JSON.parse(serializedState);
-
-        // load the workspace state
-        reconstructWorkspaceState(workspaceState);
-    }
 }
 
 // display all devices

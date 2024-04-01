@@ -25,4 +25,5 @@ var wasmDeviceURLs = [
     "speedlim",
     "times",
     "tri",
+    "wave"
 ];

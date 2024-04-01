@@ -49,17 +49,11 @@
 								"tag" : "in1",
 								"comment" : "phase"
 							}
-, 							{
-								"type" : "signal",
-								"index" : 2,
-								"tag" : "in2",
-								"comment" : "regen"
-							}
  ]
 					}
 ,
 					"maxclass" : "newobj",
-					"numinlets" : 2,
+					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outletInfo" : 					{
 						"IOInfo" : [ 							{
@@ -83,7 +77,7 @@
 						}
 ,
 						"classnamespace" : "rnbo",
-						"rect" : [ 34.0, 62.0, 1289.0, 1024.0 ],
+						"rect" : [ 84.0, 106.0, 640.0, 480.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -114,142 +108,37 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
-									"fontname" : "Lato",
-									"fontsize" : 12.0,
-									"id" : "obj-8",
+									"id" : "obj-6",
 									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 507.0, 446.0, 133.0, 23.0 ],
-									"rnbo_classname" : "swanramp~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "swanramp~_obj-8",
-									"text" : "swanramp~ @ramp 128"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-15",
-									"maxclass" : "newobj",
-									"numinlets" : 4,
-									"numoutlets" : 2,
-									"outlettype" : [ "signal", "signal" ],
-									"patching_rect" : [ 507.0, 399.367129445075989, 85.0, 23.0 ],
-									"rnbo_classname" : "wave~",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 259.0, 229.0, 168.0, 23.0 ],
+									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
-										"channels" : 1.0,
-										"indexmode" : "wave",
-										"boundmode" : "wrap",
-										"channelmode" : "wrap",
-										"interp" : "linear"
+										"meta" : ""
 									}
 ,
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "wave~_obj-15",
+									"rnbo_uniqueid" : "out~_obj-6",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
-											"phase" : 											{
+											"in1" : 											{
 												"attrOrProp" : 1,
-												"digest" : "Phase to read (0..1, between start and end).",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"inlet" : 1,
-												"type" : "number"
-											}
-,
-											"start" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Start index (samples)",
-												"defaultarg" : 3,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"inlet" : 1,
-												"type" : "number",
-												"defaultValue" : "0"
-											}
-,
-											"end" : 											{
-												"attrOrProp" : 1,
-												"digest" : "End index (samples).",
-												"defaultarg" : 4,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"inlet" : 1,
-												"type" : "number",
-												"defaultValue" : "-1"
-											}
-,
-											"offset" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Channel offset (zero-based).",
-												"defaultarg" : 5,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"inlet" : 1,
-												"type" : "number",
-												"defaultValue" : "0"
-											}
-,
-											"out1" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Sampled value at channel 1.",
+												"digest" : "signal sent to outlet with index 1",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 0,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"outlet" : 1,
+												"inlet" : 1,
 												"type" : "signal"
 											}
 ,
-											"outindex" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Index (in samples).",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 0,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"outlet" : 1,
-												"type" : "signal"
-											}
-,
-											"buffer" : 											{
-												"attrOrProp" : 1,
-												"digest" : "If multiple buffer names are declared to be used, this sets the currently active buffer using an index [0 based].",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"attachable" : 1,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "number",
-												"defaultValue" : "0"
-											}
-,
-											"buffername" : 											{
+											"index" : 											{
 												"attrOrProp" : 2,
-												"digest" : "Buffer to use.",
+												"digest" : "outlet number",
 												"defaultarg" : 1,
 												"isalias" : 0,
 												"aliases" : [  ],
@@ -257,14 +146,96 @@
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"type" : "symbol",
+												"type" : "number",
 												"mandatory" : 1
 											}
 ,
-											"channels" : 											{
+											"comment" : 											{
 												"attrOrProp" : 2,
-												"digest" : "Number of channels",
-												"defaultarg" : 2,
+												"digest" : "mouse over comment",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol"
+											}
+,
+											"meta" : 											{
+												"attrOrProp" : 2,
+												"digest" : "A JSON formatted string containing metadata for use by the exported code",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"defaultValue" : "",
+												"label" : "Metadata",
+												"displayorder" : 3
+											}
+
+										}
+,
+										"inputs" : [ 											{
+												"name" : "in1",
+												"type" : "signal",
+												"digest" : "signal sent to outlet with index 1",
+												"displayName" : "signal out",
+												"hot" : 1,
+												"docked" : 0
+											}
+ ],
+										"outputs" : [  ],
+										"helpname" : "out~",
+										"aliasOf" : "out~",
+										"classname" : "out~",
+										"operator" : 0,
+										"versionId" : 374499139,
+										"changesPatcherIO" : 1
+									}
+,
+									"text" : "out~ 1 @comment \"signal out\""
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-5",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 259.0, 155.0, 132.0, 23.0 ],
+									"rnbo_classname" : "in~",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "in~_obj-5",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"out1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "signal from inlet with index 1",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "signal"
+											}
+,
+											"index" : 											{
+												"attrOrProp" : 2,
+												"digest" : "inlet number",
+												"defaultarg" : 1,
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 1,
@@ -272,129 +243,67 @@
 												"isparam" : 0,
 												"deprecated" : 0,
 												"type" : "number",
-												"defaultValue" : "1"
+												"mandatory" : 1
 											}
 ,
-											"boundmode" : 											{
+											"comment" : 											{
 												"attrOrProp" : 2,
-												"digest" : "Set the bound mode for input sample values",
+												"digest" : "mouse over comment",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 1,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"enum" : [ "fold", "clamp", "clip", "wrap", "mirror", "ignore" ],
-												"type" : "enum",
-												"defaultValue" : "wrap"
+												"type" : "symbol"
 											}
 ,
-											"channelmode" : 											{
+											"meta" : 											{
 												"attrOrProp" : 2,
-												"digest" : "Set the bound mode for input channel values",
+												"digest" : "A JSON formatted string containing metadata for use by the exported code",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 1,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"enum" : [ "fold", "clamp", "clip", "wrap", "mirror", "ignore" ],
-												"type" : "enum",
-												"defaultValue" : "wrap"
-											}
-,
-											"indexmode" : 											{
-												"attrOrProp" : 2,
-												"digest" : "Set the lookup mode for values in the buffer",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"enum" : [ "phase", "samples", "signal", "lookup", "wave" ],
-												"type" : "enum",
-												"defaultValue" : "wave"
-											}
-,
-											"interp" : 											{
-												"attrOrProp" : 2,
-												"digest" : "Set the type of interpolation to use when reading samples from the buffer.",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"enum" : [ "linear", "cubic", "spline", "cosine", "step", "none" ],
-												"type" : "enum",
-												"defaultValue" : "linear"
+												"type" : "symbol",
+												"defaultValue" : "",
+												"label" : "Metadata",
+												"displayorder" : 3
 											}
 
 										}
 ,
-										"inputs" : [ 											{
-												"name" : "phase",
-												"type" : "auto",
-												"digest" : "Phase to read (0..1, between start and end).",
-												"hot" : 1,
-												"docked" : 0
-											}
-, 											{
-												"name" : "start",
-												"type" : "auto",
-												"digest" : "Start index (samples)",
-												"defaultarg" : 3,
-												"docked" : 0
-											}
-, 											{
-												"name" : "end",
-												"type" : "auto",
-												"digest" : "End index (samples).",
-												"defaultarg" : 4,
-												"docked" : 0
-											}
-, 											{
-												"name" : "offset",
-												"type" : "auto",
-												"digest" : "Channel offset (zero-based).",
-												"defaultarg" : 5,
-												"docked" : 0
-											}
- ],
+										"inputs" : [  ],
 										"outputs" : [ 											{
 												"name" : "out1",
 												"type" : "signal",
-												"digest" : "Sampled value at channel 1.",
-												"docked" : 0
-											}
-, 											{
-												"name" : "outindex",
-												"type" : "signal",
-												"digest" : "Index (in samples).",
+												"digest" : "signal from inlet with index 1",
+												"displayName" : "phase",
 												"docked" : 0
 											}
  ],
-										"helpname" : "wave~",
-										"aliasOf" : "wave~",
-										"classname" : "wave~",
+										"helpname" : "in~",
+										"aliasOf" : "in~",
+										"classname" : "in~",
 										"operator" : 0,
-										"versionId" : -2119515924,
-										"changesPatcherIO" : 0
+										"versionId" : -176007711,
+										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "wave~ pattern"
+									"text" : "in~ 1 @comment phase"
 								}
 
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-6",
+									"id" : "obj-4",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 3,
 									"outlettype" : [ "", "", "" ],
-									"patching_rect" : [ 393.285688102245331, 349.935498952865601, 89.0, 23.0 ],
+									"patching_rect" : [ 177.0, 155.0, 68.0, 23.0 ],
 									"rnbo_classname" : "buffer~",
 									"rnbo_extra_attributes" : 									{
 										"file" : "",
@@ -403,8 +312,8 @@
 										"samplerate" : 0.0
 									}
 ,
-									"rnbo_serial" : 2,
-									"rnbo_uniqueid" : "buffer~_obj-6",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "buffer~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
@@ -684,79 +593,93 @@
 										"changesPatcherIO" : 0
 									}
 ,
-									"text" : "buffer~ pattern"
+									"text" : "buffer~ buf"
 								}
 
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-21",
+									"id" : "obj-3",
 									"maxclass" : "newobj",
-									"numinlets" : 1,
+									"numinlets" : 4,
 									"numoutlets" : 2,
-									"outlettype" : [ "", "" ],
-									"patching_rect" : [ 574.0, 197.0, 41.0, 23.0 ],
-									"rnbo_classname" : "edge~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "edge~_obj-21",
-									"text" : "edge~"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-20",
-									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 574.0, 161.0, 42.0, 23.0 ],
-									"rnbo_classname" : ">~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : ">~_obj-20",
-									"text" : ">~ 0.5"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-7",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 574.0, 230.0, 81.0, 23.0 ],
-									"rnbo_classname" : "outport",
+									"outlettype" : [ "signal", "signal" ],
+									"patching_rect" : [ 259.0, 193.0, 64.0, 23.0 ],
+									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
-										"meta" : ""
+										"channels" : 1.0,
+										"indexmode" : "wave",
+										"boundmode" : "wrap",
+										"channelmode" : "wrap",
+										"interp" : "linear"
 									}
 ,
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "outport_obj-7",
-									"text" : "outport regen"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-4",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 574.0, 121.0, 130.0, 23.0 ],
-									"rnbo_classname" : "in~",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "in~_obj-4",
+									"rnbo_uniqueid" : "wave~_obj-3",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
+											"phase" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Phase to read (0..1, between start and end).",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number"
+											}
+,
+											"start" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Start index (samples)",
+												"defaultarg" : 3,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+,
+											"end" : 											{
+												"attrOrProp" : 1,
+												"digest" : "End index (samples).",
+												"defaultarg" : 4,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number",
+												"defaultValue" : "-1"
+											}
+,
+											"offset" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Channel offset (zero-based).",
+												"defaultarg" : 5,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+,
 											"out1" : 											{
 												"attrOrProp" : 1,
-												"digest" : "signal from inlet with index 2",
+												"digest" : "Sampled value at channel 1.",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 0,
@@ -767,103 +690,34 @@
 												"type" : "signal"
 											}
 ,
-											"index" : 											{
-												"attrOrProp" : 2,
-												"digest" : "inlet number",
-												"defaultarg" : 1,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "number",
-												"mandatory" : 1
-											}
-,
-											"comment" : 											{
-												"attrOrProp" : 2,
-												"digest" : "mouse over comment",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "symbol"
-											}
-,
-											"meta" : 											{
-												"attrOrProp" : 2,
-												"digest" : "A JSON formatted string containing metadata for use by the exported code",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "symbol",
-												"defaultValue" : "",
-												"label" : "Metadata",
-												"displayorder" : 3
-											}
-
-										}
-,
-										"inputs" : [  ],
-										"outputs" : [ 											{
-												"name" : "out1",
-												"type" : "signal",
-												"digest" : "signal from inlet with index 2",
-												"displayName" : "regen",
-												"docked" : 0
-											}
- ],
-										"helpname" : "in~",
-										"aliasOf" : "in~",
-										"classname" : "in~",
-										"operator" : 0,
-										"versionId" : -176007711,
-										"changesPatcherIO" : 1
-									}
-,
-									"text" : "in~ 2 @comment regen"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-2",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 507.0, 495.763443231582642, 168.0, 23.0 ],
-									"rnbo_classname" : "out~",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "out~_obj-2",
-									"rnboinfo" : 									{
-										"needsInstanceInfo" : 1,
-										"argnames" : 										{
-											"in1" : 											{
+											"outindex" : 											{
 												"attrOrProp" : 1,
-												"digest" : "signal sent to outlet with index 1",
+												"digest" : "Index (in samples).",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 0,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"inlet" : 1,
+												"outlet" : 1,
 												"type" : "signal"
 											}
 ,
-											"index" : 											{
+											"buffer" : 											{
+												"attrOrProp" : 1,
+												"digest" : "If multiple buffer names are declared to be used, this sets the currently active buffer using an index [0 based].",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+,
+											"buffername" : 											{
 												"attrOrProp" : 2,
-												"digest" : "outlet number",
+												"digest" : "Buffer to use.",
 												"defaultarg" : 1,
 												"isalias" : 0,
 												"aliases" : [  ],
@@ -871,196 +725,148 @@
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"type" : "number",
+												"type" : "symbol",
 												"mandatory" : 1
 											}
 ,
-											"comment" : 											{
+											"channels" : 											{
 												"attrOrProp" : 2,
-												"digest" : "mouse over comment",
+												"digest" : "Number of channels",
+												"defaultarg" : 2,
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 1,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"type" : "symbol"
+												"type" : "number",
+												"defaultValue" : "1"
 											}
 ,
-											"meta" : 											{
+											"boundmode" : 											{
 												"attrOrProp" : 2,
-												"digest" : "A JSON formatted string containing metadata for use by the exported code",
+												"digest" : "Set the bound mode for input sample values",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 1,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"type" : "symbol",
-												"defaultValue" : "",
-												"label" : "Metadata",
-												"displayorder" : 3
+												"enum" : [ "fold", "clamp", "clip", "wrap", "mirror", "ignore" ],
+												"type" : "enum",
+												"defaultValue" : "wrap"
+											}
+,
+											"channelmode" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Set the bound mode for input channel values",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"enum" : [ "fold", "clamp", "clip", "wrap", "mirror", "ignore" ],
+												"type" : "enum",
+												"defaultValue" : "wrap"
+											}
+,
+											"indexmode" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Set the lookup mode for values in the buffer",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"enum" : [ "phase", "samples", "signal", "lookup", "wave" ],
+												"type" : "enum",
+												"defaultValue" : "wave"
+											}
+,
+											"interp" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Set the type of interpolation to use when reading samples from the buffer.",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"enum" : [ "linear", "cubic", "spline", "cosine", "step", "none" ],
+												"type" : "enum",
+												"defaultValue" : "linear"
 											}
 
 										}
 ,
 										"inputs" : [ 											{
-												"name" : "in1",
-												"type" : "signal",
-												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"name" : "phase",
+												"type" : "auto",
+												"digest" : "Phase to read (0..1, between start and end).",
 												"hot" : 1,
 												"docked" : 0
 											}
- ],
-										"outputs" : [  ],
-										"helpname" : "out~",
-										"aliasOf" : "out~",
-										"classname" : "out~",
-										"operator" : 0,
-										"versionId" : 374499139,
-										"changesPatcherIO" : 1
-									}
-,
-									"text" : "out~ 1 @comment \"signal out\""
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-1",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 507.0, 349.935498952865601, 132.0, 23.0 ],
-									"rnbo_classname" : "in~",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 2,
-									"rnbo_uniqueid" : "in~_obj-1",
-									"rnboinfo" : 									{
-										"needsInstanceInfo" : 1,
-										"argnames" : 										{
-											"out1" : 											{
-												"attrOrProp" : 1,
-												"digest" : "signal from inlet with index 1",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 0,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"outlet" : 1,
-												"type" : "signal"
+, 											{
+												"name" : "start",
+												"type" : "auto",
+												"digest" : "Start index (samples)",
+												"defaultarg" : 3,
+												"docked" : 0
 											}
-,
-											"index" : 											{
-												"attrOrProp" : 2,
-												"digest" : "inlet number",
-												"defaultarg" : 1,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "number",
-												"mandatory" : 1
+, 											{
+												"name" : "end",
+												"type" : "auto",
+												"digest" : "End index (samples).",
+												"defaultarg" : 4,
+												"docked" : 0
 											}
-,
-											"comment" : 											{
-												"attrOrProp" : 2,
-												"digest" : "mouse over comment",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "symbol"
-											}
-,
-											"meta" : 											{
-												"attrOrProp" : 2,
-												"digest" : "A JSON formatted string containing metadata for use by the exported code",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "symbol",
-												"defaultValue" : "",
-												"label" : "Metadata",
-												"displayorder" : 3
-											}
-
-										}
-,
-										"inputs" : [  ],
-										"outputs" : [ 											{
-												"name" : "out1",
-												"type" : "signal",
-												"digest" : "signal from inlet with index 1",
-												"displayName" : "phase",
+, 											{
+												"name" : "offset",
+												"type" : "auto",
+												"digest" : "Channel offset (zero-based).",
+												"defaultarg" : 5,
 												"docked" : 0
 											}
  ],
-										"helpname" : "in~",
-										"aliasOf" : "in~",
-										"classname" : "in~",
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "signal",
+												"digest" : "Sampled value at channel 1.",
+												"docked" : 0
+											}
+, 											{
+												"name" : "outindex",
+												"type" : "signal",
+												"digest" : "Index (in samples).",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "wave~",
+										"aliasOf" : "wave~",
+										"classname" : "wave~",
 										"operator" : 0,
-										"versionId" : -176007711,
-										"changesPatcherIO" : 1
+										"versionId" : -2119515924,
+										"changesPatcherIO" : 0
 									}
 ,
-									"text" : "in~ 1 @comment phase"
+									"text" : "wave~ buf"
 								}
 
 							}
  ],
 						"lines" : [ 							{
 								"patchline" : 								{
-									"destination" : [ "obj-15", 0 ],
-									"source" : [ "obj-1", 0 ]
+									"destination" : [ "obj-6", 0 ],
+									"source" : [ "obj-3", 0 ]
 								}
 
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-8", 0 ],
-									"source" : [ "obj-15", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-21", 0 ],
-									"source" : [ "obj-20", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-7", 0 ],
-									"source" : [ "obj-21", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-20", 0 ],
-									"source" : [ "obj-4", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-2", 0 ],
-									"source" : [ "obj-8", 0 ]
+									"destination" : [ "obj-3", 0 ],
+									"source" : [ "obj-5", 0 ]
 								}
 
 							}
@@ -1080,7 +886,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "pattern.json"
+									"file_name" : "wave.json"
 								}
 
 							}
@@ -1089,7 +895,7 @@
 
 					}
 ,
-					"patching_rect" : [ 286.0, 160.0, 40.0, 22.0 ],
+					"patching_rect" : [ 125.0, 109.0, 40.0, 22.0 ],
 					"rnboattrcache" : 					{
 
 					}
@@ -1108,7 +914,7 @@
 					"saved_object_attributes" : 					{
 						"optimization" : "O1",
 						"parameter_enable" : 1,
-						"uuid" : "290a2c8b-bde5-11ee-ac8b-acde48001122"
+						"uuid" : "28abb4b3-e5f8-11ee-b4b3-acde48001122"
 					}
 ,
 					"snapshot" : 					{
@@ -1121,7 +927,7 @@
 						"subtype" : "Undefined",
 						"embed" : 1,
 						"snapshot" : 						{
-							"__presetid" : "290a2c8b-bde5-11ee-ac8b-acde48001122"
+							"__presetid" : "28abb4b3-e5f8-11ee-b4b3-acde48001122"
 						}
 ,
 						"snapshotlist" : 						{
@@ -1131,20 +937,20 @@
 									"version" : 2,
 									"minorversion" : 0,
 									"name" : "untitled",
-									"origin" : "290a2c8b-bde5-11ee-ac8b-acde48001122",
+									"origin" : "28abb4b3-e5f8-11ee-b4b3-acde48001122",
 									"type" : "rnbo",
 									"subtype" : "",
 									"embed" : 0,
 									"snapshot" : 									{
-										"__presetid" : "290a2c8b-bde5-11ee-ac8b-acde48001122"
+										"__presetid" : "28abb4b3-e5f8-11ee-b4b3-acde48001122"
 									}
 ,
 									"fileref" : 									{
 										"name" : "untitled",
-										"filename" : "untitled_20240128.maxsnap",
+										"filename" : "untitled_20240319.maxsnap",
 										"filepath" : "~/Documents/Max 8/Snapshots",
 										"filepos" : -1,
-										"snapshotfileid" : "6231f3b733364a77f2782db45cc09e0a"
+										"snapshotfileid" : "a05e8903a0a1d194449021004723daa2"
 									}
 
 								}
@@ -1175,7 +981,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "untitled_20240128.maxsnap",
+				"name" : "untitled_20240319.maxsnap",
 				"bootpath" : "~/Documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../../Users/cella/Documents/Max 8/Snapshots",
 				"type" : "mx@s",
