@@ -114,6 +114,25 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-5",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 393.285688102245331, 121.0, 82.0, 23.0 ],
+									"rnbo_classname" : "inport",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 4,
+									"rnbo_uniqueid" : "inport_obj-5",
+									"text" : "inport pattern"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"fontname" : "Lato",
 									"fontsize" : 12.0,
 									"id" : "obj-8",
@@ -139,11 +158,11 @@
 									"patching_rect" : [ 507.0, 399.367129445075989, 85.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
+										"channelmode" : "wrap",
+										"interp" : "linear",
 										"channels" : 1.0,
 										"indexmode" : "wave",
-										"boundmode" : "wrap",
-										"channelmode" : "wrap",
-										"interp" : "linear"
+										"boundmode" : "wrap"
 									}
 ,
 									"rnbo_serial" : 1,
@@ -403,7 +422,7 @@
 										"samplerate" : 0.0
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "buffer~_obj-6",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,

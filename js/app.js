@@ -27,30 +27,11 @@ createButtonForNavBar(
     () => context.resume()
 );
 
-// create a button for adding audio devices to the workspace
-createButtonForNavBar(
-    'Add device',
-    'deviceSelectButton navbarButton',
-    () => {
-        openAwesompleteUI(true);
-    }
-);
-
-// create a button for listing all functions
-createButtonForNavBar(
-    'All Functions',
-    'allFunctionsButton navbarButton',
-    function(event) {
-        event.stopPropagation();
-        displayAllDevices();
-    }
-);
-
 // create a button for saving workspace state
-createButtonForNavBar('Save State', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
+createButtonForNavBar('save', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
 
 // create a button for reloading workspace state
-createButtonForNavBar('Load State', 'reloadStateButton navbarButton', async () => {
+createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
     context.resume();
 });
@@ -102,7 +83,9 @@ workspaceElement.addEventListener('mousedown', (event) => {
         let rect = workspaceElement.getBoundingClientRect();
         startPoint = { x: event.clientX - rect.left, y: event.clientY - rect.top };
         // create the selection div and add it to the workspaceElement
-        selectionDiv = document.createElement('div');
+        if ( !selectionDiv) {
+            selectionDiv = document.createElement('div');
+        }
         selectionDiv.style.position = 'absolute';
         selectionDiv.style.border = '1px dashed #000';
         selectionDiv.style.background = 'rgba(0, 0, 0, 0.1)';
@@ -127,7 +110,7 @@ workspaceElement.addEventListener('mousemove', (event) => {
 });
 
 // listen for mouseup events on the workspaceElement
-workspaceElement.addEventListener('mouseup', (event) => {
+workspaceElement.addEventListener('click', (event) => {
     if (startPoint) {
         // check which elements are within the selection div
         let nodes = document.querySelectorAll('.node');
@@ -141,8 +124,10 @@ workspaceElement.addEventListener('mouseup', (event) => {
                 // add a special CSS class to the selected node
                 node.classList.add('selectedNode');
             } else {
-                // remove the special class from the node if it's not selected
-                node.classList.remove('selectedNode');
+                if ( event.target.id == 'workspace' ) {
+                    // remove the special class from the node if it's not selected
+                    node.classList.remove('selectedNode');   
+                }
             }
         });
 
@@ -195,7 +180,7 @@ function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
     deviceDropdown.appendChild(micInputOption);
 }
 
-function openAwesompleteUI(fromButtonClick) {
+function openAwesompleteUI() {
     // get the dropdown element
     var dropdown = document.querySelector('.deviceDropdown');
     
@@ -211,8 +196,8 @@ function openAwesompleteUI(fromButtonClick) {
     var div = document.createElement('div');
     div.className = 'awesomplete';
     div.style.position = 'absolute';
-    div.style.left = fromButtonClick ? '10px' : mousePosition.x + 'px';
-    div.style.top = fromButtonClick ? '70px' : mousePosition.y + 'px';
+    div.style.left = mousePosition.x + 'px';
+    div.style.top = mousePosition.y + 'px';
 
     div.appendChild(p);
 
@@ -235,6 +220,12 @@ function openAwesompleteUI(fromButtonClick) {
         if (!awesomplete.selected) {
             awesomplete.close();
             div.style.display = 'none';
+
+        }
+        // remove all elements with class name "awesomplete"
+        var elements = document.getElementsByClassName('awesomplete');
+        while(elements.length > 0){
+            elements[0].parentNode.removeChild(elements[0]);
         }
     };
 
@@ -243,6 +234,19 @@ function openAwesompleteUI(fromButtonClick) {
     button.textContent = 'add';
     button.className = 'awesomplete-submit';
     div.appendChild(button);
+
+    // create a new button element for displaying all devices
+    var allDevicesButton = document.createElement('button');
+    allDevicesButton.textContent = 'All Devices';
+    allDevicesButton.className = 'allDevicesButton';
+    div.appendChild(allDevicesButton);
+
+    // add event listener for click event on the allDevicesButton
+    allDevicesButton.addEventListener('mousedown', function(event) {
+        event.preventDefault();
+        displayAllDevices();
+    });
+
 
     // function to handle the creation of the device by name
     async function handleCreateDeviceByName() {
@@ -296,6 +300,13 @@ function initializeAwesomplete () {
     document.addEventListener('keydown', function(event) {
         // check if 'n' key is pressed and no input is focused
         if (event.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input') {
+            event.preventDefault();
+            openAwesompleteUI();
+        }
+    });
+
+    document.addEventListener('dblclick', function(event) {
+        if ( event.target.id == 'workspace' ) {
             event.preventDefault();
             openAwesompleteUI();
         }
@@ -360,7 +371,6 @@ function removeDeviceFromWorkspace(deviceId) {
 function addInputsForDevice(device) {
     const inportForm = document.createElement('form');
     const inportContainer = document.createElement('div');
-    let inportTag = null;
     let inports = [];
 
     const messages = device.messages;
@@ -518,6 +528,7 @@ async function createDeviceByName(filename, audioBuffer = null) {
             createAudioLoader(device, context, deviceDiv);
         }
     }
+    deviceDiv.onmousedown = removeSelectedNodeClass;
     return deviceDiv;
 }
 
@@ -647,16 +658,6 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             // add the selectedNode class
             deviceDiv.classList.add('selectedNode');
         },
-        stop: function(event) {
-            // remove the selectedNode class from all nodes
-            let nodes = document.querySelectorAll('.node');
-            nodes.forEach((node) => {
-                if (node.classList.contains('selectedNode')) {
-                    node.classList.remove('selectedNode');
-                }
-            });
-
-        }
     });
     return deviceDiv;
 }
@@ -678,6 +679,17 @@ function createDropdownofAllDevices () {
     // create microphone input module
     addMicrophoneInputDeviceToDropdown(deviceDropdown);
     return deviceDropdown;
+}
+
+function removeSelectedNodeClass(event) {
+    // remove the selectedNode class from all nodes
+    let nodes = document.querySelectorAll('.node');
+    nodes.forEach((node) => {
+        if (node === event.target) return;
+        if (node.classList.contains('selectedNode')) {
+            node.classList.remove('selectedNode');
+        }
+    });
 }
 
 function createButtonForNavBar(text, className, clickHandler) {
@@ -769,36 +781,23 @@ async function getWorkspaceState(saveToFile = false) {
     return workspaceState;
 }
 
-async function reconstructWorkspaceState(fromLocalStorage = false) {
+async function reconstructWorkspaceState() {
     let deviceStates;
 
-    if (fromLocalStorage) {
-        let patcherState = localStorage.getItem('patcherState');
-        if (patcherState) {
-            deviceStates = JSON.parse(patcherState);
-        } else {
-            console.error('No saved state in localStorage');
-            return;
-        }
-    } else {
-        let fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.zip';
+    let fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.zip';
 
-        fileInput.onchange = async function(event) {
-            let file = event.target.files[0];
-            let zip = await JSZip.loadAsync(file);
-            let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
-            let patcherState = await zip.file(jsonFileName).async('string');
-            deviceStates = JSON.parse(patcherState);
-            await reconstructDevicesAndConnections(deviceStates, zip);
-        };
+    fileInput.onchange = async function(event) {
+        let file = event.target.files[0];
+        let zip = await JSZip.loadAsync(file);
+        let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
+        let patcherState = await zip.file(jsonFileName).async('string');
+        deviceStates = JSON.parse(patcherState);
+        await reconstructDevicesAndConnections(deviceStates, zip);
+    };
 
-        fileInput.click();
-        return;
-    }
-
-    await reconstructDevicesAndConnections(deviceStates);
+    fileInput.click();
 }
 
 async function reconstructDevicesAndConnections(deviceStates, zip) {
@@ -886,6 +885,9 @@ function displayAllDevices() {
 
     // add the modal to the body
     document.body.appendChild(modal);
+    modal.style.position = 'absolute';
+    modal.style.left = mousePosition.x + 'px';
+    modal.style.top = mousePosition.y + 'px';
 
     // add an event listener to the body to remove the modal when clicked
     document.body.addEventListener('click', function(event) {

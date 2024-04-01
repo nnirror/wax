@@ -38,32 +38,25 @@ body {
     font-size: 0.8em;
 }
 .saveStateButton {
-    top: 10px;
-    right: 10px;
-}
-.copyStateButton {
-    top: 70px;
+    top: 40px;
     right: 10px;
 }
 .reloadStateButton {
-    top: 40px;
+    top: 70px;
     right: 10px;
 }
 .startAudioButton {
     top: 10px;
-    left: 10px;
-}
-.deviceSelectButton {
-    top: 40px;
-    left: 10px;
+    right: 10px;
 }
 .navbarButton {
     position: fixed;
     z-index: 1000;
 }
-.allFunctionsButton {
-    top: 70px;
-    left: 10px;
+.allDevicesButton {
+    position: absolute;
+    z-index: 1000;
+    left: 12em;
 }
 .deviceDropdown {
     display: none;
@@ -92,6 +85,7 @@ body {
     width: 5em;
 }
 .awesomplete {
+    width: 20em;
     z-index: 1;
 }
 .awesomplete-submit {
