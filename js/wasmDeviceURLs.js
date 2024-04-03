@@ -3,6 +3,7 @@ var wasmDeviceURLs = [
     "add",
     "bpf",
     "clock_divider",
+    "comment",
     "cycle",
     "delay",
     "granulator",

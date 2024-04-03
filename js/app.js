@@ -309,7 +309,7 @@ function openAwesompleteUI() {
 function initializeAwesomplete () {
     document.addEventListener('keydown', function(event) {
         // check if 'n' key is pressed and no input is focused
-        if (event.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input') {
+        if (event.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
             event.preventDefault();
             openAwesompleteUI();
         }
@@ -392,8 +392,12 @@ function addInputsForDevice(device) {
 
     if (inports.length > 0) {
         inports.forEach(inport => {
-            const inportText = document.createElement('input');
-            inportText.type = 'text';
+            let inportText;
+            if (device.it.T.inports[0].tag == 'comment' || device.it.T.inports[0].tag == 'pattern') {
+                inportText = document.createElement('textarea');
+            } else {
+                inportText = document.createElement('input');
+            }
             inportText.id = inport.tag;
             inportText.className = 'deviceInport'
             inportText.addEventListener('change', function(event) {
@@ -809,6 +813,12 @@ async function getWorkspaceState(saveToFile = false) {
             deviceState.inputs[input.id] = input.value;
         }
 
+        // save the values of the textarea elements
+        let textareas = deviceElement.getElementsByTagName('textarea');
+        for (let textarea of textareas) {
+            deviceState.inputs[textarea.id] = textarea.value;
+        }
+
         if (deviceElement.dataset.audioFileName) {
             let audioBuffer = audioBuffers[deviceElement.dataset.audioFileName];
             let wav = audioBufferToWav(audioBuffer);
@@ -889,6 +899,12 @@ async function getStateForDeviceIds(deviceIds) {
             deviceState.inputs[input.id] = input.value;
         }
 
+        // save the values of the textarea elements
+        let textareas = deviceElement.getElementsByTagName('textarea');
+        for (let textarea of textareas) {
+            deviceState.inputs[textarea.id] = textarea.value;
+        }
+
         workspaceState.push(deviceState);
     }
 
@@ -961,6 +977,15 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             if (deviceState.inputs[input.id]) {
                 input.value = deviceState.inputs[input.id];
                 input.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // set the values of its textarea elements
+        let textareas = deviceElement.getElementsByTagName('textarea');
+        for (let textarea of textareas) {
+            if (deviceState.inputs[textarea.id]) {
+                textarea.value = deviceState.inputs[textarea.id];
+                textarea.dispatchEvent(new Event('change'));
             }
         }
 
