@@ -22,7 +22,7 @@ let deviceDropdown = createDropdownofAllDevices();
 
 // create a button for starting audio
 createButtonForNavBar(
-    'Start Audio',
+    'start audio',
     'startAudioButton navbarButton',
     () => context.resume()
 );
@@ -126,7 +126,7 @@ workspaceElement.addEventListener('click', (event) => {
             } else {
                 if ( event.target.id == 'workspace' ) {
                     // remove the special class from the node if it's not selected
-                    node.classList.remove('selectedNode');   
+                    node.classList.remove('selectedNode'); 
                 }
             }
         });
@@ -169,6 +169,15 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// copy-paste functionality
+document.addEventListener('keydown', async function(event) {
+    // command-d for duplicate
+    if (event.metaKey && event.key === 'd') {
+        event.preventDefault();
+        await copySelectedNodes();
+    }
+});
+
 initializeAwesomplete();
 /* END event handlers */
 
@@ -189,17 +198,18 @@ function openAwesompleteUI() {
         return option.text;
     });
 
-    var p = document.createElement('p');
-    p.textContent = "Type to select a device...";
+    var deviceSelectTextDiv = document.createElement('div');
+    deviceSelectTextDiv.textContent = "type to select a device...";
+    deviceSelectTextDiv.className = 'deviceSelectText';
 
     // create a new div element for autocomplete
     var div = document.createElement('div');
-    div.className = 'awesomplete';
+    div.className = 'awesompleteContainer';
     div.style.position = 'absolute';
     div.style.left = mousePosition.x + 'px';
     div.style.top = mousePosition.y + 'px';
 
-    div.appendChild(p);
+    div.appendChild(deviceSelectTextDiv);
 
     // create a new input element for autocomplete
     var input = document.createElement('input');
@@ -223,7 +233,7 @@ function openAwesompleteUI() {
 
         }
         // remove all elements with class name "awesomplete"
-        var elements = document.getElementsByClassName('awesomplete');
+        var elements = document.getElementsByClassName('awesompleteContainer');
         while(elements.length > 0){
             elements[0].parentNode.removeChild(elements[0]);
         }
@@ -237,7 +247,7 @@ function openAwesompleteUI() {
 
     // create a new button element for displaying all devices
     var allDevicesButton = document.createElement('button');
-    allDevicesButton.textContent = 'All Devices';
+    allDevicesButton.textContent = 'view all';
     allDevicesButton.className = 'allDevicesButton';
     div.appendChild(allDevicesButton);
 
@@ -314,14 +324,16 @@ function initializeAwesomplete () {
 }
 
 async function createMicrophoneDevice() {
-    // TODO: look into / fix occasional garbled mic input
     // get access to the microphone
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     // create a source node from the stream
     const source = context.createMediaStreamSource(stream);
+
     // create a wrapper object for the source
     const device = {
         node: source,
+        stream: stream,
+        source: source,
         it: {
             T: {
                 outlets: [{ comment: 'microphone output' }], // these need to exist so they work like the other WASM modules built with RNBO
@@ -507,11 +519,30 @@ function finishConnection(deviceId, inputIndex) {
     jsPlumb.repaintEverything();
 }
 
-async function createDeviceByName(filename, audioBuffer = null) {
+async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
     let deviceDiv;
     if (filename === "mic") {
         const device = await createMicrophoneDevice();
         deviceDiv = addDeviceToWorkspace(device, "microphone input", false);
+        await createInputDeviceSelector(device, context, deviceDiv);
+        // listen for the streamChanged event
+        deviceDiv.addEventListener('streamChanged', async (event) => {
+            // stop the old stream
+            device.stream.getTracks().forEach(track => track.stop());
+        
+            // disconnect the old source
+            device.node.disconnect();
+        
+            // update the stream
+            device.stream = event.detail;
+        
+            // create a new source with the new stream
+            const newSource = context.createMediaStreamSource(device.stream);
+        
+            // update the source and node
+            device.source = newSource;
+            device.node = newSource;
+        });
     }
     else if ( filename.startsWith('outputnode') ) {
         deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
@@ -521,7 +552,7 @@ async function createDeviceByName(filename, audioBuffer = null) {
         const patcher = await response.json();
         const device = await RNBO.createDevice({ context, patcher });
         deviceDiv = addDeviceToWorkspace(device, filename, false);
-        if ( filename == 'wave' ) {
+        if ( filename == 'wave' || filename == 'granulator' ) {
             if (audioBuffer) {
                 await device.setDataBuffer('buf', audioBuffer);
             }
@@ -529,7 +560,43 @@ async function createDeviceByName(filename, audioBuffer = null) {
         }
     }
     deviceDiv.onmousedown = removeSelectedNodeClass;
+    if ( devicePosition ) {
+        deviceDiv.style.left = devicePosition.left + 'px';
+        deviceDiv.style.top = devicePosition.top + 'px';
+    }
     return deviceDiv;
+}
+
+async function createInputDeviceSelector(device, context, deviceDiv) {
+    // create a new select element
+    const select = document.createElement('select');
+    select.className = 'audioInputDeviceSelect'
+
+    // get the list of available input devices
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+
+    // create an option for each device
+    audioInputDevices.forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.deviceId;
+        option.textContent = device.label;
+        select.appendChild(option);
+    });
+
+    // listen for changes
+    select.addEventListener('change', async (event) => {
+        const deviceId = event.target.value;
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: deviceId } });
+        // emit a custom event with the new stream
+        const streamChangedEvent = new CustomEvent('streamChanged', { detail: stream });
+        deviceDiv.dispatchEvent(streamChangedEvent);
+    });
+
+    // select the form inside the deviceDiv
+    const form = deviceDiv.querySelector('form');
+    // add the select to the form
+    form.appendChild(select);
 }
 
 function createAudioLoader(device, context, deviceDiv) {
@@ -692,6 +759,16 @@ function removeSelectedNodeClass(event) {
     });
 }
 
+function deselectAllNodes () {
+    jsPlumb.clearDragSelection();
+    let nodes = document.querySelectorAll('.node');
+    nodes.forEach((node) => {
+        if (node.classList.contains('selectedNode')) {
+            node.classList.remove('selectedNode');
+        }
+    });
+}
+
 function createButtonForNavBar(text, className, clickHandler) {
     const button = document.createElement('button');
     button.innerText = text;
@@ -781,6 +858,52 @@ async function getWorkspaceState(saveToFile = false) {
     return workspaceState;
 }
 
+async function getStateForDeviceIds(deviceIds) {
+    let workspaceState = [];
+    
+    for (let id of deviceIds) {
+        let device = devices[id];
+        let deviceElement = document.getElementById(id);
+
+        let connections = [];
+        if (Array.isArray(device.connections)) {
+            // create a new array of connections without the splitter property which cannot be serialized
+            connections = device.connections.map(connection => {
+                let { splitter, ...connectionWithoutSplitter } = connection;
+                return connectionWithoutSplitter;
+            });
+        }
+
+        let deviceState = {
+            id: id,
+            connections: connections,
+            left: deviceElement.style.left,
+            top: deviceElement.style.top,
+            inputs: {},
+            audioFileName: deviceElement.dataset.audioFileName
+        };
+
+        // save the values of the input elements
+        let inputs = deviceElement.getElementsByTagName('input');
+        for (let input of inputs) {
+            deviceState.inputs[input.id] = input.value;
+        }
+
+        workspaceState.push(deviceState);
+    }
+
+    return workspaceState;
+}
+
+async function copySelectedNodes() {
+    // get all the ids of elements with class "selectedNode"
+    let deviceIds = Array.from(document.getElementsByClassName('selectedNode')).map(node => node.id);
+    deselectAllNodes();
+    // call reconstructDevicesAndConnections with the state for the selected devices
+    reconstructDevicesAndConnections(await getStateForDeviceIds(deviceIds), null, true);
+    selectionDiv = null;
+}
+
 async function reconstructWorkspaceState() {
     let deviceStates;
 
@@ -794,35 +917,44 @@ async function reconstructWorkspaceState() {
         let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
         let patcherState = await zip.file(jsonFileName).async('string');
         deviceStates = JSON.parse(patcherState);
-        await reconstructDevicesAndConnections(deviceStates, zip);
+        await reconstructDevicesAndConnections(deviceStates, zip, true);
     };
 
     fileInput.click();
 }
 
-async function reconstructDevicesAndConnections(deviceStates, zip) {
+async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false) {
     let connectionsToMake = [];
     let idMap = {};
 
     for (let deviceState of deviceStates) {
         let deviceName = deviceState.id.split('-')[0];            
         let deviceElement;
-
+        let devicePosition = {};
+        if ( reconstructFromDuplicateCommand ) {
+            let l = parseInt(deviceState.left.split('px')[0]);
+            let t = parseInt(deviceState.top.split('px')[0]);
+            devicePosition = {left: l+100, top: t+100};
+        }
         // load any stored audio files
         if (deviceState.audioFileName && zip ) {
             let wavFileData = await zip.file(deviceState.audioFileName).async('arraybuffer');
             let audioBuffer = await context.decodeAudioData(wavFileData);
             audioBuffers[deviceState.audioFileName] = audioBuffer;
-            deviceElement = await createDeviceByName(deviceName,audioBuffer);
+            deviceElement = await createDeviceByName(deviceName,audioBuffer,devicePosition);
         }
         else {
-            deviceElement = await createDeviceByName(deviceName);
+            if ( deviceName == 'microphone input') {
+                deviceElement = await createDeviceByName('mic', null, devicePosition);
+            }
+            else {
+                deviceElement = await createDeviceByName(deviceName, null, devicePosition);
+            }
         }
 
-        // move the device to its previous position
-        deviceElement.style.left = deviceState.left;
-        deviceElement.style.top = deviceState.top;
-
+        deviceElement.classList.add('selectedNode');
+        jsPlumb.addToDragSelection(deviceElement);
+        
         // set the values of its input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
@@ -850,8 +982,11 @@ async function reconstructDevicesAndConnections(deviceStates, zip) {
 
     // make the connections
     for (let connection of connectionsToMake) {
-        startConnection(idMap[connection.source], connection.output);
-        finishConnection(idMap[connection.target], connection.input);
+        // Check if the target node exists
+        if (idMap[connection.target]) {
+            startConnection(idMap[connection.source], connection.output);
+            finishConnection(idMap[connection.target], connection.input);
+        }
     }
 
     // repaint everything after all devices have been added

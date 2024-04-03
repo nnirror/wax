@@ -5,6 +5,7 @@ var wasmDeviceURLs = [
     "clock_divider",
     "cycle",
     "delay",
+    "granulator",
     "hpf",
     "line",
     "lpf",

@@ -18,7 +18,6 @@
   "homepage": "https://github.com/Cycling74/rnbo.example.webpage#readme",
   "dependencies": {
     "@rnbo/js": "^1.2.3",
-    "audiobuffer-to-wav": "^1.0.0",
     "awesomplete": "^1.1.5",
     "jsplumb": "^2.15.6",
     "jszip": "^3.10.1"
