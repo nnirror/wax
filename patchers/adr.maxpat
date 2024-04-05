@@ -77,7 +77,7 @@
 						}
 ,
 						"classnamespace" : "rnbo",
-						"rect" : [ 34.0, 62.0, 1724.0, 1024.0 ],
+						"rect" : [ 34.0, 62.0, 1292.0, 1024.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -360,7 +360,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "inport_obj-7",
 									"text" : "inport decay (ms)"
 								}
@@ -379,7 +379,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "inport_obj-6",
 									"text" : "inport attack (ms)"
 								}
@@ -394,7 +394,7 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 300.0, 267.0, 33.0, 23.0 ],
 									"rnbo_classname" : "t",
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "t_obj-5",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -711,7 +711,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "adsr.json"
+									"file_name" : "adr.json"
 								}
 
 							}

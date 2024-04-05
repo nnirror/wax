@@ -12,9 +12,18 @@ context.destination.channelInterpretation = "discrete";
 const channelMerger = context.createChannelMerger(context.destination.channelCount);
 // create a gainNode for mute/unmute
 const gainNode = context.createGain();
-// connect the channelMerger to the GainNode
-channelMerger.connect(gainNode);
-// connect the GainNode to the destination
+// create a dynamics compressor (limiter)
+const limiter = context.createDynamicsCompressor();
+limiter.threshold.value = -1;
+limiter.knee.value = 0;
+limiter.ratio.value = 20;
+limiter.attack.value = 0;
+limiter.release.value = 0.1;
+// connect the channelMerger to the limiter
+channelMerger.connect(limiter);
+// connect the limiter to the gainNode
+limiter.connect(gainNode);
+// connect the gainNode to the destination
 gainNode.connect(context.destination);
 /* END audio context initialization */
 
@@ -390,7 +399,6 @@ function attachOutports(device,deviceDiv) {
     }
     // listen on outports for any "regen" events to regenerate its parameters
     device.messageEvent.subscribe((ev) => {
-        console.log(`this should ocntinually happen ${Date.now()}`)
         // ignore message events that don't belong to an outport
         if (outports.findIndex(elt => elt.tag === ev.tag) < 0) return;
 
@@ -485,8 +493,10 @@ async function scheduleDeviceEvent(device, inport, value) {
         else {
             values = value.split(/\s+/).map(s => parseFloat(eval(s)));
         }
-        let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
-        device.scheduleEvent(messageEvent);
+        if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
+            let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
+            device.scheduleEvent(messageEvent);
+        }
     } catch (error) {
         console.error('An error occurred:', error);
     }
@@ -627,7 +637,15 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         deviceDiv = addDeviceToWorkspace(device, filename, false);
         if ( filename == 'wave' || filename == 'granulator' || filename == 'play' ) {
             if (audioBuffer) {
-                await device.setDataBuffer('buf', audioBuffer);
+                await device.setDataBuffer('buf', audioBuffer.buffer);
+                audioBuffers[audioBuffer.name] = audioBuffer.buffer;
+                deviceDiv.dataset.audioFileName = audioBuffer.name;
+                const fileNameElement = document.createElement('p');
+                fileNameElement.className = 'audioFileName';
+                fileNameElement.textContent = `file: ${audioBuffer.name}`;
+                const form = deviceDiv.querySelector('form');
+                form.appendChild(fileNameElement);
+
             }
             createAudioLoader(device, context, deviceDiv);
         }
@@ -1034,7 +1052,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             let wavFileData = await zip.file(deviceState.audioFileName).async('arraybuffer');
             let audioBuffer = await context.decodeAudioData(wavFileData);
             audioBuffers[deviceState.audioFileName] = audioBuffer;
-            deviceElement = await createDeviceByName(deviceName,audioBuffer,devicePosition);
+            deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
         }
         else {
             if ( deviceName == 'microphone input') {
