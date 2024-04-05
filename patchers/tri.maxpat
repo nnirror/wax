@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 7,
+			"minor" : 6,
+			"revision" : 0,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -47,7 +47,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "frequency"
+								"comment" : "frequency (hz)"
 							}
  ]
 					}
@@ -70,8 +70,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 7,
+							"minor" : 6,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -132,7 +132,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 253.0, 154.0, 23.0 ],
+									"patching_rect" : [ 171.0, 253.0, 175.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -204,7 +204,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 1",
-												"displayName" : "frequency",
+												"displayName" : "frequency (hz)",
 												"docked" : 0
 											}
  ],
@@ -216,7 +216,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 1 @comment frequency"
+									"text" : "in~ 1 @comment frequency (hz)"
 								}
 
 							}
@@ -368,7 +368,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "tri~.json"
+									"file_name" : "tri.json"
 								}
 
 							}
@@ -382,7 +382,7 @@
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.4",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
@@ -465,7 +465,7 @@
 		"dependency_cache" : [ 			{
 				"name" : "untitled_20240118.maxsnap",
 				"bootpath" : "~/Documents/Max 8/Snapshots",
-				"patcherrelativepath" : "../../../../../../Users/cella/Documents/Max 8/Snapshots",
+				"patcherrelativepath" : "../../../../../Users/cella/Documents/Max 8/Snapshots",
 				"type" : "mx@s",
 				"implicit" : 1
 			}

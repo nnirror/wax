@@ -18,7 +18,7 @@
         "index": 1,
         "tag": "in1",
         "meta": "",
-        "comment": "frequency"
+        "comment": "frequency (hz)"
       }
     ],
     "outlets": [
@@ -42,10 +42,10 @@
     "presetid": "rnbo",
     "meta": {
       "architecture": "x64",
-      "filename": "phasor~.maxpat",
+      "filename": "phasor.maxpat",
       "rnboobjname": "rnbomatic",
-      "maxversion": "8.5.7",
-      "rnboversion": "1.2.3",
+      "maxversion": "8.6.0",
+      "rnboversion": "1.2.4",
       "name": "untitled"
     }
   },

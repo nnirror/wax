@@ -47,7 +47,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "frequency (hz)"
+								"comment" : "trigger"
 							}
  ]
 					}
@@ -77,7 +77,7 @@
 						}
 ,
 						"classnamespace" : "rnbo",
-						"rect" : [ 34.0, 62.0, 1292.0, 1024.0 ],
+						"rect" : [ 34.0, 62.0, 1724.0, 1024.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -108,86 +108,21 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
-									"id" : "obj-21",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 2,
-									"outlettype" : [ "", "" ],
-									"patching_rect" : [ 550.0, 322.0, 41.0, 23.0 ],
-									"rnbo_classname" : "edge~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "edge~_obj-21",
-									"text" : "edge~"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-20",
+									"id" : "obj-8",
 									"maxclass" : "newobj",
 									"numinlets" : 2,
 									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 550.0, 286.0, 42.0, 23.0 ],
-									"rnbo_classname" : ">~",
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 318.0, 312.0, 31.0, 23.0 ],
+									"rnbo_classname" : "pipe",
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : ">~_obj-20",
-									"text" : ">~ 0.5"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-7",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 550.0, 355.0, 81.0, 23.0 ],
-									"rnbo_classname" : "outport",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "outport_obj-7",
-									"text" : "outport regen"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-2",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 550.0, 246.0, 130.0, 23.0 ],
-									"rnbo_classname" : "in~",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "in~_obj-2",
+									"rnbo_uniqueid" : "pipe_obj-8",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
-											"out1" : 											{
+											"in1" : 											{
 												"attrOrProp" : 1,
-												"digest" : "signal from inlet with index 1",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 0,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"outlet" : 1,
-												"type" : "signal"
-											}
-,
-											"index" : 											{
-												"attrOrProp" : 2,
-												"digest" : "inlet number",
+												"digest" : "Anything to be delayed",
 												"defaultarg" : 1,
 												"isalias" : 0,
 												"aliases" : [  ],
@@ -195,169 +130,123 @@
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
+												"inlet" : 1,
 												"type" : "number",
-												"mandatory" : 1
+												"defaultValue" : "0"
 											}
 ,
-											"comment" : 											{
-												"attrOrProp" : 2,
-												"digest" : "mouse over comment",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "symbol"
-											}
-,
-											"meta" : 											{
-												"attrOrProp" : 2,
-												"digest" : "A JSON formatted string containing metadata for use by the exported code",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "symbol",
-												"defaultValue" : "",
-												"label" : "Metadata",
-												"displayorder" : 3
-											}
-
-										}
-,
-										"inputs" : [  ],
-										"outputs" : [ 											{
-												"name" : "out1",
-												"type" : "signal",
-												"digest" : "signal from inlet with index 1",
-												"displayName" : "regen",
-												"docked" : 0
-											}
- ],
-										"helpname" : "in~",
-										"aliasOf" : "in~",
-										"classname" : "in~",
-										"operator" : 0,
-										"versionId" : -176007711,
-										"changesPatcherIO" : 1
-									}
-,
-									"text" : "in~ 1 @comment regen"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-9",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 251.000002801418304, 175.0, 23.0 ],
-									"rnbo_classname" : "in~",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 3,
-									"rnbo_uniqueid" : "in~_obj-9",
-									"rnboinfo" : 									{
-										"needsInstanceInfo" : 1,
-										"argnames" : 										{
 											"out1" : 											{
 												"attrOrProp" : 1,
-												"digest" : "signal from inlet with index 1",
+												"digest" : "Delayed number",
 												"isalias" : 0,
 												"aliases" : [  ],
-												"settable" : 0,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
 												"outlet" : 1,
-												"type" : "signal"
+												"type" : "number"
 											}
 ,
-											"index" : 											{
-												"attrOrProp" : 2,
-												"digest" : "inlet number",
-												"defaultarg" : 1,
+											"time" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Delay time",
+												"defaultarg" : 2,
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 1,
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
+												"inlet" : 1,
 												"type" : "number",
-												"mandatory" : 1
+												"defaultValue" : "0"
 											}
 ,
-											"comment" : 											{
-												"attrOrProp" : 2,
-												"digest" : "mouse over comment",
+											"flush" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Stop delay and output current value",
 												"isalias" : 0,
 												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
+												"attachable" : 1,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"type" : "symbol"
+												"type" : "bang"
 											}
 ,
-											"meta" : 											{
-												"attrOrProp" : 2,
-												"digest" : "A JSON formatted string containing metadata for use by the exported code",
+											"stop" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Stop delay",
 												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
+												"aliases" : [ "clear" ],
+												"attachable" : 1,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"type" : "symbol",
-												"defaultValue" : "",
-												"label" : "Metadata",
-												"displayorder" : 3
+												"type" : "bang"
+											}
+,
+											"clear" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Stop delay",
+												"isalias" : 1,
+												"aliasOf" : "stop",
+												"aliases" : [  ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "bang"
 											}
 
 										}
 ,
-										"inputs" : [  ],
-										"outputs" : [ 											{
-												"name" : "out1",
-												"type" : "signal",
-												"digest" : "signal from inlet with index 1",
-												"displayName" : "frequency (hz)",
+										"inputs" : [ 											{
+												"name" : "in1",
+												"type" : "number",
+												"digest" : "Anything to be delayed",
+												"defaultarg" : 1,
+												"hot" : 1,
+												"docked" : 0
+											}
+, 											{
+												"name" : "time",
+												"type" : "number",
+												"digest" : "Delay time",
+												"defaultarg" : 2,
 												"docked" : 0
 											}
  ],
-										"helpname" : "in~",
-										"aliasOf" : "in~",
-										"classname" : "in~",
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "number",
+												"digest" : "Delayed number",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "pipe",
+										"aliasOf" : "pipe",
+										"classname" : "pipe",
 										"operator" : 0,
-										"versionId" : -176007711,
-										"changesPatcherIO" : 1
+										"versionId" : 734053540,
+										"changesPatcherIO" : 0
 									}
 ,
-									"text" : "in~ 1 @comment frequency (hz)"
+									"text" : "pipe"
 								}
 
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-4",
+									"id" : "obj-10",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 171.0, 331.0, 168.0, 23.0 ],
+									"patching_rect" : [ 300.0, 394.0, 168.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "out~_obj-4",
+									"rnbo_uniqueid" : "out~_obj-10",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
@@ -441,57 +330,367 @@
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-1",
+									"id" : "obj-9",
 									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 2,
-									"outlettype" : [ "signal", "signal" ],
-									"patching_rect" : [ 171.0, 292.0, 320.0, 23.0 ],
-									"rnbo_classname" : "cycle~",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 524.0, 300.0, 105.0, 23.0 ],
+									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
-										"index" : "freq",
-										"interp" : "linear",
-										"buffername" : "RNBODefaultSinus"
+										"meta" : ""
 									}
 ,
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "cycle~_obj-1",
-									"text" : "cycle~"
+									"rnbo_uniqueid" : "inport_obj-9",
+									"text" : "inport release (ms)"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-7",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 412.0, 228.0, 98.0, 23.0 ],
+									"rnbo_classname" : "inport",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 3,
+									"rnbo_uniqueid" : "inport_obj-7",
+									"text" : "inport decay (ms)"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-6",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 356.0, 188.0, 100.0, 23.0 ],
+									"rnbo_classname" : "inport",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 4,
+									"rnbo_uniqueid" : "inport_obj-6",
+									"text" : "inport attack (ms)"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-5",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"outlettype" : [ "", "" ],
+									"patching_rect" : [ 300.0, 267.0, 33.0, 23.0 ],
+									"rnbo_classname" : "t",
+									"rnbo_serial" : 3,
+									"rnbo_uniqueid" : "t_obj-5",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"out1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Output order 2 (number).",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "number"
+											}
+,
+											"out2" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Output order 1 (number).",
+												"defaultarg" : 2,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "number"
+											}
+,
+											"triggers" : 											{
+												"attrOrProp" : 2,
+												"digest" : "The number of arguments determines the number of outlets. \t\t\t\t\t\tEach outlet sends out either a whole number, float, bang or list, \t\t\t\t\t\tas identified by symbol arguments (i, f, b, l). \t\t\t\t\t\tIf there are no arguments, there are two outlets, both of which send a float.",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "list"
+											}
+
+										}
+,
+										"inputs" : [ 											{
+												"name" : "input",
+												"type" : [ "bang", "number", "list" ],
+												"digest" : "input to distribute",
+												"hot" : 1,
+												"docked" : 0
+											}
+ ],
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "number",
+												"digest" : "Output order 2 (number).",
+												"defaultarg" : 1,
+												"docked" : 0
+											}
+, 											{
+												"name" : "out2",
+												"type" : "number",
+												"digest" : "Output order 1 (number).",
+												"defaultarg" : 2,
+												"docked" : 0
+											}
+ ],
+										"helpname" : "trigger",
+										"aliasOf" : "trigger",
+										"classname" : "t",
+										"operator" : 0,
+										"versionId" : -1133428571,
+										"changesPatcherIO" : 0
+									}
+,
+									"text" : "t 1 0"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-4",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"outlettype" : [ "", "" ],
+									"patching_rect" : [ 300.0, 224.0, 41.0, 23.0 ],
+									"rnbo_classname" : "edge~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "edge~_obj-4",
+									"text" : "edge~"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-3",
+									"maxclass" : "newobj",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 300.0, 188.0, 42.0, 23.0 ],
+									"rnbo_classname" : ">~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : ">~_obj-3",
+									"text" : ">~ 0.5"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-2",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 300.0, 144.0, 135.0, 23.0 ],
+									"rnbo_classname" : "in~",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "in~_obj-2",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"out1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "signal from inlet with index 1",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "signal"
+											}
+,
+											"index" : 											{
+												"attrOrProp" : 2,
+												"digest" : "inlet number",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number",
+												"mandatory" : 1
+											}
+,
+											"comment" : 											{
+												"attrOrProp" : 2,
+												"digest" : "mouse over comment",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol"
+											}
+,
+											"meta" : 											{
+												"attrOrProp" : 2,
+												"digest" : "A JSON formatted string containing metadata for use by the exported code",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"defaultValue" : "",
+												"label" : "Metadata",
+												"displayorder" : 3
+											}
+
+										}
+,
+										"inputs" : [  ],
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "signal",
+												"digest" : "signal from inlet with index 1",
+												"displayName" : "trigger",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "in~",
+										"aliasOf" : "in~",
+										"classname" : "in~",
+										"operator" : 0,
+										"versionId" : -176007711,
+										"changesPatcherIO" : 1
+									}
+,
+									"text" : "in~ 1 @comment trigger"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-1",
+									"maxclass" : "newobj",
+									"numinlets" : 5,
+									"numoutlets" : 2,
+									"outlettype" : [ "signal", "" ],
+									"patching_rect" : [ 300.0, 348.0, 243.0, 23.0 ],
+									"rnbo_classname" : "adsr~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "adsr~_obj-1",
+									"text" : "adsr~"
 								}
 
 							}
  ],
 						"lines" : [ 							{
 								"patchline" : 								{
-									"destination" : [ "obj-4", 0 ],
+									"destination" : [ "obj-10", 0 ],
 									"source" : [ "obj-1", 0 ]
 								}
 
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-20", 0 ],
+									"destination" : [ "obj-3", 0 ],
 									"source" : [ "obj-2", 0 ]
 								}
 
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-21", 0 ],
-									"source" : [ "obj-20", 0 ]
+									"destination" : [ "obj-4", 0 ],
+									"source" : [ "obj-3", 0 ]
 								}
 
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-7", 0 ],
-									"source" : [ "obj-21", 0 ]
+									"destination" : [ "obj-5", 0 ],
+									"source" : [ "obj-4", 0 ]
 								}
 
 							}
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-5", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-8", 0 ],
+									"source" : [ "obj-5", 1 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 1 ],
+									"source" : [ "obj-6", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 2 ],
+									"order" : 0,
+									"source" : [ "obj-7", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-8", 1 ],
+									"order" : 1,
+									"source" : [ "obj-7", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"source" : [ "obj-8", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 4 ],
 									"source" : [ "obj-9", 0 ]
 								}
 
@@ -512,7 +711,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "cycle.json"
+									"file_name" : "adsr.json"
 								}
 
 							}
@@ -521,7 +720,7 @@
 
 					}
 ,
-					"patching_rect" : [ 317.0, 138.0, 40.0, 22.0 ],
+					"patching_rect" : [ 305.0, 260.0, 40.0, 22.0 ],
 					"rnboattrcache" : 					{
 
 					}
@@ -540,7 +739,7 @@
 					"saved_object_attributes" : 					{
 						"optimization" : "O1",
 						"parameter_enable" : 1,
-						"uuid" : "29a78a5b-b626-11ee-8a5b-acde48001122"
+						"uuid" : "1c3950ff-f2a0-11ee-90ff-acde48001122"
 					}
 ,
 					"snapshot" : 					{
@@ -553,7 +752,7 @@
 						"subtype" : "Undefined",
 						"embed" : 1,
 						"snapshot" : 						{
-							"__presetid" : "29a78a5b-b626-11ee-8a5b-acde48001122"
+							"__presetid" : "1c3950ff-f2a0-11ee-90ff-acde48001122"
 						}
 ,
 						"snapshotlist" : 						{
@@ -563,20 +762,20 @@
 									"version" : 2,
 									"minorversion" : 0,
 									"name" : "untitled",
-									"origin" : "29a78a5b-b626-11ee-8a5b-acde48001122",
+									"origin" : "1c3950ff-f2a0-11ee-90ff-acde48001122",
 									"type" : "rnbo",
 									"subtype" : "",
 									"embed" : 0,
 									"snapshot" : 									{
-										"__presetid" : "29a78a5b-b626-11ee-8a5b-acde48001122"
+										"__presetid" : "1c3950ff-f2a0-11ee-90ff-acde48001122"
 									}
 ,
 									"fileref" : 									{
 										"name" : "untitled",
-										"filename" : "untitled_20240118.maxsnap",
+										"filename" : "untitled_20240404_4.maxsnap",
 										"filepath" : "~/Documents/Max 8/Snapshots",
 										"filepos" : -1,
-										"snapshotfileid" : "8c7e283ffa015dbf9c3b3820c1e78bf3"
+										"snapshotfileid" : "22eb7577f48400ecd08794575c7b470b"
 									}
 
 								}
@@ -607,7 +806,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "untitled_20240118.maxsnap",
+				"name" : "untitled_20240404_4.maxsnap",
 				"bootpath" : "~/Documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../../Users/cella/Documents/Max 8/Snapshots",
 				"type" : "mx@s",

@@ -10,7 +10,12 @@ context.destination.channelCountMode = "explicit";
 context.destination.channelInterpretation = "discrete";
 // create channel merger for speaker output
 const channelMerger = context.createChannelMerger(context.destination.channelCount);
-channelMerger.connect(context.destination);
+// create a gainNode for mute/unmute
+const gainNode = context.createGain();
+// connect the channelMerger to the GainNode
+channelMerger.connect(gainNode);
+// connect the GainNode to the destination
+gainNode.connect(context.destination);
 /* END audio context initialization */
 
 /* BEGIN UI initialization */
@@ -22,9 +27,29 @@ let deviceDropdown = createDropdownofAllDevices();
 
 // create a button for starting audio
 createButtonForNavBar(
-    'start audio',
+    'mute',
     'startAudioButton navbarButton',
-    () => context.resume()
+    () => {
+        const button = document.querySelector('.startAudioButton');
+        if (isAudioPlaying) {
+            gainNode.gain.setValueAtTime(1, context.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, context.currentTime + 0.01);
+            setTimeout(() => {
+                context.suspend().then(() => {
+                    button.textContent = 'start';
+                    button.style.color = '#005925';
+                    isAudioPlaying = false;
+                });
+            }, 10);
+        } else {
+            context.resume().then(() => {
+                gainNode.gain.linearRampToValueAtTime(1, context.currentTime + 0.01);
+                button.textContent = 'mute';
+                button.style.color = '#ab2222';
+                isAudioPlaying = true;
+            });
+        }
+    }
 );
 
 // create a button for saving workspace state
@@ -33,6 +58,7 @@ createButtonForNavBar('save', 'saveStateButton navbarButton', ()=>{getWorkspaceS
 // create a button for reloading workspace state
 createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
+    isAudioPlaying = true;
     context.resume();
 });
 
@@ -45,6 +71,7 @@ window.onbeforeunload = function() {
 
 /* BEGIN globally acessible objects */
 let deviceCounts = {};
+let isAudioPlaying = true;
 let devices = {};
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
@@ -63,8 +90,12 @@ jsPlumb.bind("connectionDetached", function(info) {
     if (sourceDevice && targetDevice && sourceDevice.connections) {
         let connection = sourceDevice.connections.find(conn => conn.target === info.targetId);
         if (connection) {
-            sourceDevice.device.node.disconnect(connection.splitter);
-            connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
+            try {
+                sourceDevice.device.node.disconnect(connection.splitter);
+                connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
+            } catch (error) {
+                console.error('Failed to disconnect:', error);
+            }
             // remove the connection from the list
             sourceDevice.connections = sourceDevice.connections.filter(conn => conn !== connection);
         }
@@ -87,7 +118,7 @@ workspaceElement.addEventListener('mousedown', (event) => {
             selectionDiv = document.createElement('div');
         }
         selectionDiv.style.position = 'absolute';
-        selectionDiv.style.border = '1px dashed #000';
+        selectionDiv.style.border = '1px dashed #fff';
         selectionDiv.style.background = 'rgba(0, 0, 0, 0.1)';
         selectionDiv.style.pointerEvents = 'none'; // Ignore mouse events
         workspaceElement.appendChild(selectionDiv);
@@ -167,6 +198,11 @@ document.addEventListener('keydown', (event) => {
         jsPlumb.clearDragSelection();
         jsPlumb.repaintEverything();
     }
+    // 'f' creates a number input
+    else if (event.key === 'f' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+        event.preventDefault();
+        createDeviceByName('number');
+    }
 });
 
 // copy-paste functionality
@@ -234,9 +270,12 @@ function openAwesompleteUI() {
         }
         // remove all elements with class name "awesomplete"
         var elements = document.getElementsByClassName('awesompleteContainer');
-        while(elements.length > 0){
-            elements[0].parentNode.removeChild(elements[0]);
+        try {
+            while(elements.length > 0){
+                elements[0].parentNode.removeChild(elements[0]);
+            }
         }
+        catch(err) {}
     };
 
     // create a new button element
@@ -351,11 +390,12 @@ function attachOutports(device,deviceDiv) {
     }
     // listen on outports for any "regen" events to regenerate its parameters
     device.messageEvent.subscribe((ev) => {
+        console.log(`this should ocntinually happen ${Date.now()}`)
         // ignore message events that don't belong to an outport
         if (outports.findIndex(elt => elt.tag === ev.tag) < 0) return;
 
         // select all input elements within the deviceDiv
-        const inputElements = deviceDiv.querySelectorAll('input');
+        const inputElements = deviceDiv.querySelectorAll('input','textarea');
 
         inputElements.forEach((inputElement) => {
             // create/trigger a change event
@@ -523,6 +563,34 @@ function finishConnection(deviceId, inputIndex) {
     jsPlumb.repaintEverything();
 }
 
+function reconnectNodeConnections(nodeId) {
+    // get the device
+    let device = devices[nodeId];
+
+    // check if the device has connections
+    if (Array.isArray(device.connections)) {
+        // create a new array of connections without the splitter property which cannot be serialized
+        let connectionsData = device.connections.map(connection => {
+            let { splitter, ...connectionWithoutSplitter } = connection;
+            return connectionWithoutSplitter;
+        });
+
+        // delete the connections
+        let sourceConnections = jsPlumb.getConnections({source: nodeId});
+        let targetConnections = jsPlumb.getConnections({target: nodeId});
+        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+
+        // reconnect the connections
+        connectionsData.forEach(connectionData => {
+            startConnection(nodeId, connectionData.output);
+            finishConnection(connectionData.target, connectionData.input);
+        });
+
+        // update the device connections
+        device.connections = connectionsData;
+    }
+}
 async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
     let deviceDiv;
     if (filename === "mic") {
@@ -534,9 +602,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             // stop the old stream
             device.stream.getTracks().forEach(track => track.stop());
         
-            // disconnect the old source
-            device.node.disconnect();
-        
             // update the stream
             device.stream = event.detail;
         
@@ -546,6 +611,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             // update the source and node
             device.source = newSource;
             device.node = newSource;
+
+            if (devices[deviceDiv.id].connections && devices[deviceDiv.id].connections.length > 0) {
+                reconnectNodeConnections(deviceDiv.id);
+            }
         });
     }
     else if ( filename.startsWith('outputnode') ) {
@@ -556,7 +625,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         const patcher = await response.json();
         const device = await RNBO.createDevice({ context, patcher });
         deviceDiv = addDeviceToWorkspace(device, filename, false);
-        if ( filename == 'wave' || filename == 'granulator' ) {
+        if ( filename == 'wave' || filename == 'granulator' || filename == 'play' ) {
             if (audioBuffer) {
                 await device.setDataBuffer('buf', audioBuffer);
             }
@@ -609,6 +678,10 @@ function createAudioLoader(device, context, deviceDiv) {
     fileInput.type = 'file';
     fileInput.accept = 'audio/*';
 
+    // create a new p element for the file name
+    const fileNameElement = document.createElement('p');
+    fileNameElement.className = 'audioFileName';
+
     // listen for changes
     fileInput.addEventListener('change', async (event) => {
         if (event.target.files.length > 0) {
@@ -620,6 +693,9 @@ function createAudioLoader(device, context, deviceDiv) {
 
             await device.setDataBuffer('buf', audioBuf);
             deviceDiv.dataset.audioFileName = file.name;
+
+            // show the file name in the UI
+            fileNameElement.textContent = `file: ${file.name}`;
         }
     });
 
@@ -634,6 +710,7 @@ function createAudioLoader(device, context, deviceDiv) {
     const form = deviceDiv.querySelector('form');
     // add the button to the form
     form.appendChild(button);
+    form.appendChild(fileNameElement);
 }
 
 function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false) {
@@ -702,7 +779,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             inputButton.onclick = () => {
                 if (input.comment == 'regen') {
                     // clicking a 'regen' button triggers a change event in all of the device's inputs
-                    const inputElements = deviceDiv.querySelectorAll('input');
+                    const inputElements = deviceDiv.querySelectorAll('input, textarea');
                     inputElements.forEach((inputElement) => {
                         // create/trigger a change event
                         const event = new Event('change');
