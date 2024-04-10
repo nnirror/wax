@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 7,
+			"minor" : 6,
+			"revision" : 0,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -43,35 +43,23 @@
 					"autosave" : 1,
 					"id" : "obj-1",
 					"inletInfo" : 					{
-						"IOInfo" : [ 							{
-								"type" : "signal",
-								"index" : 1,
-								"tag" : "in1",
-								"comment" : "signal in"
-							}
- ]
+						"IOInfo" : [  ]
 					}
 ,
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 2,
+					"numoutlets" : 1,
 					"outletInfo" : 					{
-						"IOInfo" : [ 							{
-								"type" : "signal",
-								"index" : 1,
-								"tag" : "out1",
-								"comment" : "signal out"
-							}
- ]
+						"IOInfo" : [  ]
 					}
 ,
-					"outlettype" : [ "signal", "list" ],
+					"outlettype" : [ "list" ],
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 7,
+							"minor" : 6,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -108,18 +96,33 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
-									"id" : "obj-4",
+									"id" : "obj-3",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 224.0, 189.0, 72.0, 23.0 ],
+									"rnbo_classname" : "hztosamps~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "hztosamps~_obj-3",
+									"text" : "hztosamps~"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-2",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 283.0, 231.0, 168.0, 23.0 ],
+									"patching_rect" : [ 224.0, 236.0, 168.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "out~_obj-4",
+									"rnbo_uniqueid" : "out~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
@@ -203,46 +206,12 @@
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-3",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 326.5, 137.0, 87.0, 23.0 ],
-									"rnbo_classname" : "inport",
-									"rnbo_extra_attributes" : 									{
-										"meta" : ""
-									}
-,
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "inport_obj-3",
-									"text" : "inport operand"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-2",
-									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 283.0, 184.0, 62.5, 23.0 ],
-									"rnbo_classname" : "%~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "%~_obj-2",
-									"text" : "%~"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"id" : "obj-1",
 									"maxclass" : "newobj",
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 283.0, 90.0, 152.0, 23.0 ],
+									"patching_rect" : [ 224.0, 143.0, 152.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -333,21 +302,14 @@
  ],
 						"lines" : [ 							{
 								"patchline" : 								{
-									"destination" : [ "obj-2", 0 ],
+									"destination" : [ "obj-3", 0 ],
 									"source" : [ "obj-1", 0 ]
 								}
 
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-4", 0 ],
-									"source" : [ "obj-2", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-2", 1 ],
+									"destination" : [ "obj-2", 0 ],
 									"source" : [ "obj-3", 0 ]
 								}
 
@@ -368,7 +330,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "modulo.json"
+									"file_name" : "hztosamps.json"
 								}
 
 							}
@@ -377,12 +339,12 @@
 
 					}
 ,
-					"patching_rect" : [ 423.0, 143.0, 40.0, 22.0 ],
+					"patching_rect" : [ 251.0, 202.0, 40.0, 22.0 ],
 					"rnboattrcache" : 					{
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.4",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
@@ -396,7 +358,7 @@
 					"saved_object_attributes" : 					{
 						"optimization" : "O1",
 						"parameter_enable" : 1,
-						"uuid" : "5d7808e9-f2a6-11ee-88e9-acde48001122"
+						"uuid" : "e51b457f-f541-11ee-857f-acde48001122"
 					}
 ,
 					"snapshot" : 					{
@@ -409,7 +371,7 @@
 						"subtype" : "Undefined",
 						"embed" : 1,
 						"snapshot" : 						{
-							"__presetid" : "5d7808e9-f2a6-11ee-88e9-acde48001122"
+
 						}
 ,
 						"snapshotlist" : 						{
@@ -419,20 +381,20 @@
 									"version" : 2,
 									"minorversion" : 0,
 									"name" : "untitled",
-									"origin" : "5d7808e9-f2a6-11ee-88e9-acde48001122",
+									"origin" : "e51b457f-f541-11ee-857f-acde48001122",
 									"type" : "rnbo",
 									"subtype" : "",
 									"embed" : 0,
 									"snapshot" : 									{
-										"__presetid" : "5d7808e9-f2a6-11ee-88e9-acde48001122"
+
 									}
 ,
 									"fileref" : 									{
 										"name" : "untitled",
-										"filename" : "untitled_20240404_7.maxsnap",
+										"filename" : "untitled_20240407.maxsnap",
 										"filepath" : "~/Documents/Max 8/Snapshots",
 										"filepos" : -1,
-										"snapshotfileid" : "f6e423c4721f1ad54a8020ac0bed0efc"
+										"snapshotfileid" : "b107033979c17d29883dd3349edf0eab"
 									}
 
 								}
@@ -463,7 +425,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "untitled_20240404_7.maxsnap",
+				"name" : "untitled_20240407.maxsnap",
 				"bootpath" : "~/Documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../../Users/cella/Documents/Max 8/Snapshots",
 				"type" : "mx@s",

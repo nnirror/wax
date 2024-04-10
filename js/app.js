@@ -10,21 +10,7 @@ context.destination.channelCountMode = "explicit";
 context.destination.channelInterpretation = "discrete";
 // create channel merger for speaker output
 const channelMerger = context.createChannelMerger(context.destination.channelCount);
-// create a gainNode for mute/unmute
-const gainNode = context.createGain();
-// create a dynamics compressor (limiter)
-const limiter = context.createDynamicsCompressor();
-limiter.threshold.value = -1;
-limiter.knee.value = 0;
-limiter.ratio.value = 20;
-limiter.attack.value = 0;
-limiter.release.value = 0.1;
-// connect the channelMerger to the limiter
-channelMerger.connect(limiter);
-// connect the limiter to the gainNode
-limiter.connect(gainNode);
-// connect the gainNode to the destination
-gainNode.connect(context.destination);
+channelMerger.connect(context.destination);
 /* END audio context initialization */
 
 /* BEGIN UI initialization */
@@ -41,8 +27,6 @@ createButtonForNavBar(
     () => {
         const button = document.querySelector('.startAudioButton');
         if (isAudioPlaying) {
-            gainNode.gain.setValueAtTime(1, context.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0, context.currentTime + 0.01);
             setTimeout(() => {
                 context.suspend().then(() => {
                     button.textContent = 'start';
@@ -52,7 +36,6 @@ createButtonForNavBar(
             }, 10);
         } else {
             context.resume().then(() => {
-                gainNode.gain.linearRampToValueAtTime(1, context.currentTime + 0.01);
                 button.textContent = 'mute';
                 button.style.color = '#ab2222';
                 isAudioPlaying = true;
@@ -76,9 +59,71 @@ window.onbeforeunload = function() {
     return "Are you sure you want to leave? Unsaved changes will be lost.";
 };
 
+// add the initial speaker objects and getting started text
+window.onload = async function() {
+    mousePosition.x = (document.documentElement.clientWidth / 2) - 158;
+    mousePosition.y = document.documentElement.clientHeight * 0.8;
+    let speaker1Div = await createDeviceByName('outputnode');
+    let inputElement = speaker1Div.querySelector('input');
+    if (inputElement) {
+        inputElement.value = 1;
+    }
+    mousePosition.x = (document.documentElement.clientWidth / 2);
+    mousePosition.y = document.documentElement.clientHeight * 0.8;
+    let speaker2Div = await createDeviceByName('outputnode');
+    inputElement = speaker2Div.querySelector('input');
+    if (inputElement) {
+        inputElement.value = 2;
+    }
+    document.addEventListener('mousemove', function(event) {
+        mousePosition.x = event.pageX;
+        mousePosition.y = event.pageY;
+    });
+    
+    // create the info div element
+    let infoDiv = document.createElement('div');
+    infoDiv.id = 'infoDiv';
+    infoDiv.textContent = "Double-click or press 'n' to add a device to the workspace. Connect to a 'speaker' object to hear the output. ";
+
+    // stop propagation of click event in infoDiv
+    infoDiv.onclick = function(event) {
+        event.stopPropagation();
+    };
+
+    // create the button to close the info div
+    let closeButton = document.createElement('button');
+    closeButton.textContent = 'x';
+    closeButton.onclick = function(event) {
+        infoDiv.style.display = 'none';
+        event.stopPropagation();
+    };
+
+    // add event listener to document to hide infoDiv when clicked
+    document.onclick = function() {
+        infoDiv.style.display = 'none';
+    };
+
+    // add the close button to the info div and the info div to body
+    infoDiv.appendChild(closeButton);
+    document.body.appendChild(infoDiv);
+
+    // create the help button
+    let helpButton = document.createElement('button');
+    helpButton.textContent = '?';
+    helpButton.id = 'helpButton';
+    helpButton.onclick = function() {
+        infoDiv.style.display = 'block';
+        event.stopPropagation();
+    };
+
+    // add the help button to the body
+    document.body.appendChild(helpButton);
+};
+
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
+let lastClicked = null;
 let deviceCounts = {};
 let isAudioPlaying = true;
 let devices = {};
@@ -109,11 +154,6 @@ jsPlumb.bind("connectionDetached", function(info) {
             sourceDevice.connections = sourceDevice.connections.filter(conn => conn !== connection);
         }
     }
-});
-
-document.addEventListener('mousemove', function(event) {
-    mousePosition.x = event.pageX;
-    mousePosition.y = event.pageY;
 });
 
 // listen for mousedown events on the workspaceElement
@@ -430,6 +470,7 @@ function removeDeviceFromWorkspace(deviceId) {
 
 function addInputsForDevice(device) {
     const inportForm = document.createElement('form');
+    inportForm.autocomplete = 'off';
     const inportContainer = document.createElement('div');
     let inports = [];
 
@@ -443,6 +484,8 @@ function addInputsForDevice(device) {
             let inportText;
             if (device.it.T.inports[0].tag == 'comment' || device.it.T.inports[0].tag == 'pattern') {
                 inportText = document.createElement('textarea');
+                inportText.style.width = '32em';
+                inportText.style.height = '6em';
             } else {
                 inportText = document.createElement('input');
             }
@@ -498,7 +541,26 @@ async function scheduleDeviceEvent(device, inport, value) {
             device.scheduleEvent(messageEvent);
         }
     } catch (error) {
-        console.error('An error occurred:', error);
+        showGrowlNotification(`Error in device parameter: ${value}, ${error}`);
+    }
+}
+
+function handleButtonClick(deviceId, index, isInputButton) {
+    if (lastClicked && ((lastClicked.isInputButton && !isInputButton) || (!lastClicked.isInputButton && isInputButton))) {
+        if (lastClicked.isInputButton && !isInputButton) {
+            startConnection(deviceId, index);
+            finishConnection(lastClicked.deviceId, lastClicked.index);
+        } else if (!lastClicked.isInputButton && isInputButton) {
+            startConnection(lastClicked.deviceId, lastClicked.index);
+            finishConnection(deviceId, index);
+        }
+        lastClicked = null;
+    } else {
+        lastClicked = {
+            isInputButton,
+            deviceId,
+            index
+        };
     }
 }
 
@@ -511,7 +573,6 @@ function finishConnection(deviceId, inputIndex) {
     if (sourceDeviceId) {
         const sourceDevice = devices[sourceDeviceId].device;
         const targetDevice = devices[deviceId] ? devices[deviceId].device : null;
-
         // create channel splitter
         let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
 
@@ -602,60 +663,69 @@ function reconnectNodeConnections(nodeId) {
     }
 }
 async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
-    let deviceDiv;
-    if (filename === "mic") {
-        const device = await createMicrophoneDevice();
-        deviceDiv = addDeviceToWorkspace(device, "microphone input", false);
-        await createInputDeviceSelector(device, context, deviceDiv);
-        // listen for the streamChanged event
-        deviceDiv.addEventListener('streamChanged', async (event) => {
-            // stop the old stream
-            device.stream.getTracks().forEach(track => track.stop());
-        
-            // update the stream
-            device.stream = event.detail;
-        
-            // create a new source with the new stream
-            const newSource = context.createMediaStreamSource(device.stream);
-        
-            // update the source and node
-            device.source = newSource;
-            device.node = newSource;
+    try {
+        let deviceDiv;
+        if (filename === "mic") {
+            const device = await createMicrophoneDevice();
+            deviceDiv = addDeviceToWorkspace(device, "microphone input", false);
+            await createInputDeviceSelector(device, context, deviceDiv);
+            // listen for the streamChanged event
+            deviceDiv.addEventListener('streamChanged', async (event) => {
+                // stop the old stream
+                device.stream.getTracks().forEach(track => track.stop());
+            
+                // update the stream
+                device.stream = event.detail;
+            
+                // create a new source with the new stream
+                const newSource = context.createMediaStreamSource(device.stream);
+            
+                // update the source and node
+                device.source = newSource;
+                device.node = newSource;
 
-            if (devices[deviceDiv.id].connections && devices[deviceDiv.id].connections.length > 0) {
-                reconnectNodeConnections(deviceDiv.id);
-            }
-        });
-    }
-    else if ( filename.startsWith('outputnode') ) {
-        deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
-    }
-    else {
-        const response = await fetch(`wasm/${filename}.json`);
-        const patcher = await response.json();
-        const device = await RNBO.createDevice({ context, patcher });
-        deviceDiv = addDeviceToWorkspace(device, filename, false);
-        if ( filename == 'wave' || filename == 'granulator' || filename == 'play' ) {
-            if (audioBuffer) {
-                await device.setDataBuffer('buf', audioBuffer.buffer);
-                audioBuffers[audioBuffer.name] = audioBuffer.buffer;
-                deviceDiv.dataset.audioFileName = audioBuffer.name;
-                const fileNameElement = document.createElement('p');
-                fileNameElement.className = 'audioFileName';
-                fileNameElement.textContent = `file: ${audioBuffer.name}`;
-                const form = deviceDiv.querySelector('form');
-                form.appendChild(fileNameElement);
-
-            }
-            createAudioLoader(device, context, deviceDiv);
+                if (devices[deviceDiv.id].connections && devices[deviceDiv.id].connections.length > 0) {
+                    reconnectNodeConnections(deviceDiv.id);
+                }
+            });
         }
+        else if ( filename.startsWith('outputnode') ) {
+            deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
+        }
+        else {
+            const response = await fetch(`wasm/${filename}.json`);
+            const patcher = await response.json();
+            const device = await RNBO.createDevice({ context, patcher });
+            deviceDiv = addDeviceToWorkspace(device, filename, false);
+            if ( filename == 'wave' || filename == 'granulator' || filename == 'play' ) {
+                if (audioBuffer) {
+                    await device.setDataBuffer('buf', audioBuffer.buffer);
+                    audioBuffers[audioBuffer.name] = audioBuffer.buffer;
+                    deviceDiv.dataset.audioFileName = audioBuffer.name;
+                    const fileNameElement = document.createElement('p');
+                    fileNameElement.className = 'audioFileName';
+                    fileNameElement.textContent = `file: ${audioBuffer.name}`;
+                    const form = deviceDiv.querySelector('form');
+                    form.appendChild(fileNameElement);
+
+                }
+                createAudioLoader(device, context, deviceDiv);
+            }
+        }
+        deviceDiv.onmousedown = removeSelectedNodeClass;
+        if ( devicePosition ) {
+            deviceDiv.style.left = devicePosition.left + 'px';
+            deviceDiv.style.top = devicePosition.top + 'px';
+        }
+        let deviceHasTextarea = deviceDiv.querySelector('textarea');
+        if (deviceHasTextarea) {
+            deviceDiv.style.width = '32em';
+        }
+        return deviceDiv;
     }
-    deviceDiv.onmousedown = removeSelectedNodeClass;
-    if ( devicePosition ) {
-        deviceDiv.style.left = devicePosition.left + 'px';
-        deviceDiv.style.top = devicePosition.top + 'px';
+    catch (error) {
+        showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
     }
-    return deviceDiv;
 }
 
 async function createInputDeviceSelector(device, context, deviceDiv) {
@@ -688,6 +758,16 @@ async function createInputDeviceSelector(device, context, deviceDiv) {
     const form = deviceDiv.querySelector('form');
     // add the select to the form
     form.appendChild(select);
+}
+
+function showGrowlNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'growl-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        document.body.removeChild(notification);
+    }, 3000);
 }
 
 function createAudioLoader(device, context, deviceDiv) {
@@ -766,11 +846,36 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         const button = document.createElement('button');
         button.innerText = 'signal in';
         const speakerChannelSelectorInput = document.createElement('input');
-        speakerChannelSelectorInput.type = 'text';
+        speakerChannelSelectorInput.type = 'number';
         speakerChannelSelectorInput.className = 'speakerChannelSelectorInput';
         speakerChannelSelectorInput.id = 'output_channel';
         speakerChannelSelectorInput.value = 1;
-        button.onclick = () => finishConnection(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1);
+        speakerChannelSelectorInput.min = 1;
+        speakerChannelSelectorInput.max = context.destination.channelCount;
+        speakerChannelSelectorInput.onchange = () => {
+            let deviceConnectionData = [];
+            for(let deviceKey in devices) {
+                let device = devices[deviceKey];
+                if (device.connections === undefined) continue;
+                let matchingConnections = device.connections.filter(connection => connection.target === deviceDiv.id);
+                if(matchingConnections.length > 0) {
+                    deviceConnectionData.push({ deviceId: deviceKey, connectionData: matchingConnections });
+                }
+            }
+            // delete the connections
+            let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+            let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
+            sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+            targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+            // reconnect the connections
+            deviceConnectionData.forEach(connectedDevice => {
+                connectedDevice.connectionData.forEach(connection => {
+                    startConnection(connectedDevice.deviceId, connection.output);
+                    finishConnection(connection.target, speakerChannelSelectorInput.value-1);
+                });
+            });
+        };
+        button.onclick = () => handleButtonClick(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1, true);
         inputContainer.appendChild(button);
         inputContainer.appendChild(deleteButton);
         deviceDiv.append(inputContainer);
@@ -788,23 +893,23 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         device.it.T.outlets.forEach((output, index) => {
             const outputButton = document.createElement('button');
             outputButton.innerText = `${output.comment}`;
-            outputButton.onclick = () => startConnection(deviceDiv.id, index);
+            outputButton.className = 'output-button';
+            outputButton.onclick = () => handleButtonClick(deviceDiv.id, index, false);
             outputContainer.appendChild(outputButton);
         });
         device.it.T.inlets.forEach((input, index) => {
             const inputButton = document.createElement('button');
             inputButton.innerText = `${input.comment}`;
+            inputButton.className = 'input-button';
             inputButton.onclick = () => {
                 if (input.comment == 'regen') {
-                    // clicking a 'regen' button triggers a change event in all of the device's inputs
                     const inputElements = deviceDiv.querySelectorAll('input, textarea');
                     inputElements.forEach((inputElement) => {
-                        // create/trigger a change event
                         const event = new Event('change');
                         inputElement.dispatchEvent(event);
                     });
                 }
-                finishConnection(deviceDiv.id, index);
+                handleButtonClick(deviceDiv.id, index, true);
             };
             inputContainer.appendChild(inputButton);
             deviceWidth += input.comment.length;
@@ -1052,6 +1157,10 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             let wavFileData = await zip.file(deviceState.audioFileName).async('arraybuffer');
             let audioBuffer = await context.decodeAudioData(wavFileData);
             audioBuffers[deviceState.audioFileName] = audioBuffer;
+            deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
+        }
+        else if (deviceState.audioFileName && !zip ) {
+            let audioBuffer = audioBuffers[deviceState.audioFileName];
             deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
         }
         else {

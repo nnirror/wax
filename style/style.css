@@ -80,11 +80,11 @@ body {
     display: none;
 }
 .speakerChannelSelectorInput {
-    width: 2em;
+    width: 3em;
 }
 .deviceInportLabel {
     display: inline-block;
-    width: 45%;
+    width: 6em;
     font-size: 0.75em;
 }
 .deviceInport {
@@ -160,4 +160,40 @@ mark{
 .audioFileName {
     font-size: 0.8em;
     margin-top: 4px;
+}
+#infoDiv {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+#helpButton {
+    cursor: pointer;
+    position: fixed;
+    padding: 10px 20px;
+    bottom: 10px;
+    right: 10px;
+}
+.growl-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px;
+    background-color: #ab2222;
+    color: white;
+    border-radius: 5px;
+    z-index: 1000;
+    opacity: 0;
+    animation: fade-in-out 4s forwards;
+}
+
+@keyframes fade-in-out {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
 }
