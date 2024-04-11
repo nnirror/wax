@@ -841,6 +841,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         removeDeviceFromWorkspace(deviceDiv.id);
         deviceDiv.remove();
     });
+    const infoButton = document.createElement('button');
 
     if(isSpeakerChannelDevice){
         const button = document.createElement('button');
@@ -878,6 +879,12 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         button.onclick = () => handleButtonClick(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1, true);
         inputContainer.appendChild(button);
         inputContainer.appendChild(deleteButton);
+        infoButton.innerText = 'i';
+        infoButton.className = 'info-button';
+        infoButton.addEventListener('click', function() {
+            window.open(`https://github.com/nnirror/web_patcher/README.md#speaker`, '_blank');
+        });
+        inputContainer.appendChild(infoButton);
         deviceDiv.append(inputContainer);
         deviceDiv.appendChild(speakerChannelSelectorInput);
     } else {
@@ -915,6 +922,12 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             deviceWidth += input.comment.length;
         });
         inputContainer.appendChild(deleteButton);
+        infoButton.innerText = 'i';
+        infoButton.className = 'info-button';
+        infoButton.addEventListener('click', function() {
+            window.open(`https://github.com/nnirror/web_patcher/README.md#${deviceType}`, '_blank');
+        });
+        inputContainer.appendChild(infoButton);
         deviceDiv.style.width = `${(deviceWidth/2)+1.5}em`;
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '10em';

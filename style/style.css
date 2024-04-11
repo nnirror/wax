@@ -38,6 +38,9 @@ body {
     float: right;
     margin-right: 8px;
 }
+.info-button {
+    float: right;
+}
 .aLabelClass {
     color: white;
     font-size: 0.8em;
