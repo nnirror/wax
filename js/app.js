@@ -882,7 +882,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoButton.innerText = 'i';
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/web_patcher/README.md#speaker`, '_blank');
+            window.open(`https://github.com/nnirror/web_patcher/blob/main/README.md#speaker`, '_blank');
         });
         inputContainer.appendChild(infoButton);
         deviceDiv.append(inputContainer);
@@ -925,7 +925,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoButton.innerText = 'i';
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/web_patcher/README.md#${deviceType}`, '_blank');
+            window.open(`https://github.com/nnirror/web_patcher/blob/main/README.md#${deviceType}`, '_blank');
         });
         inputContainer.appendChild(infoButton);
         deviceDiv.style.width = `${(deviceWidth/2)+1.5}em`;
