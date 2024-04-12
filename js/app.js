@@ -424,7 +424,7 @@ async function createMicrophoneDevice() {
         source: source,
         it: {
             T: {
-                outlets: [{ comment: 'microphone output' }], // these need to exist so they work like the other WASM modules built with RNBO
+                outlets: [{ comment: 'signal out' }], // these need to exist so they work like the other WASM modules built with RNBO
                 inlets: [{ comment: 'microphone input' }]
             }
         }
@@ -904,23 +904,28 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             outputButton.onclick = () => handleButtonClick(deviceDiv.id, index, false);
             outputContainer.appendChild(outputButton);
         });
-        device.it.T.inlets.forEach((input, index) => {
-            const inputButton = document.createElement('button');
-            inputButton.innerText = `${input.comment}`;
-            inputButton.className = 'input-button';
-            inputButton.onclick = () => {
-                if (input.comment == 'regen') {
-                    const inputElements = deviceDiv.querySelectorAll('input, textarea');
-                    inputElements.forEach((inputElement) => {
-                        const event = new Event('change');
-                        inputElement.dispatchEvent(event);
-                    });
-                }
-                handleButtonClick(deviceDiv.id, index, true);
-            };
-            inputContainer.appendChild(inputButton);
-            deviceWidth += input.comment.length;
-        });
+        if (deviceType !== 'microphone input') {
+            device.it.T.inlets.forEach((input, index) => {
+                const inputButton = document.createElement('button');
+                inputButton.innerText = `${input.comment}`;
+                inputButton.className = 'input-button';
+                inputButton.onclick = () => {
+                    if (input.comment == 'regen') {
+                        const inputElements = deviceDiv.querySelectorAll('input, textarea');
+                        inputElements.forEach((inputElement) => {
+                            const event = new Event('change');
+                            inputElement.dispatchEvent(event);
+                        });
+                    }
+                    handleButtonClick(deviceDiv.id, index, true);
+                };
+                inputContainer.appendChild(inputButton);
+                deviceWidth += input.comment.length;
+            });
+        }
+        else {
+            deviceWidth = 15;
+        }
         inputContainer.appendChild(deleteButton);
         infoButton.innerText = 'i';
         infoButton.className = 'info-button';

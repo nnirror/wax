@@ -16,7 +16,6 @@ var wasmDeviceURLs = [
     "equals",
     "fold",
     "freqshift",
-    "granulator",
     "greater",
     "hpf",
     "hztoms",

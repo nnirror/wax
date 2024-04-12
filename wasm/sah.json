@@ -28,7 +28,7 @@
         "index": 1,
         "tag": "in1",
         "meta": "",
-        "comment": "input signal"
+        "comment": "signal in"
       },
       {
         "type": "signal",
