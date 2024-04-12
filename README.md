@@ -1,13 +1,56 @@
 # Overview
-Wax is a free open-source web-based audio synthesis environment that is inspired by Max and other data-flow programming systems.
+Wax is a browser-based audio synthesis environment that is inspired by Max and other data-flow programming systems.
 
-In Wax, everything is a signal. It is similar to a modular synthesizer, in that all modules communicate to each other with audio signals.
+By adding devices to a virtual workspace and connecting them together, you can create custom digital signal processing algorithms.
 
-The DSP modules for Wax were built with [RNBO](https://rnbo.cycling74.com/).
+All devices communicate to each other with audio signals, similar to a modular synthesizer.
 
-using facet
-'regen'
-managing state
+# Getting started
+
+Wax runs entirely in the browser. When you load the web page, the virtual workspace is empty except for two `speaker` devices at the bottom.
+
+To view a list of all objects, press the "all devices" button. This will list each device along with a link to its below documentation.
+
+# Examples
+In the top-left corner of the web app, there is an `examples` folder containing several pre-patched system states to demonstrate how elements can be connected together. Select any element from the dropdown to load that state.
+
+## Adding devices
+Double-click or press 'n' to open the interface for adding a device to the workspace. Then begin typing to find the object you want to add. Press `enter` or click the `add` button to add the device to the workspace.
+
+For device documentation, click the `i` button at the top of the device.
+
+## Creating connections
+Creating connections between two devices will create a data flow between them at audio rate, from the output of the `source device` to the input of the `target device`. Device outputs are listed as buttons on the bottom of the device, and device inputs are listed as button on the top.
+
+## Manipulating devices
+Click-drag on the workspace to select multiple devices at once. Selected devices have a bold, white border. Selected devices are draggable to anywhere the workspace.
+
+## Deleting devices
+When a device is selected, press `delete` or click the `x` button to delete the device.
+
+## Device parameters
+Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers or expressions in [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. Press `enter` to transmit the number or expression into the device.
+
+## Regenerating device parameters
+Some devices have a `regen` button which causes all device parameters to regenerate every time a signal connected to `regen` goes above 0.5. For static numbers, this will have no effect, but if the device parameter is written as Facet code, the resulting can be different each time it's generated.
+
+For example, if you have a `number` device, and you enter `ri(10,1000)` for its `value`, then each time the `regen` signal goes above 0.5, the output from `number` will be a new, random integer between 10 and 1000. If you entered `choose([2,3,4,6,8])` as its `value`, then the output from `number` would be either 2, 3, 4, 6, or 8.
+
+## Key combinations
+- create new device: `n`
+- duplicate selected device(s): `[command] + d`
+- delete selected device(s): `delete`
+- create number device: `f`
+- create comment device: `f`
+
+# Managing state
+In Wax, system states can be saved, reloaded, and shared with others.
+
+## Saving a state
+Press the `save` button to save the system state as a zip file, including all audio files that were loaded.
+
+## Loading state
+Press the `load` button to load a previously saved .zip file, including all audio files.
 
 # Device reference
 

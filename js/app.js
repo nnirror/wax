@@ -120,6 +120,44 @@ window.onload = async function() {
     document.body.appendChild(helpButton);
 };
 
+// create a button to open the modal
+var openButton = document.createElement('button');
+openButton.innerText = 'all devices';
+openButton.id = 'viewAllDevices';
+openButton.addEventListener('click', function(event) {
+    event.stopPropagation(); // stop the click event from propagating to the window
+    var modal = displayAllDevices();
+    modal.style.display = 'block';
+});
+document.body.appendChild(openButton);
+
+// create a dropdown select
+var dropdown = document.createElement('select');
+dropdown.id = 'exampleFiles';
+
+// add an unselectable first option
+var firstOption = document.createElement('option');
+firstOption.text = 'examples';
+firstOption.disabled = true;
+firstOption.selected = true;
+dropdown.appendChild(firstOption);
+
+// add an option for each file
+['amplitude_modulation.zip', 'audio_file_playback.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone_input.zip'].forEach(function(file) {
+    var option = document.createElement('option');
+    option.value = file;
+    option.text = file;
+    dropdown.appendChild(option);
+});
+
+// add the dropdown to the body
+document.body.appendChild(dropdown);
+
+// add an event listener to the dropdown to load the selected file when changed
+dropdown.addEventListener('change', function(event) {
+    loadExampleFile('examples/' + event.target.value);
+});
+
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -155,6 +193,8 @@ jsPlumb.bind("connectionDetached", function(info) {
         }
     }
 });
+
+connectionManagementClickHandler();
 
 // listen for mousedown events on the workspaceElement
 workspaceElement.addEventListener('mousedown', (event) => {
@@ -252,6 +292,10 @@ document.addEventListener('keydown', (event) => {
         event.preventDefault();
         createDeviceByName('number');
     }
+    else if (event.key === 'c' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+        event.preventDefault();
+        createDeviceByName('comment');
+    }
 });
 
 // copy-paste functionality
@@ -332,18 +376,6 @@ function openAwesompleteUI() {
     button.textContent = 'add';
     button.className = 'awesomplete-submit';
     div.appendChild(button);
-
-    // create a new button element for displaying all devices
-    var allDevicesButton = document.createElement('button');
-    allDevicesButton.textContent = 'view all';
-    allDevicesButton.className = 'allDevicesButton';
-    div.appendChild(allDevicesButton);
-
-    // add event listener for click event on the allDevicesButton
-    allDevicesButton.addEventListener('mousedown', function(event) {
-        event.preventDefault();
-        displayAllDevices();
-    });
 
 
     // function to handle the creation of the device by name
@@ -441,12 +473,12 @@ function attachOutports(device,deviceDiv) {
     device.messageEvent.subscribe((ev) => {
         // ignore message events that don't belong to an outport
         if (outports.findIndex(elt => elt.tag === ev.tag) < 0) return;
-
         // select all input elements within the deviceDiv
-        const inputElements = deviceDiv.querySelectorAll('input','textarea');
+        const inputElements = deviceDiv.querySelectorAll('input, textarea');
 
         inputElements.forEach((inputElement) => {
             // create/trigger a change event
+            // console.log('triggering change...');
             const event = new Event('change');
             inputElement.dispatchEvent(event);
         });
@@ -482,11 +514,17 @@ function addInputsForDevice(device) {
     if (inports.length > 0) {
         inports.forEach(inport => {
             let inportText;
-            if (device.it.T.inports[0].tag == 'comment' || device.it.T.inports[0].tag == 'pattern') {
+            if (device.it.T.inports[0].tag == 'pattern') {
                 inportText = document.createElement('textarea');
                 inportText.style.width = '32em';
                 inportText.style.height = '6em';
-            } else {
+            }
+            else if (device.it.T.inports[0].tag == 'comment') {
+                inportText = document.createElement('textarea');
+                inportText.style.width = '12em';
+                inportText.style.height = '4em';
+            }
+            else {
                 inportText = document.createElement('input');
             }
             inportText.id = inport.tag;
@@ -534,7 +572,9 @@ async function scheduleDeviceEvent(device, inport, value) {
             await device.setDataBuffer('pattern', audioBuffer);
         }
         else {
-            values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+            if (inport.tag !== 'comment') {
+                values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+            }
         }
         if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
             let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
@@ -717,8 +757,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.left = devicePosition.left + 'px';
             deviceDiv.style.top = devicePosition.top + 'px';
         }
-        let deviceHasTextarea = deviceDiv.querySelector('textarea');
-        if (deviceHasTextarea) {
+        if (filename == 'pattern') {
             deviceDiv.style.width = '32em';
         }
         return deviceDiv;
@@ -933,7 +972,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             window.open(`https://github.com/nnirror/web_patcher/blob/main/README.md#${deviceType}`, '_blank');
         });
         inputContainer.appendChild(infoButton);
-        deviceDiv.style.width = `${(deviceWidth/2)+1.5}em`;
+        deviceDiv.style.width = `${(deviceWidth/2)+2.5}em`;
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '10em';
         }
@@ -988,6 +1027,13 @@ function deselectAllNodes () {
         if (node.classList.contains('selectedNode')) {
             node.classList.remove('selectedNode');
         }
+    });
+}
+
+function deleteAllNodes() {
+    var deleteButtons = document.querySelectorAll('.delete-button');
+    deleteButtons.forEach(function(button) {
+        button.click();
     });
 }
 
@@ -1057,7 +1103,7 @@ async function getWorkspaceState(saveToFile = false) {
     }
 
     if (saveToFile) {
-        let fileName = prompt("Enter a file name:", `wax_state_${Date.now()}.zip`);
+        let fileName = prompt("Save system state as:", `wax_state_${Date.now()}.zip`);
 
         // if the user clicked "cancel", don't save the file
         if (fileName === null) {
@@ -1146,6 +1192,7 @@ async function reconstructWorkspaceState() {
     fileInput.accept = '.zip';
 
     fileInput.onchange = async function(event) {
+        deleteAllNodes();
         let file = event.target.files[0];
         let zip = await JSZip.loadAsync(file);
         let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
@@ -1155,6 +1202,20 @@ async function reconstructWorkspaceState() {
     };
 
     fileInput.click();
+}
+
+async function loadExampleFile(filePath) {
+    deleteAllNodes();
+    let deviceStates;
+
+    let response = await fetch(filePath);
+    let file = await response.blob();
+
+    let zip = await JSZip.loadAsync(file);
+    let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
+    let patcherState = await zip.file(jsonFileName).async('string');
+    deviceStates = JSON.parse(patcherState);
+    await reconstructDevicesAndConnections(deviceStates, zip, true);
 }
 
 async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false) {
@@ -1240,7 +1301,6 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
     jsPlumb.repaintEverything();
 }
 
-// display all devices
 function displayAllDevices() {
     // get the dropdown select
     var dropdown = document.querySelector('.deviceDropdown');
@@ -1252,13 +1312,27 @@ function displayAllDevices() {
     var modal = document.createElement('div');
     modal.className = 'deviceListModal';
 
+    // create a close button for the modal
+    var closeButton = document.createElement('button');
+    closeButton.innerText = 'x';
+    closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+    modal.appendChild(closeButton);
+
     // create a ul for the list
     var ul = document.createElement('ul');
+    ul.className = 'deviceList';
 
     // add each option in the dropdown to the list
     for (var i = 0; i < options.length; i++) {
         var li = document.createElement('li');
-        li.textContent = options[i].text;
+        var a = document.createElement('a');
+        a.textContent = options[i].text;
+        a.href = `https://github.com/nnirror/web_patcher/blob/main/README.md#${options[i].text.toLowerCase()}`;
+        a.target = '_blank';
+        li.appendChild(a);
+        li.className = 'deviceListItem';
         ul.appendChild(li);
     }
 
@@ -1267,14 +1341,22 @@ function displayAllDevices() {
 
     // add the modal to the body
     document.body.appendChild(modal);
-    modal.style.position = 'absolute';
-    modal.style.left = mousePosition.x + 'px';
-    modal.style.top = mousePosition.y + 'px';
 
-    // add an event listener to the body to remove the modal when clicked
-    document.body.addEventListener('click', function(event) {
-        if (event.target !== modal && !modal.contains(event.target)) {
-            document.body.removeChild(modal);
+    // add an event listener to the body to close the modal when clicked outside
+    window.addEventListener('click', function(event) {
+        if (!modal.contains(event.target)) {
+            modal.style.display = 'none';
+        }
+    });
+    return modal;
+}
+
+function connectionManagementClickHandler() {
+    // listen for all clicks on the document
+    document.addEventListener('click', function(event) {
+        // if the clicked element does not have the class 'input-button' or 'output-button', set lastClicked to null
+        if (!event.target.classList.contains('input-button') && !event.target.classList.contains('output-button')) {
+            lastClicked = null;
         }
     });
 }
