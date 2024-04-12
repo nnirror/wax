@@ -146,7 +146,8 @@ dropdown.appendChild(firstOption);
 ['amplitude_modulation.zip', 'audio_file_playback.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone_input.zip'].forEach(function(file) {
     var option = document.createElement('option');
     option.value = file;
-    option.text = file;
+    // remove underscores and '.zip' from the display text
+    option.text = file.replace(/_/g, ' ').replace('.zip', '');
     dropdown.appendChild(option);
 });
 
@@ -155,7 +156,9 @@ document.body.appendChild(dropdown);
 
 // add an event listener to the dropdown to load the selected file when changed
 dropdown.addEventListener('change', function(event) {
-    loadExampleFile('examples/' + event.target.value);
+    // replace spaces with underscores and add '.zip' back
+    var selectedFile = event.target.value.replace(/ /g, '_');
+    loadExampleFile('examples/' + selectedFile);
 });
 
 /* END UI initialization */

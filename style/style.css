@@ -59,6 +59,8 @@ body {
     font-size: 1em;
     cursor: pointer;
     transition: all 0.3s ease;
+    min-width: 80px;
+    min-height: 20px;
 }
 .navbarButton:hover {
     background: linear-gradient(to right, #c4c4c4, #f2f2f2);
@@ -166,7 +168,7 @@ mark{
 }
 #infoDiv {
     position: fixed;
-    top: 10px;
+    top: 50%;
     left: 50%;
     transform: translateX(-50%);
     background-color: #f8f9fa;
@@ -176,10 +178,15 @@ mark{
 }
 #helpButton {
     cursor: pointer;
+    text-align: center;
     position: fixed;
     padding: 10px 20px;
     bottom: 10px;
     right: 10px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
+    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+    border: none;
 }
 #viewAllDevices {
     cursor: pointer;
@@ -187,12 +194,20 @@ mark{
     padding: 10px 20px;
     bottom: 10px;
     left: 10px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
+    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+    border: none;
 }
 #exampleFiles {
     position: fixed;
     top: 10px;
     left: 10px;
     padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
+    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
 }
 .growl-notification {
     position: fixed;
@@ -233,4 +248,33 @@ mark{
 }
 .deviceListItem {
     margin: 10px;
+}
+/* screens smaller than 600px */
+@media (max-width: 600px) {
+    #exampleFiles, #viewAllDevices {
+        width: 40%;
+        height: 8%;
+        font-size: 25px;
+        min-height: 40px;
+    }
+    #helpButton {
+        height: 8%;
+        min-height: 40px;
+        font-size: 25px;
+        width: 12%;
+    }
+    .navbarButton {
+        height: 8%;
+        font-size: 25px;
+        min-height: 40px;
+    }
+    .startAudioButton {
+        top: 10px;
+    }
+    .saveStateButton {
+        top: calc(10px + 9%);
+    }
+    .reloadStateButton {
+        top: calc(10px + 18%);
+    }
 }
