@@ -83,7 +83,16 @@ window.onload = async function() {
     // create the info div element
     let infoDiv = document.createElement('div');
     infoDiv.id = 'infoDiv';
-    infoDiv.textContent = "Double-click or press 'n' to add a device to the workspace. Connect to a 'speaker' object to hear the output. ";
+    var link = document.createElement('a');
+    link.href = "https://github.com/nnirror/web_patcher/blob/main/README.md";
+    link.textContent = "full documentation";
+    link.target = "_blank"; // to open the link in a new tab
+
+    infoDiv.textContent = "Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the ";
+    infoDiv.appendChild(link);
+
+    var period = document.createTextNode(".");
+    infoDiv.appendChild(period);
     infoDiv.style.display = 'none';
 
     // stop propagation of click event in infoDiv
