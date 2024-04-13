@@ -33,6 +33,7 @@ body {
     height: 10000px;
     position: relative;
     overflow: auto;
+    touch-action: manipulation;
 }
 .delete-button {
     float: right;
@@ -117,7 +118,7 @@ body {
 }
 .awesomplete-submit {
     position: absolute;
-    left: 10em;
+    left: 12em;
 }
 .allDevicesButton {
     position: absolute;
@@ -175,6 +176,8 @@ mark{
     padding: 10px;
     border-radius: 5px;
     text-align: center;
+    display: none;
+    font-size: 1.5em;
 }
 #helpButton {
     cursor: pointer;

@@ -84,6 +84,7 @@ window.onload = async function() {
     let infoDiv = document.createElement('div');
     infoDiv.id = 'infoDiv';
     infoDiv.textContent = "Double-click or press 'n' to add a device to the workspace. Connect to a 'speaker' object to hear the output. ";
+    infoDiv.style.display = 'none';
 
     // stop propagation of click event in infoDiv
     infoDiv.onclick = function(event) {
@@ -975,7 +976,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             window.open(`https://github.com/nnirror/web_patcher/blob/main/README.md#${deviceType}`, '_blank');
         });
         inputContainer.appendChild(infoButton);
-        deviceDiv.style.width = `${(deviceWidth/2)+2.5}em`;
+        deviceDiv.style.width = `${(deviceWidth/2)+5}em`;
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '10em';
         }
@@ -1365,3 +1366,14 @@ function connectionManagementClickHandler() {
 }
 
 /* END functions */
+
+function isMobileDevice() {
+    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+};
+
+if (isMobileDevice()) {
+    let button = document.querySelector('.startAudioButton');
+    button.textContent = 'start';
+    button.style.color = '#005925';
+    isAudioPlaying = false;
+}
