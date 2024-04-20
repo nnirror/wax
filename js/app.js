@@ -84,7 +84,7 @@ window.onload = async function() {
     let infoDiv = document.createElement('div');
     infoDiv.id = 'infoDiv';
     var link = document.createElement('a');
-    link.href = "https://github.com/nnirror/web_patcher/blob/main/README.md";
+    link.href = "https://github.com/nnirror/wax/blob/main/README.md";
     link.textContent = "full documentation";
     link.target = "_blank"; // to open the link in a new tab
 
@@ -934,7 +934,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoButton.innerText = 'i';
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/web_patcher/blob/main/README.md#speaker`, '_blank');
+            window.open(`https://github.com/nnirror/wax/blob/main/README.md#speaker`, '_blank');
         });
         inputContainer.appendChild(infoButton);
         deviceDiv.append(inputContainer);
@@ -982,7 +982,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoButton.innerText = 'i';
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/web_patcher/blob/main/README.md#${deviceType}`, '_blank');
+            window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
         });
         inputContainer.appendChild(infoButton);
         deviceDiv.style.width = `${(deviceWidth/2)+5}em`;
@@ -1342,7 +1342,7 @@ function displayAllDevices() {
         var li = document.createElement('li');
         var a = document.createElement('a');
         a.textContent = options[i].text;
-        a.href = `https://github.com/nnirror/web_patcher/blob/main/README.md#${options[i].text.toLowerCase()}`;
+        a.href = `https://github.com/nnirror/wax/blob/main/README.md#${options[i].text.toLowerCase()}`;
         a.target = '_blank';
         li.appendChild(a);
         li.className = 'deviceListItem';
