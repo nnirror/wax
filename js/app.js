@@ -9,6 +9,7 @@ context.destination.channelCountMode = "explicit";
 // set channelInterpretation to "discrete"
 context.destination.channelInterpretation = "discrete";
 // create channel merger for speaker output
+context.suspend();
 const channelMerger = context.createChannelMerger(context.destination.channelCount);
 channelMerger.connect(context.destination);
 /* END audio context initialization */
@@ -22,24 +23,13 @@ let deviceDropdown = createDropdownofAllDevices();
 
 // create a button for starting audio
 createButtonForNavBar(
-    'mute',
+    'start',
     'startAudioButton navbarButton',
     () => {
-        const button = document.querySelector('.startAudioButton');
         if (isAudioPlaying) {
-            setTimeout(() => {
-                context.suspend().then(() => {
-                    button.textContent = 'start';
-                    button.style.color = '#005925';
-                    isAudioPlaying = false;
-                });
-            }, 10);
+            stopAudio();
         } else {
-            context.resume().then(() => {
-                button.textContent = 'mute';
-                button.style.color = '#ab2222';
-                isAudioPlaying = true;
-            });
+            startAudio();
         }
     }
 );
@@ -50,8 +40,7 @@ createButtonForNavBar('save', 'saveStateButton navbarButton', ()=>{getWorkspaceS
 // create a button for reloading workspace state
 createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
-    isAudioPlaying = true;
-    context.resume();
+    startAudio();
 });
 
 // prevent accidental refreshes which would lose unsaved changes
@@ -153,7 +142,7 @@ firstOption.selected = true;
 dropdown.appendChild(firstOption);
 
 // add an option for each file
-['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone_input.zip'].forEach(function(file) {
+['amplitude_modulation.zip', 'audio_file_playback.zip', 'fm.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone_input.zip'].forEach(function(file) {
     var option = document.createElement('option');
     option.value = file;
     // remove underscores and '.zip' from the display text
@@ -176,7 +165,7 @@ dropdown.addEventListener('change', function(event) {
 /* BEGIN globally acessible objects */
 let lastClicked = null;
 let deviceCounts = {};
-let isAudioPlaying = true;
+let isAudioPlaying = false;
 let devices = {};
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
@@ -1000,11 +989,6 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             deviceDiv.classList.add('selectedNode');
         },
     });
-    context.resume().then(() => {
-        button.textContent = 'mute';
-        button.style.color = '#ab2222';
-        isAudioPlaying = true;
-    });
     return deviceDiv;
 }
 
@@ -1216,7 +1200,7 @@ async function reconstructWorkspaceState() {
         let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
         let patcherState = await zip.file(jsonFileName).async('string');
         deviceStates = JSON.parse(patcherState);
-        await reconstructDevicesAndConnections(deviceStates, zip, true);
+        await reconstructDevicesAndConnections(deviceStates, zip, false);
     };
 
     fileInput.click();
@@ -1233,7 +1217,7 @@ async function loadExampleFile(filePath) {
     let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
     let patcherState = await zip.file(jsonFileName).async('string');
     deviceStates = JSON.parse(patcherState);
-    await reconstructDevicesAndConnections(deviceStates, zip, true);
+    await reconstructDevicesAndConnections(deviceStates, zip, false);
 }
 
 async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false) {
@@ -1244,10 +1228,13 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         let deviceName = deviceState.id.split('-')[0];            
         let deviceElement;
         let devicePosition = {};
+        let l = parseInt(deviceState.left.split('px')[0]);
+        let t = parseInt(deviceState.top.split('px')[0]);
         if ( reconstructFromDuplicateCommand ) {
-            let l = parseInt(deviceState.left.split('px')[0]);
-            let t = parseInt(deviceState.top.split('px')[0]);
             devicePosition = {left: l+100, top: t+100};
+        }
+        else {
+            devicePosition = {left: l, top: t};
         }
         // load any stored audio files
         if (deviceState.audioFileName && zip ) {
@@ -1379,15 +1366,24 @@ function connectionManagementClickHandler() {
     });
 }
 
-/* END functions */
-
-function isMobileDevice() {
-    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
-};
-
-if (isMobileDevice()) {
-    let button = document.querySelector('.startAudioButton');
-    button.textContent = 'start';
-    button.style.color = '#005925';
-    isAudioPlaying = false;
+function stopAudio () {
+    const button = document.querySelector('.startAudioButton');
+    setTimeout(() => {
+        context.suspend().then(() => {
+            button.textContent = 'start';
+            button.style.background = 'linear-gradient(to right, #005925, #002e13)';
+            isAudioPlaying = false;
+        });
+    }, 10);
 }
+
+function startAudio() {
+    const button = document.querySelector('.startAudioButton');
+    context.resume().then(() => {
+        button.textContent = 'mute';
+        button.style.background = 'linear-gradient(to right, #ab2222, #7b0000)';
+        isAudioPlaying = true;
+    });
+}
+
+/* END functions */

@@ -69,7 +69,8 @@ body {
 }
 .startAudioButton {
     top: 10px;
-    color: #ab2222;
+    color: white;
+    background: linear-gradient(to right, #005925, #002e13);
 }
 .saveStateButton {
     top: 60px;
