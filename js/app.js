@@ -1000,6 +1000,11 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             deviceDiv.classList.add('selectedNode');
         },
     });
+    context.resume().then(() => {
+        button.textContent = 'mute';
+        button.style.color = '#ab2222';
+        isAudioPlaying = true;
+    });
     return deviceDiv;
 }
 
