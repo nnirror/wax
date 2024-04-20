@@ -46,9 +46,15 @@ body {
     color: white;
     font-size: 0.8em;
 }
+#toggleNavbarButton {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    height: 20px;
+}
 .navbarButton {
     position: fixed;
-    width: 5em;
+    width: 6em;
     right: 10px;
     z-index: 1000;
     padding: 10px 20px;
@@ -68,15 +74,26 @@ body {
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
 }
 .startAudioButton {
-    top: 10px;
+    top: 40px;
     color: white;
     background: linear-gradient(to right, #005925, #002e13);
 }
 .saveStateButton {
-    top: 60px;
+    top: 90px;
 }
 .reloadStateButton {
-    top: 110px;
+    top: 140px;
+}
+.viewAllDevices {
+    top: 190px;
+}
+.helpButton {
+    top: 260px;
+}
+.recordButton {
+    top: 310px;
+    background: linear-gradient(to right, #ab2222, #841a1a);
+    color: white;
 }
 .allDevicesButton {
     position: absolute;
@@ -269,16 +286,45 @@ mark{
     }
     .navbarButton {
         height: 8%;
-        font-size: 25px;
+        font-size: 18px;
         min-height: 40px;
     }
     .startAudioButton {
-        top: 10px;
+        top: 40px;
     }
     .saveStateButton {
-        top: calc(10px + 9%);
+        top: calc(40px + 9%);
     }
     .reloadStateButton {
-        top: calc(10px + 18%);
+        top: calc(40px + 18%);
     }
+    .viewAllDevices {
+        top: calc(40px + 27%);
+    }
+    .helpButton {
+        top: calc(40px + 36%);
+    }
+    .recordButton {
+        top: calc(40px + 45%);
+    }
+    #toggleNavbarButton {
+        width: 8em;
+    }
+}
+.hamburger {
+    width: 7em;
+    padding: 0px 30px;
+    height: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: linear-gradient(to right, #acacac, #cecece);
+}
+
+.hamburger-line {
+    width: 75%;
+    height: 2px;
+    background-color: #000;
 }

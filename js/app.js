@@ -43,6 +43,115 @@ createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
     startAudio();
 });
 
+// create button for viewing all devices
+createButtonForNavBar(
+    'all devices',
+    'viewAllDevices navbarButton',
+    (event) => {
+        event.stopPropagation(); // stop the click event from propagating to the window
+        var modal = displayAllDevices();
+        modal.style.display = 'block';
+    }
+);
+
+createButtonForNavBar(
+    '?',
+    'helpButton navbarButton',
+    (event) => {
+        document.getElementById('infoDiv').style.display = 'block';
+        event.stopPropagation();
+    }
+);
+
+createButtonForNavBar(
+    'start recording',
+    'recordButton navbarButton',
+    (event) => {
+        if (!recorder) {
+            // start recording
+            const destination = context.createMediaStreamDestination();
+            channelMerger.connect(destination);
+            recorder = new MediaRecorder(destination.stream, { mimeType: 'audio/webm' });
+            recorder.addEventListener('dataavailable', (event) => {
+                chunks.push(event.data);
+            });
+            recorder.start();
+            event.target.textContent = 'stop recording';
+        } else {
+            // stop recording
+            recorder.addEventListener('stop', () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const arrayBuffer = reader.result;
+                    try {
+                        context.decodeAudioData(arrayBuffer, audioBuffer => {
+                            const wavArrayBuffer = audioBufferToWav(audioBuffer);
+                            const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+                            const audioURL = URL.createObjectURL(wavBlob);
+                    
+                            // prompt the user for a filename
+                            let fileName = prompt("Save recording as:", `recording_${Date.now()}.wav`);
+                            if (fileName === null) {
+                                // if the user clicked "Cancel", don't save the file
+                                return;
+                            }
+                            if (!fileName.endsWith('.wav')) {
+                                fileName += '.wav';
+                            }
+                    
+                            // create a download link
+                            let downloadLink = document.createElement('a');
+                            downloadLink.href = audioURL;
+                            downloadLink.download = fileName;
+                            downloadLink.textContent = 'Download recording';
+                            document.body.appendChild(downloadLink);
+                    
+                            downloadLink.click();
+                            downloadLink.remove();
+                    
+                            // reset
+                            chunks = [];
+                            recorder = null;
+                        }, error => {
+                            console.error('Failed to decode audio data:', error);
+                            // reset
+                            chunks = [];
+                            recorder = null;
+                        });
+                    } catch (error) {
+                        console.error('An error occurred:', error);
+                        // reset
+                        chunks = [];
+                        recorder = null;
+                    }
+                };
+                reader.readAsArrayBuffer(blob);
+            });
+            recorder.stop();
+            event.target.textContent = 'start recording';
+        }
+    }
+);
+
+// create the button
+var toggleButton = document.createElement('button');
+toggleButton.id = 'toggleNavbarButton';
+toggleButton.className = 'hamburger';
+
+// create the hamburger icon
+for (let i = 0; i < 3; i++) {
+    var line = document.createElement('div');
+    line.className = 'hamburger-line';
+    toggleButton.appendChild(line);
+}
+
+// add the event listener
+toggleButton.addEventListener('click', toggleNavbar);
+
+// append the button to the body
+document.body.appendChild(toggleButton);
+
 // prevent accidental refreshes which would lose unsaved changes
 window.onbeforeunload = function() {
     return "Are you sure you want to leave? Unsaved changes will be lost.";
@@ -77,7 +186,7 @@ window.onload = async function() {
     link.textContent = "full documentation";
     link.target = "_blank"; // to open the link in a new tab
 
-    infoDiv.textContent = "Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the ";
+    infoDiv.textContent = "Wax is a browser-based audio synthesis environment that is inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the ";
     infoDiv.appendChild(link);
 
     var period = document.createTextNode(".");
@@ -105,30 +214,7 @@ window.onload = async function() {
     // add the close button to the info div and the info div to body
     infoDiv.appendChild(closeButton);
     document.body.appendChild(infoDiv);
-
-    // create the help button
-    let helpButton = document.createElement('button');
-    helpButton.textContent = '?';
-    helpButton.id = 'helpButton';
-    helpButton.onclick = function() {
-        infoDiv.style.display = 'block';
-        event.stopPropagation();
-    };
-
-    // add the help button to the body
-    document.body.appendChild(helpButton);
 };
-
-// create a button to open the modal
-var openButton = document.createElement('button');
-openButton.innerText = 'all devices';
-openButton.id = 'viewAllDevices';
-openButton.addEventListener('click', function(event) {
-    event.stopPropagation(); // stop the click event from propagating to the window
-    var modal = displayAllDevices();
-    modal.style.display = 'block';
-});
-document.body.appendChild(openButton);
 
 // create a dropdown select
 var dropdown = document.createElement('select');
@@ -163,6 +249,8 @@ dropdown.addEventListener('change', function(event) {
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
+let chunks = [];
+let recorder = null;
 let lastClicked = null;
 let deviceCounts = {};
 let isAudioPlaying = false;
@@ -994,7 +1082,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 
 function createDropdownofAllDevices () {
     const deviceDropdown = document.createElement('select');
-    deviceDropdown.className = 'deviceDropdown navbarButton';
+    deviceDropdown.className = 'deviceDropdown';
 
     // load each WASM device into dropdown
     wasmDeviceURLs.sort().forEach((filename) => {
@@ -1386,4 +1474,20 @@ function startAudio() {
     });
 }
 
+function toggleNavbar() {
+    const buttons = document.querySelectorAll('.navbarButton');
+    buttons.forEach(button => {
+        if (button.style.display === 'none') {
+            button.style.display = 'block';
+        } else {
+            button.style.display = 'none';
+        }
+    });
+    const exampleFiles = document.getElementById('exampleFiles');
+    if (exampleFiles.style.display === 'none') {
+        exampleFiles.style.display = 'block';
+    } else {
+        exampleFiles.style.display = 'none';
+    }
+}
 /* END functions */

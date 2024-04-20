@@ -52,6 +52,9 @@ Press the `save` button to save the system state as a zip file, including all au
 ## Loading state
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
+## Recording a session
+With devices connected to a speaker objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer.
+
 # Device reference
 
 ## add
