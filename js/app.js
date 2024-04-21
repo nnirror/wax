@@ -70,7 +70,7 @@ createButtonForNavBar(
         try {
             if (!recorder) {
                 // start recording
-                const destination = context.createMediaStreamDestination();
+                destination = context.createMediaStreamDestination();
                 channelMerger.connect(destination);
                 recorder = RecordRTC(destination.stream, { type: 'audio' });
                 recorder.startRecording();
@@ -80,7 +80,9 @@ createButtonForNavBar(
                 recorder.stopRecording(async function() {
                     const blob = recorder.getBlob();
     
-                    destination.stream.getTracks().forEach(track => track.stop());
+                    if (destination && destination.stream) {
+                        destination.stream.getTracks().forEach(track => track.stop());
+                    }
     
                     const reader = new FileReader();
                     reader.onloadend = async () => {
@@ -252,6 +254,7 @@ dropdown.addEventListener('change', function(event) {
 
 /* BEGIN globally acessible objects */
 let chunks = [];
+let destination;
 let recorder = null;
 let lastClicked = null;
 let deviceCounts = {};
@@ -1456,10 +1459,11 @@ function displayAllDevices() {
 function connectionManagementClickHandler() {
     // listen for all clicks on the document
     document.addEventListener('click', function(event) {
-        // get the parent element that contains only the input and output buttons
-        const parentElement = document.getElementById('parent-element-id');
-        // if the clicked element is not a child of the parent element, set lastClicked to null
-        if (!parentElement.contains(event.target)) {
+        // get the parent elements that contain only the input and output buttons
+        const parentElements = document.querySelectorAll('.input-container, .output-container');
+        // if the clicked element is not a child of any of the parent elements, set lastClicked to null
+        let isChildOfParentElement = Array.from(parentElements).some(parentElement => parentElement.contains(event.target));
+        if (!isChildOfParentElement) {
             lastClicked = null;
         }
     });
