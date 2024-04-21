@@ -10,6 +10,7 @@
     user-select: none;
     width: auto;
     border: 3px solid #333;
+    z-index: 1003;
 }
 .input-container {
     position: absolute;
