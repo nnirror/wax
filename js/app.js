@@ -127,8 +127,7 @@ createButtonForNavBar(
                     };
                     reader.readAsArrayBuffer(blob);
                 });
-                stopAudio();
-                setTimeout(() => {startAudio();}, 500);
+                recreateWorkSpaceState();
                 event.target.textContent = 'start recording';
             }
         }
@@ -1284,6 +1283,16 @@ async function copySelectedNodes() {
     deselectAllNodes();
     // call reconstructDevicesAndConnections with the state for the selected devices
     reconstructDevicesAndConnections(await getStateForDeviceIds(deviceIds), null, true);
+    selectionDiv = null;
+}
+
+async function recreateWorkSpaceState() {
+    // get all the ids of elements with class "node", store their state, and delete them
+    let deviceIds = Array.from(document.getElementsByClassName('node')).map(node => node.id);
+    let deviceStates = await getStateForDeviceIds(deviceIds);
+    deleteAllNodes();
+    // call reconstructDevicesAndConnections with the state for all the devices
+    reconstructDevicesAndConnections(deviceStates, null, false);
     selectionDiv = null;
 }
 
