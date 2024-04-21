@@ -51,10 +51,11 @@ body {
     top: 10px;
     right: 10px;
     height: 20px;
+    padding: 4px 20px;
 }
 .navbarButton {
     position: fixed;
-    width: 6em;
+    width: 10em;
     right: 10px;
     z-index: 1000;
     padding: 10px 20px;
@@ -88,15 +89,25 @@ body {
     top: 190px;
 }
 .helpButton {
-    top: 260px;
+    top: 340px;
 }
 .recordButton {
-    top: 310px;
+    top: 240px;
     background: linear-gradient(to right, #ab2222, #841a1a);
     color: white;
 }
-.recordButton {
-    background: linear-gradient(to right, #ab2222, #841a1a) !important;
+#exampleFiles {
+    position: fixed;
+    top: 290px;
+    right: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    width: 10em;
+    font-size: 1em;
+    text-align: center;
+    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
+    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
 }
 .allDevicesButton {
     position: absolute;
@@ -223,16 +234,6 @@ mark{
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     border: none;
 }
-#exampleFiles {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
-}
 .growl-notification {
     position: fixed;
     bottom: 20px;
@@ -293,30 +294,39 @@ mark{
         min-height: 40px;
     }
     .startAudioButton {
-        top: 40px;
+        top: 10%;
     }
     .saveStateButton {
-        top: calc(40px + 9%);
+        top: 19%;
     }
     .reloadStateButton {
-        top: calc(40px + 18%);
+        top: 28%;
+    }
+    #exampleFiles {
+        width: 10em;
+        font-size: 18px;
+        top: 55%;
     }
     .viewAllDevices {
-        top: calc(40px + 27%);
-    }
-    .helpButton {
-        top: calc(40px + 36%);
+        top: 37%;
     }
     .recordButton {
-        top: calc(40px + 45%);
+        top:46%;
+    }
+    .helpButton {
+        top: 64%;
     }
     #toggleNavbarButton {
-        width: 8em;
+        height: 8%;
+        width: 10em;
+        font-size: 18px;
+        padding: 15px 30px;
     }
 }
 .hamburger {
-    width: 7em;
-    padding: 0px 30px;
+    width: 10em;
+    font-size: 1em;
+    padding: 15px 30px;
     height: 20px;
     display: flex;
     flex-direction: column;
@@ -327,7 +337,7 @@ mark{
 }
 
 .hamburger-line {
-    width: 75%;
+    width: 100%;
     height: 2px;
     background-color: #000;
 }

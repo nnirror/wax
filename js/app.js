@@ -23,7 +23,7 @@ let deviceDropdown = createDropdownofAllDevices();
 
 // create a button for starting audio
 createButtonForNavBar(
-    'start',
+    'start audio',
     'startAudioButton navbarButton',
     () => {
         if (isAudioPlaying) {
@@ -79,7 +79,6 @@ createButtonForNavBar(
                 // stop recording
                 recorder.stopRecording(async function() {
                     const blob = recorder.getBlob();
-    
                     if (destination && destination.stream) {
                         destination.stream.getTracks().forEach(track => track.stop());
                     }
@@ -128,6 +127,8 @@ createButtonForNavBar(
                     };
                     reader.readAsArrayBuffer(blob);
                 });
+                stopAudio();
+                setTimeout(() => {startAudio();}, 500);
                 event.target.textContent = 'start recording';
             }
         }
@@ -190,7 +191,7 @@ window.onload = async function() {
     link.textContent = "full documentation";
     link.target = "_blank"; // to open the link in a new tab
 
-    infoDiv.textContent = "Wax is a browser-based audio synthesis environment that is inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the ";
+    infoDiv.textContent = "Wax is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the ";
     infoDiv.appendChild(link);
 
     var period = document.createTextNode(".");
@@ -1473,7 +1474,7 @@ function stopAudio () {
     const button = document.querySelector('.startAudioButton');
     setTimeout(() => {
         context.suspend().then(() => {
-            button.textContent = 'start';
+            button.textContent = 'start audio';
             button.style.background = 'linear-gradient(to right, #005925, #002e13)';
             isAudioPlaying = false;
         });
@@ -1483,7 +1484,7 @@ function stopAudio () {
 function startAudio() {
     const button = document.querySelector('.startAudioButton');
     context.resume().then(() => {
-        button.textContent = 'mute';
+        button.textContent = 'mute audio';
         button.style.background = 'linear-gradient(to right, #ab2222, #7b0000)';
         isAudioPlaying = true;
     });

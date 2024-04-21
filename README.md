@@ -1,5 +1,5 @@
 # Overview
-Wax is a browser-based audio synthesis environment that is inspired by Max and other data-flow programming systems.
+Wax is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems.
 
 By adding devices to a virtual workspace and connecting them together, you can create custom digital signal processing algorithms.
 
