@@ -94,7 +94,7 @@ body {
 }
 .recordButton {
     top: 240px;
-    background: linear-gradient(to right, #ab2222, #841a1a);
+    background: linear-gradient(to right, #ab2222, #841a1a) !important;
     color: white;
 }
 #exampleFiles {
