@@ -1,7 +1,7 @@
 /* BEGIN audio context initialization */
 // create audio context
-const WAContext = window.AudioContext || window.webkitAudioContext;
-const context = new WAContext();
+let WAContext = window.AudioContext || window.webkitAudioContext;
+let context = new WAContext();
 // set channelCount to maximum amount of channels available
 context.destination.channelCount = context.destination.maxChannelCount;
 // set channelCountMode to "explicit"
@@ -10,7 +10,7 @@ context.destination.channelCountMode = "explicit";
 context.destination.channelInterpretation = "discrete";
 // create channel merger for speaker output
 context.suspend();
-const channelMerger = context.createChannelMerger(context.destination.channelCount);
+let channelMerger = context.createChannelMerger(context.destination.channelCount);
 channelMerger.connect(context.destination);
 /* END audio context initialization */
 
@@ -1292,6 +1292,16 @@ async function recreateWorkSpaceState() {
     let deviceStates = await getStateForDeviceIds(deviceIds);
     deleteAllNodes();
     // call reconstructDevicesAndConnections with the state for all the devices
+    context = new WAContext();
+    // set channelCount to maximum amount of channels available
+    context.destination.channelCount = context.destination.maxChannelCount;
+    // set channelCountMode to "explicit"
+    context.destination.channelCountMode = "explicit";
+    // set channelInterpretation to "discrete"
+    context.destination.channelInterpretation = "discrete";
+    // create channel merger for speaker output
+    channelMerger = context.createChannelMerger(context.destination.channelCount);
+    channelMerger.connect(context.destination);
     reconstructDevicesAndConnections(deviceStates, null, false);
     selectionDiv = null;
 }
