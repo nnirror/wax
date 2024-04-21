@@ -67,63 +67,71 @@ createButtonForNavBar(
     'start recording',
     'recordButton navbarButton',
     async (event) => {
-        if (!recorder) {
-            // start recording
-            const destination = context.createMediaStreamDestination();
-            channelMerger.connect(destination);
-            recorder = RecordRTC(destination.stream, { type: 'audio' });
-            recorder.startRecording();
-            event.target.textContent = 'stop recording';
-        } else {
-            // stop recording
-            recorder.stopRecording(async function() {
-                const blob = recorder.getBlob();
-
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const arrayBuffer = reader.result;
-                    try {
-                        context.decodeAudioData(arrayBuffer, audioBuffer => {
-                            const wavArrayBuffer = audioBufferToWav(audioBuffer);
-                            const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
-                            const audioURL = URL.createObjectURL(wavBlob);
-                    
-                            // prompt the user for a filename
-                            let fileName = prompt("Save recording as:", `recording_${Date.now()}.wav`);
-                            if (fileName === null) {
-                                // if the user clicked "Cancel", don't save the file
-                                return;
-                            }
-                            if (!fileName.endsWith('.wav')) {
-                                fileName += '.wav';
-                            }
-                    
-                            // create a download link
-                            let downloadLink = document.createElement('a');
-                            downloadLink.href = audioURL;
-                            downloadLink.download = fileName;
-                            downloadLink.textContent = 'Download recording';
-                            document.body.appendChild(downloadLink);
-                    
-                            downloadLink.click();
-                            downloadLink.remove();
-                    
+        try {
+            if (!recorder) {
+                // start recording
+                const destination = context.createMediaStreamDestination();
+                channelMerger.connect(destination);
+                recorder = RecordRTC(destination.stream, { type: 'audio' });
+                recorder.startRecording();
+                event.target.textContent = 'stop recording';
+            } else {
+                // stop recording
+                recorder.stopRecording(async function() {
+                    const blob = recorder.getBlob();
+    
+                    destination.stream.getTracks().forEach(track => track.stop());
+    
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const arrayBuffer = reader.result;
+                        try {
+                            context.decodeAudioData(arrayBuffer, audioBuffer => {
+                                const wavArrayBuffer = audioBufferToWav(audioBuffer);
+                                const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+                                const audioURL = URL.createObjectURL(wavBlob);
+                        
+                                // prompt the user for a filename
+                                let fileName = prompt("Save recording as:", `recording_${Date.now()}.wav`);
+                                if (fileName === null) {
+                                    // if the user clicked "Cancel", don't save the file
+                                    return;
+                                }
+                                if (!fileName.endsWith('.wav')) {
+                                    fileName += '.wav';
+                                }
+                        
+                                // create a download link
+                                let downloadLink = document.createElement('a');
+                                downloadLink.href = audioURL;
+                                downloadLink.download = fileName;
+                                downloadLink.textContent = 'Download recording';
+                                document.body.appendChild(downloadLink);
+                        
+                                downloadLink.click();
+                                downloadLink.remove();
+                        
+                                // reset
+                                recorder = null;
+                            }, error => {
+                                console.error('Failed to decode audio data:', error);
+                                // reset
+                                recorder = null;
+                            });
+                        } catch (error) {
+                            console.error('An error occurred:', error);
                             // reset
                             recorder = null;
-                        }, error => {
-                            console.error('Failed to decode audio data:', error);
-                            // reset
-                            recorder = null;
-                        });
-                    } catch (error) {
-                        console.error('An error occurred:', error);
-                        // reset
-                        recorder = null;
-                    }
-                };
-                reader.readAsArrayBuffer(blob);
-            });
-            event.target.textContent = 'start recording';
+                        }
+                    };
+                    reader.readAsArrayBuffer(blob);
+                });
+                event.target.textContent = 'start recording';
+            }
+        }
+        catch (error) {
+            console.error('An error occurred:', error);
+            recorder = null;
         }
     }
 );
