@@ -66,77 +66,109 @@ createButtonForNavBar(
 createButtonForNavBar(
     'start recording',
     'recordButton navbarButton',
-    async (event) => {
-        try {
-            if (!recorder) {
-                // start recording
-                destination = context.createMediaStreamDestination();
-                channelMerger.connect(destination);
-                recorder = RecordRTC(destination.stream, { type: 'audio' });
-                recorder.startRecording();
-                event.target.textContent = 'stop recording';
-            } else {
-                // stop recording
-                recorder.stopRecording(async function() {
-                    const blob = recorder.getBlob();
-                    if (destination && destination.stream) {
-                        destination.stream.getTracks().forEach(track => track.stop());
-                    }
-    
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        const arrayBuffer = reader.result;
-                        try {
-                            context.decodeAudioData(arrayBuffer, audioBuffer => {
-                                const wavArrayBuffer = audioBufferToWav(audioBuffer);
-                                const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
-                                const audioURL = URL.createObjectURL(wavBlob);
-                        
-                                // prompt the user for a filename
-                                let fileName = prompt("Save recording as:", `recording_${Date.now()}.wav`);
-                                if (fileName === null) {
-                                    // if the user clicked "Cancel", don't save the file
-                                    return;
-                                }
+    ()=>{}
+);
+
+
+document.body.addEventListener('click', async (event) => {
+    if (event.target.classList.contains('recordButton')) {
+        if (!isRecording) {
+            // start recording
+            destination = context.createMediaStreamDestination();
+            channelMerger.connect(destination);
+            recorder = RecordRTC(destination.stream, { type: 'audio', type: 'audio/wav' });
+            recorder.startRecording();
+            event.target.textContent = 'stop recording';
+            isRecording = true;
+        } else {
+            isRecording = false;
+            // stop recording
+            recorder.stopRecording(async function() {
+                const blob = recorder.getBlob();
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const arrayBuffer = reader.result;
+                    try {
+                        context.decodeAudioData(arrayBuffer, audioBuffer => {
+                            const wavArrayBuffer = audioBufferToWav(audioBuffer);
+                            const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+                            const audioURL = URL.createObjectURL(wavBlob);
+                            
+                            // create a modal dialog
+                            let modal = document.createElement('div');
+                            modal.style.position = 'fixed';
+                            modal.style.left = '0';
+                            modal.style.top = '0';
+                            modal.style.width = '100%';
+                            modal.style.height = '100%';
+                            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                            modal.style.display = 'flex';
+                            modal.style.justifyContent = 'center';
+                            modal.style.alignItems = 'center';
+                            modal.style.zIndex = '1005';
+
+                            // create a modal content container
+                            let modalContent = document.createElement('div');
+                            modalContent.style.backgroundColor = '#fff';
+                            modalContent.style.padding = '20px';
+                            modalContent.style.borderRadius = '10px';
+                            modalContent.style.width = '50%';
+                            modalContent.style.maxWidth = '500px';
+                            modal.appendChild(modalContent);
+
+                            // create a text element
+                            let text = document.createElement('p');
+                            text.textContent = 'Save file as:';
+                            modalContent.appendChild(text);
+
+                            // create an input field
+                            let input = document.createElement('input');
+                            input.type = 'text';
+                            input.value = `recording_${Date.now()}.wav`;
+                            input.style.width = '100%';
+                            input.style.marginBottom = '10px';
+                            modalContent.appendChild(input);
+
+                            // create a save button
+                            let saveButton = document.createElement('button');
+                            saveButton.textContent = 'Save';
+                            modalContent.appendChild(saveButton);
+
+                            // when the save button is clicked, save the file with the inputted name
+                            saveButton.addEventListener('click', () => {
+                                let fileName = input.value;
                                 if (!fileName.endsWith('.wav')) {
                                     fileName += '.wav';
                                 }
-                        
+
                                 // create a download link
                                 let downloadLink = document.createElement('a');
                                 downloadLink.href = audioURL;
                                 downloadLink.download = fileName;
                                 downloadLink.textContent = 'Download recording';
                                 document.body.appendChild(downloadLink);
-                        
                                 downloadLink.click();
-                                downloadLink.remove();
-                        
-                                // reset
-                                recorder = null;
-                            }, error => {
-                                console.error('Failed to decode audio data:', error);
-                                // reset
-                                recorder = null;
+
+                                // remove the modal dialog
+                                document.body.removeChild(modal);
                             });
-                        } catch (error) {
-                            console.error('An error occurred:', error);
-                            // reset
-                            recorder = null;
-                        }
-                    };
-                    reader.readAsArrayBuffer(blob);
-                });
-                recreateWorkSpaceState();
-                event.target.textContent = 'start recording';
-            }
-        }
-        catch (error) {
-            console.error('An error occurred:', error);
-            recorder = null;
+
+                            // add the modal dialog to the document
+                            document.body.appendChild(modal);
+                        }, error => {
+                            console.error('Failed to decode audio data:', error);
+                        });
+                    } catch (error) {
+                        console.error('An error occurred:', error);
+                    }
+                };
+                reader.readAsArrayBuffer(blob);
+                recorder = null;
+            });
+            event.target.textContent = 'start recording';
         }
     }
-);
+});
 
 // create the button
 var toggleButton = document.createElement('button');
@@ -259,6 +291,7 @@ let recorder = null;
 let lastClicked = null;
 let deviceCounts = {};
 let isAudioPlaying = false;
+let isRecording = false;
 let devices = {};
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
@@ -1283,26 +1316,6 @@ async function copySelectedNodes() {
     deselectAllNodes();
     // call reconstructDevicesAndConnections with the state for the selected devices
     reconstructDevicesAndConnections(await getStateForDeviceIds(deviceIds), null, true);
-    selectionDiv = null;
-}
-
-async function recreateWorkSpaceState() {
-    // get all the ids of elements with class "node", store their state, and delete them
-    let deviceIds = Array.from(document.getElementsByClassName('node')).map(node => node.id);
-    let deviceStates = await getStateForDeviceIds(deviceIds);
-    deleteAllNodes();
-    // call reconstructDevicesAndConnections with the state for all the devices
-    context = new WAContext();
-    // set channelCount to maximum amount of channels available
-    context.destination.channelCount = context.destination.maxChannelCount;
-    // set channelCountMode to "explicit"
-    context.destination.channelCountMode = "explicit";
-    // set channelInterpretation to "discrete"
-    context.destination.channelInterpretation = "discrete";
-    // create channel merger for speaker output
-    channelMerger = context.createChannelMerger(context.destination.channelCount);
-    channelMerger.connect(context.destination);
-    reconstructDevicesAndConnections(deviceStates, null, false);
     selectionDiv = null;
 }
 
