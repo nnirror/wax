@@ -66,23 +66,21 @@ createButtonForNavBar(
 createButtonForNavBar(
     'start recording',
     'recordButton navbarButton',
-    (event) => {
+    async (event) => {
         if (!recorder) {
             // start recording
             const destination = context.createMediaStreamDestination();
             channelMerger.connect(destination);
-            recorder = new MediaRecorder(destination.stream, { mimeType: 'audio/webm' });
-            recorder.addEventListener('dataavailable', (event) => {
-                chunks.push(event.data);
-            });
-            recorder.start();
+            recorder = RecordRTC(destination.stream, { type: 'audio' });
+            recorder.startRecording();
             event.target.textContent = 'stop recording';
         } else {
             // stop recording
-            recorder.addEventListener('stop', () => {
-                const blob = new Blob(chunks, { type: 'audio/webm' });
+            recorder.stopRecording(async function() {
+                const blob = recorder.getBlob();
+
                 const reader = new FileReader();
-                reader.onloadend = () => {
+                reader.onloadend = async () => {
                     const arrayBuffer = reader.result;
                     try {
                         context.decodeAudioData(arrayBuffer, audioBuffer => {
@@ -111,24 +109,20 @@ createButtonForNavBar(
                             downloadLink.remove();
                     
                             // reset
-                            chunks = [];
                             recorder = null;
                         }, error => {
                             console.error('Failed to decode audio data:', error);
                             // reset
-                            chunks = [];
                             recorder = null;
                         });
                     } catch (error) {
                         console.error('An error occurred:', error);
                         // reset
-                        chunks = [];
                         recorder = null;
                     }
                 };
                 reader.readAsArrayBuffer(blob);
             });
-            recorder.stop();
             event.target.textContent = 'start recording';
         }
     }
@@ -534,8 +528,15 @@ function initializeAwesomplete () {
 }
 
 async function createMicrophoneDevice() {
+    const constraints = {
+        audio: {
+            autoGainControl: false,
+            noiseSuppression: false,
+            echoCancellation: false
+        }
+    };
     // get access to the microphone
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
     // create a source node from the stream
     const source = context.createMediaStreamSource(stream);
 
@@ -1447,8 +1448,10 @@ function displayAllDevices() {
 function connectionManagementClickHandler() {
     // listen for all clicks on the document
     document.addEventListener('click', function(event) {
-        // if the clicked element does not have the class 'input-button' or 'output-button', set lastClicked to null
-        if (!event.target.classList.contains('input-button') && !event.target.classList.contains('output-button')) {
+        // get the parent element that contains only the input and output buttons
+        const parentElement = document.getElementById('parent-element-id');
+        // if the clicked element is not a child of the parent element, set lastClicked to null
+        if (!parentElement.contains(event.target)) {
             lastClicked = null;
         }
     });

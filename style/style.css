@@ -95,6 +95,9 @@ body {
     background: linear-gradient(to right, #ab2222, #841a1a);
     color: white;
 }
+.recordButton {
+    background: linear-gradient(to right, #ab2222, #841a1a) !important;
+}
 .allDevicesButton {
     position: absolute;
     z-index: 1000;
