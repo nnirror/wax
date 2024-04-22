@@ -576,7 +576,8 @@ async function createMicrophoneDevice() {
         audio: {
             autoGainControl: false,
             noiseSuppression: false,
-            echoCancellation: false
+            echoCancellation: false,
+            sampleRate: 44100
         }
     };
     // get access to the microphone
