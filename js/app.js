@@ -134,6 +134,16 @@ document.body.addEventListener('click', async (event) => {
                             saveButton.textContent = 'Save';
                             modalContent.appendChild(saveButton);
 
+                            // create a cancel button
+                            let cancelButton = document.createElement('button');
+                            cancelButton.textContent = 'Cancel';
+                            modalContent.appendChild(cancelButton);
+
+                            // when the cancel button is clicked, remove the modal dialog
+                            cancelButton.addEventListener('click', () => {
+                                document.body.removeChild(modal);
+                            });
+
                             // when the save button is clicked, save the file with the inputted name
                             saveButton.addEventListener('click', () => {
                                 let fileName = input.value;
@@ -264,7 +274,7 @@ firstOption.selected = true;
 dropdown.appendChild(firstOption);
 
 // add an option for each file
-['_mic_simple.zip', 'amplitude_modulation.zip', 'audio_file_playback.zip', 'fm.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone_input.zip'].forEach(function(file) {
+['amplitude_modulation.zip', 'audio_file_playback.zip', 'fm.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone_input.zip'].forEach(function(file) {
     var option = document.createElement('option');
     option.value = file;
     // remove underscores and '.zip' from the display text
