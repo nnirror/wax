@@ -25,11 +25,11 @@ let deviceDropdown = createDropdownofAllDevices();
 createButtonForNavBar(
     'start audio',
     'startAudioButton navbarButton',
-    () => {
+    async () => {
         if (isAudioPlaying) {
-            stopAudio();
+            await stopAudio();
         } else {
-            startAudio();
+            await startAudio();
         }
     }
 );
@@ -40,7 +40,7 @@ createButtonForNavBar('save', 'saveStateButton navbarButton', ()=>{getWorkspaceS
 // create a button for reloading workspace state
 createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
-    startAudio();
+    await startAudio();
 });
 
 // create button for viewing all devices
@@ -286,10 +286,11 @@ dropdown.appendChild(firstOption);
 document.body.appendChild(dropdown);
 
 // add an event listener to the dropdown to load the selected file when changed
-dropdown.addEventListener('change', function(event) {
+dropdown.addEventListener('change', async function(event) {
     // replace spaces with underscores and add '.zip' back
     var selectedFile = event.target.value.replace(/ /g, '_');
-    loadExampleFile('examples/' + selectedFile);
+    await loadExampleFile('examples/' + selectedFile);
+    await startAudio();
 });
 
 /* END UI initialization */
@@ -852,6 +853,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
     try {
         let deviceDiv;
         if (filename === "mic") {
+            if ( !isAudioPlaying ) {
+                await startAudio();
+            }
             const device = await createMicrophoneDevice();
             deviceDiv = addDeviceToWorkspace(device, "microphone input", false);
             await createInputDeviceSelector(device, context, deviceDiv);
@@ -1513,24 +1517,21 @@ function connectionManagementClickHandler() {
     });
 }
 
-function stopAudio () {
+async function stopAudio() {
     const button = document.querySelector('.startAudioButton');
-    setTimeout(() => {
-        context.suspend().then(() => {
-            button.textContent = 'start audio';
-            button.style.background = 'linear-gradient(to right, #005925, #002e13)';
-            isAudioPlaying = false;
-        });
-    }, 10);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await context.suspend();
+    button.textContent = 'start audio';
+    button.style.background = 'linear-gradient(to right, #005925, #002e13)';
+    isAudioPlaying = false;
 }
 
-function startAudio() {
+async function startAudio() {
     const button = document.querySelector('.startAudioButton');
-    context.resume().then(() => {
-        button.textContent = 'mute audio';
-        button.style.background = 'linear-gradient(to right, #ab2222, #7b0000)';
-        isAudioPlaying = true;
-    });
+    await context.resume();
+    button.textContent = 'mute audio';
+    button.style.background = 'linear-gradient(to right, #ab2222, #7b0000)';
+    isAudioPlaying = true;
 }
 
 function toggleNavbar() {

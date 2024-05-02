@@ -146,7 +146,7 @@ Applies a low-pass filter to `signal in`.
 - `q` controls the resonance of the filter at the cutoff.
 
 ## microphone input
-Returns the selected `microphone input` device as a signal.
+Returns the selected `microphone input` device as a signal. **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
 
 ## mstohz
 Converts an input value in  `ms` to its equivalent number in `hz`.
