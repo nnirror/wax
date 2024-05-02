@@ -29,7 +29,12 @@ Click-drag on the workspace to select multiple devices at once. Selected devices
 When a device is selected, press `delete` or click the `x` button to delete the device.
 
 ## Device parameters
-Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers or expressions in [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. Press `enter` to transmit the number or expression into the device.
+Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers or expressions in [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. Press `enter` to transmit the number or expression into the device, or if on a mobile device, press the `regen` button.
+
+As an example, here are several useful Facet commands, which allow you add tunable randomness to device parameters:
+- `choose()`. For example: `choose([1,2,34]) // each time it's regenerated, it will choose either 1,2,3, or 4`
+- `rf()`. For example: `rf(-1,1) // random float between -1 and 1`
+- `ri()`. For example: `ri(10,60) // random integer between 10 and 60`
 
 ## Regenerating device parameters
 Some devices have a `regen` button which causes all device parameters to regenerate every time a signal connected to `regen` goes above 0.5. For static numbers, this will have no effect, but if the device parameter is written as Facet code, the resulting can be different each time it's generated.
@@ -53,7 +58,7 @@ Press the `save` button to save the system state as a zip file, including all au
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
 ## Recording a session
-With devices connected to a speaker objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer.
+With devices connected to a speaker objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer. **NOTE:** on mobile devices, recordings that include microphone input might sound garbled.
 
 # Device reference
 
