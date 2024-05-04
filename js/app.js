@@ -64,7 +64,7 @@ createButtonForNavBar(
 );
 
 createButtonForNavBar(
-    'start recording',
+    'start record',
     'recordButton navbarButton',
     ()=>{}
 );
@@ -78,7 +78,7 @@ document.body.addEventListener('click', async (event) => {
             channelMerger.connect(destination);
             recorder = RecordRTC(destination.stream, { type: 'audio', type: 'audio/wav' });
             recorder.startRecording();
-            event.target.textContent = 'stop recording';
+            event.target.textContent = 'stop record';
             isRecording = true;
         } else {
             isRecording = false;
@@ -175,7 +175,7 @@ document.body.addEventListener('click', async (event) => {
                 reader.readAsArrayBuffer(blob);
                 recorder = null;
             });
-            event.target.textContent = 'start recording';
+            event.target.textContent = 'start record';
         }
     }
 });
