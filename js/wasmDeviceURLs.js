@@ -1,4 +1,5 @@
 var wasmDeviceURLs = [
+    "abs",
     "add",
     "adr",
     "allpass",
@@ -6,6 +7,7 @@ var wasmDeviceURLs = [
     "bpf",
     "clip",
     "clock_divider",
+    "comb",
     "comment",
     "counter",
     "cycle",
@@ -50,6 +52,7 @@ var wasmDeviceURLs = [
     "speaker",
     "speedlim",
     "sqrt",
+    "swanramp",
     "times",
     "tri",
     "wave",
