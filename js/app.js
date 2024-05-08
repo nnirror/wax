@@ -69,7 +69,6 @@ createButtonForNavBar(
     ()=>{}
 );
 
-
 document.body.addEventListener('click', async (event) => {
     if (event.target.classList.contains('recordButton')) {
         if (!isRecording) {
@@ -708,24 +707,35 @@ async function scheduleDeviceEvent(device, inport, value) {
     try {
         let values;
         value = value.replace(/_\./g, '$().');
-        if (device.dataBufferIds == 'pattern') {
-            values = eval(value).data;
-            const float32Array = new Float32Array(values);
-            // create a new AudioBuffer
-            const audioBuffer = context.createBuffer(1, float32Array.length, context.sampleRate);
-            // copy the Float32Array to the AudioBuffer
-            audioBuffer.copyToChannel(float32Array, 0);
-            // set the AudioBuffer as the data buffer for the device
-            await device.setDataBuffer('pattern', audioBuffer);
-        }
-        else {
-            if (inport.tag !== 'comment') {
-                values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+        const evalWorker = new Worker('js/eval-worker.js');
+
+        evalWorker.onmessage = async (event) => {
+            values = event.data;
+            if (device.dataBufferIds == 'pattern') {
+                if (Array.isArray(values) && values.length > 0) {
+                    const float32Array = new Float32Array(values);
+                    // create a new AudioBuffer
+                    const audioBuffer = context.createBuffer(1, float32Array.length, context.sampleRate);
+                    // copy the Float32Array to the AudioBuffer
+                    audioBuffer.copyToChannel(float32Array, 0);
+                    // set the AudioBuffer as the data buffer for the device
+                    await device.setDataBuffer('pattern', audioBuffer);
+                }
             }
-        }
+            else {
+                if (inport.tag !== 'comment' && typeof values === 'string') {
+                    values = values.split(/\s+/).map(s => parseFloat(s));
+                }
+            }
+        };
         if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
             let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
             device.scheduleEvent(messageEvent);
+        }
+
+        if (device.dataBufferIds == 'pattern' || inport.tag !== 'comment') {
+            // send the data to be evaluated to the worker
+            evalWorker.postMessage(value);
         }
     } catch (error) {
         showGrowlNotification(`Error in device parameter: ${value}, ${error}`);

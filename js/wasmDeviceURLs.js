@@ -44,6 +44,7 @@ var wasmDeviceURLs = [
     "round",
     "sah",
     "saw",
+    "sampler",
     "sampstohz",
     "sampstoms",
     "scale",
