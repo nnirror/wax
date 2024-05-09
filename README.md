@@ -62,6 +62,9 @@ With devices connected to a speaker objet, press the `start recording` button. W
 
 # Device reference
 
+## abs
+Computes the absolute value of the input signal.
+
 ## add
 Adds `signal 1` to `signal 2`.
 
@@ -90,6 +93,9 @@ Clips any values in `signal in 1` below `minimum` or above `maximum` to be equal
 
 ## clock_divider
 Returns metronomic subdivisions of `root click time (ms)`. Each outlet runs at a different, increasingly faster speed.
+
+## comb
+Applies a comb filter effect to the input signal. The `feed fwd` and `feed back` inputs expect a range of floats 0 - 1.
 
 ## comment
 Stores text in the workspace which can be saved and loaded as part of system presets.
@@ -221,6 +227,9 @@ Converts an input value in  `samples` to its equivalent number in `hz`.
 ## sampstoms
 Converts an input value in  `samples` to its equivalent number in `ms`.
 
+## sampler
+Records `signal in ` into a buffer of length `size(ms)`. An input of 1 to `start/stop` will start recording, and an input of 0 will stop it. A trigger input (greater than 0.5) to `trigger` will play the buffer at `rate`. A trigger input (greater than 0.5) to `clear` will delete the buffer.
+
 ## scale
 Translates `signal in` into a different number range.
 
@@ -245,6 +254,9 @@ Slows a signal down so it only changes once for every `interval (ms)` that passe
 
 ## sqrt
 Computes the square root of `signal in 1`.
+
+## swanramp
+Applies a declicking algorithm to the input signal with user control over when to avoid clicks. From the [Cyling '74 RNBO Documentation of swanramp:](https://rnbo.cycling74.com/objects/ref/swanramp~): "Performs click compensation using Miller Puckette's switch-and-ramp technique. When the right inlet receives a positive value, swanramp~ triggers a ramp that starts from the value of the last sample in the left inlet and goes down to zero over the number of samples specified. This ramp is mixed with the input signal to prevent clicks."
   
 ## times
 Multiplies `signal 1` and `signal 2`. 
