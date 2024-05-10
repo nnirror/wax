@@ -624,7 +624,6 @@ function attachOutports(device,deviceDiv) {
 
         inputElements.forEach((inputElement) => {
             // create/trigger a change event
-            // console.log('triggering change...');
             const event = new Event('change');
             inputElement.dispatchEvent(event);
         });
@@ -709,7 +708,7 @@ function addInputsForDevice(device) {
 
 async function scheduleDeviceEvent(device, inport, value) {
     try {
-        let values;
+        let values, messageEvent;
         value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
             values = eval(value).data;
@@ -727,9 +726,12 @@ async function scheduleDeviceEvent(device, inport, value) {
             }
         }
         if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
-            let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
-            device.scheduleEvent(messageEvent);
+            messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
         }
+        else {
+            messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, -60101123);
+        }
+        device.scheduleEvent(messageEvent);
     } catch (error) {
         showGrowlNotification(`Error in device parameter: ${value}, ${error}`);
     }
@@ -799,9 +801,9 @@ function finishConnection(deviceId, inputIndex) {
                 ["Perimeter", { shape: "Rectangle", anchorCount: 50 }],
                 ["Perimeter", { shape: "Rectangle", anchorCount: 50 }]
             ],
-            endpoint: ["Dot", { radius: 4 }],
+            endpoint: ["Dot", { radius: 8 }],
             paintStyle: { stroke: "grey", strokeWidth: 2, fill: "transparent" },
-            endpointStyle: { fill: "black", outlineStroke: "transparent", outlineWidth: 12 },
+            endpointStyle: { fill: "black", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
             connector: ["StateMachine"],
             overlays: [
                 ["Arrow", { width: 12, length: 12, location: 1 }],
@@ -991,7 +993,12 @@ function createAudioLoader(device, context, deviceDiv) {
 
     // create a new button
     const button = document.createElement('button');
-    button.textContent = 'Load audio file';
+    button.type = 'button';
+    button.textContent = 'load file';
+    button.style.marginTop = '10px';
+    button.style.position = 'relative';
+    button.style.display = 'inline';
+    button.style.left = '-5px';
 
     // when the button is clicked, simulate a click on the file input
     button.addEventListener('click', () => fileInput.click());
@@ -1015,6 +1022,18 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';
     deviceDiv.style.top = mousePosition.y + 'px';
+
+    if (!isSpeakerChannelDevice) {
+        // create silence generator node
+        const silenceGenerator = context.createConstantSource();
+        silenceGenerator.offset.value = 0;
+        silenceGenerator.start();
+        // connect the silence generator to the device
+        for (let i = 0; i < device.node.numberOfInputs; i++) {
+            silenceGenerator.connect(device.node, 0, i);
+        }
+        // this is necessary so the device's inputs beyond the first are accessible with nothing patched into any other inlets
+    }
 
     devices[deviceDiv.id] = { device: isSpeakerChannelDevice ? { node: channelMerger } : device , div: deviceDiv };
     
@@ -1085,6 +1104,11 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             event.preventDefault();
         });
         deviceDiv.appendChild(inportForm);
+
+        const hrElement = document.createElement('hr');
+        hrElement.className = 'device-hr';
+        deviceDiv.appendChild(hrElement);
+
         const outputContainer = document.createElement('div');
         outputContainer.className = 'output-container';
         deviceDiv.appendChild(outputContainer);

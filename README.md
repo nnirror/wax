@@ -31,6 +31,8 @@ When a device is selected, press `delete` or click the `x` button to delete the 
 ## Device parameters
 Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers or expressions in [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. Press `enter` to transmit the number or expression into the device, or if on a mobile device, press the `regen` button.
 
+**IMPORTANT:** Many parameters are available via both the text input _and_ as an audio rate data flow connection. In this case, the text input takes precedence, and the audio rate data flow connection will only modulate the parameter if the corresponding text input is empty.
+
 As an example, here are several useful Facet commands, which allow you add tunable randomness to device parameters:
 - `choose()`. For example: `choose([1,2,34]) // each time it's regenerated, it will choose either 1,2,3, or 4`
 - `rf()`. For example: `rf(-1,1) // random float between -1 and 1`
@@ -95,7 +97,7 @@ Clips any values in `signal in 1` below `minimum` or above `maximum` to be equal
 Returns metronomic subdivisions of `root click time (ms)`. Each outlet runs at a different, increasingly faster speed.
 
 ## comb
-Applies a comb filter effect to the input signal. The `feed fwd` and `feed back` inputs expect a range of floats 0 - 1.
+Applies a comb filter effect to the input signal. `feedback` expect a range of floats 0 - 1.
 
 ## comment
 Stores text in the workspace which can be saved and loaded as part of system presets.
@@ -114,7 +116,7 @@ Applies a delay effect to `signal in`, lasting `delay time (ms)` and feeding bac
 Divides `signal 1` and `signal 2`.
 
 ## downsamp
-Downsamples `signal in`  by `amount`.
+Downsamples `signal in` by `amount`, which expects a range of floats 0 - 1. Higher `amount` values produce more downsampling.
 
 ## drunk
 Generates a new value in a random walk of values between 0 and `maximum`, with `step` being the maximum value between each step, every time `trigger` goes above 0.5.
@@ -147,9 +149,6 @@ Computes the boolean representation of whether `signal in 1` is greater than `si
 
 ## limi
 Applies a peak-limiter to `signal in 1`. 
-
-## line
-Generates an envelope every time `trigger` goes above 0.5. The `segments` of the envelope must be a list of numbers which adhere to the list syntax from Max MSP. To quote their [documentation](https://docs.cycling74.com/max8/refpages/line): "The first number specifies a target value, and the second number specifies a total amount of time (in milliseconds)". So `0 0 1 10 0 1000` means "go to 0 in 0 ms; then go to 1 in 10 ms; then go to 0 in 1000ms."
 
 ## lpf
 Applies a low-pass filter to `signal in`.
@@ -210,7 +209,7 @@ Generates a rectangle wave between -1 and 1, oscillating at `frequency (hz)` and
 ## reverb
 Applies a reverb effect to `signal in`.
 - `feedback` controls feedback of the delay lines.
-- `size` functions as a coefficient, multiplying all delay line times.
+- `size` functions as a coefficient, multiplying all delay line times and expects a range of floats 0 - 1.
 
 ## round
 Rounds `signal in` to the nearest integer.  
@@ -226,9 +225,6 @@ Converts an input value in  `samples` to its equivalent number in `hz`.
 
 ## sampstoms
 Converts an input value in  `samples` to its equivalent number in `ms`.
-
-## sampler
-Records `signal in ` into a buffer of length `size(ms)`. An input of 1 to `start/stop` will start recording, and an input of 0 will stop it. A trigger input (greater than 0.5) to `trigger` will play the buffer at `rate`. A trigger input (greater than 0.5) to `clear` will delete the buffer.
 
 ## scale
 Translates `signal in` into a different number range.
