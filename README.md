@@ -43,6 +43,8 @@ Some devices have a `regen` button which causes all device parameters to regener
 
 For example, if you have a `number` device, and you enter `ri(10,1000)` for its `value`, then each time the `regen` signal goes above 0.5, the output from `number` will be a new, random integer between 10 and 1000. If you entered `choose([2,3,4,6,8])` as its `value`, then the output from `number` would be either 2, 3, 4, 6, or 8.
 
+**IMPORTANT:** inputs will not regenerate while the cursor is inside of it. After modifying an input, click outside of it to begin regenerating.
+
 ## Key combinations
 - create new device: `n`
 - duplicate selected device(s): `[command] + d`
@@ -89,6 +91,9 @@ Computes the logical AND of `signal in 1` `signal in 2`.
 Applies a band-pass filter to `signal in`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff. 
+
+## change
+Compares the current sample with the previous sample value in the signal and returns 1 if the current sample value increased, -1 if it decreased, and 0 if it stayed the same.
 
 ## clip
 Clips any values in `signal in 1` below `minimum` or above `maximum` to be equal to `minimum` and `maximum`, respectively. 

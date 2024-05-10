@@ -892,7 +892,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const patcher = await response.json();
             const device = await RNBO.createDevice({ context, patcher });
             deviceDiv = addDeviceToWorkspace(device, filename, false);
-            if ( filename == 'wave' || filename == 'granulator' || filename == 'play' ) {
+            if ( filename == 'wave' ||  filename == 'play' ) {
+                createAudioLoader(device, context, deviceDiv);
                 if (audioBuffer) {
                     await device.setDataBuffer('buf', audioBuffer.buffer);
                     audioBuffers[audioBuffer.name] = audioBuffer.buffer;
@@ -902,9 +903,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     fileNameElement.textContent = `file: ${audioBuffer.name}`;
                     const form = deviceDiv.querySelector('form');
                     form.appendChild(fileNameElement);
-
                 }
-                createAudioLoader(device, context, deviceDiv);
             }
         }
         deviceDiv.onmousedown = removeSelectedNodeClass;
@@ -986,8 +985,16 @@ function createAudioLoader(device, context, deviceDiv) {
             await device.setDataBuffer('buf', audioBuf);
             deviceDiv.dataset.audioFileName = file.name;
 
-            // show the file name in the UI
+            // remove any preexisting elements with class name "audioFileName"
+            const existingElements = deviceDiv.querySelectorAll('.audioFileName');
+            existingElements.forEach(element => element.remove());
+
+            // create a new p element to display the audio file name
+            const fileNameElement = document.createElement('p');
+            fileNameElement.className = 'audioFileName';
             fileNameElement.textContent = `file: ${file.name}`;
+            const form = deviceDiv.querySelector('form');
+            form.appendChild(fileNameElement);
         }
     });
 
