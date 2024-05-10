@@ -1,6 +1,6 @@
 .node {
     position: absolute;
-    padding: 40px 10px 5px 10px;
+    padding: 36px 10px 0px 10px;
     background: linear-gradient(to right, #f2f2f2, #c4c4c4);
     border-radius: 10px;
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
@@ -13,25 +13,37 @@
     z-index: 1001;
 }
 .input-container {
-    border-bottom: 1px solid black;
-    padding-bottom: 6px;
     position: absolute;
-    top: 4px;
-    padding-left: 4px;
-    width: 100%;
-    white-space: nowrap;
+    top: 0px;
+    padding-top: 4px;
+    width: calc(100% - 4px);
     overflow-x: auto;
+    padding-left: 4px;
+    height: 26px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    background: #898989;
+}
+.input-container button, .output-container button {
+    background: white;
 }
 .output-container {
+    position: relative;
+    left: -10px;
     padding-top: 6px;
-    margin-left: -6px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    width: calc(100% + 14px);
+    background: #898989;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
 }
 body {
     margin: 0;
     font-family: Arial, sans-serif;
 }
 #workspace {
-    background-color: #333;
+    background-color: #222;
     width: 5000px;
     height: 10000px;
     position: relative;
@@ -120,14 +132,15 @@ body {
 }
 .speakerChannelSelectorInput {
     width: 3em;
+    margin-bottom: 6px;
 }
 .deviceInportLabel {
     display: inline-block;
-    width: 6em;
+    width: 8em;
     font-size: 0.75em;
 }
 .deviceInport {
-    width: calc(100% - 6em);
+    width: calc(100% - 8em);
     display: inline-block;
 }
 .awesompleteContainer {

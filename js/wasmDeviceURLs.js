@@ -40,6 +40,7 @@ var wasmDeviceURLs = [
     "rampsmooth",
     "rect",
     "reverb",
+    "rotator",
     "round",
     "sah",
     "sampstohz",

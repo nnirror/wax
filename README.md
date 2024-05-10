@@ -111,6 +111,7 @@ Generates a sine wave between -1 and 1, oscillating at `frequency (hz)`.
 
 ## delay
 Applies a delay effect to `signal in`, lasting `delay time (ms)` and feeding back based on `feedback`.
+- `wet` controls dry/wet balance and expects a range of floats 0 - 1.
 
 ## divide
 Divides `signal 1` and `signal 2`.
@@ -210,9 +211,13 @@ Generates a rectangle wave between -1 and 1, oscillating at `frequency (hz)` and
 Applies a reverb effect to `signal in`.
 - `feedback` controls feedback of the delay lines.
 - `size` functions as a coefficient, multiplying all delay line times and expects a range of floats 0 - 1.
+- `wet` controls dry/wet balance and expects a range of floats 0 - 1.
 
 ## round
-Rounds `signal in` to the nearest integer.  
+Rounds `signal in` to the nearest integer.
+
+## rotator
+Rotates the 4 input signals rightwards every time `trigger` goes above 0.5. In other words, `signal in 1` will cyclically move from its initial output position at `signal out 1`, to `signal out 2`, then `signal out 3`, and finally `signal out 4` before wrapping back to `signal out 1` again.
 
 ## sah
 Applies a sample-and-hold effect to `signal in`, holding its value every time `trigger` goes above 0.5.
