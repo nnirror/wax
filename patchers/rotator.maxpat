@@ -71,7 +71,7 @@
 								"type" : "signal",
 								"index" : 5,
 								"tag" : "in5",
-								"comment" : "regen"
+								"comment" : "trigger"
 							}
  ]
 					}
@@ -149,6 +149,21 @@
 						"assistshowspatchername" : 0,
 						"title" : "untitled",
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-5",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 410.526279330253601, 243.0, 56.0, 23.0 ],
+									"rnbo_classname" : "loadbang",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "loadbang_obj-5",
+									"text" : "loadbang"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-89",
 									"linecount" : 3,
@@ -10109,13 +10124,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 362.0, 167.0, 130.0, 23.0 ],
+									"patching_rect" : [ 362.0, 167.0, 135.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 6,
 									"rnbo_uniqueid" : "in~_obj-8",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -10181,7 +10196,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 5",
-												"displayName" : "regen",
+												"displayName" : "trigger",
 												"docked" : 0
 											}
  ],
@@ -10193,7 +10208,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 5 @comment regen"
+									"text" : "in~ 5 @comment trigger"
 								}
 
 							}
@@ -10798,6 +10813,14 @@
 									"destination" : [ "obj-89", 4 ],
 									"order" : 0,
 									"source" : [ "obj-4", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-9", 0 ],
+									"midpoints" : [ 420.026279330253601, 275.939825117588043, 371.5, 275.939825117588043 ],
+									"source" : [ "obj-5", 0 ]
 								}
 
 							}

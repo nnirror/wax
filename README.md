@@ -107,6 +107,9 @@ Applies a comb filter effect to the input signal. `feedback` expect a range of f
 ## comment
 Stores text in the workspace which can be saved and loaded as part of system presets.
 
+## cross
+Imparts the spectral envelope of `modulator signal in` onto `carrier signal in`.
+
 ## counter
 Counts upwards from 0 to `maximum`, incrementing every time `trigger` goes above 0.5.
 - `set` immediately sets the counter to that value.
@@ -184,6 +187,9 @@ Returns `value` as a signal.
 
 ## or
 Computes the logical OR of `signal in 1` `signal in 2`.
+
+## overdrive
+Overdrives `signal in` by `amount`, which expects a range of floats 0 - 1. Higher `amount` values produce more distortion.
 
 ## pattern
 Generates a customizable wavetable using [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. 
