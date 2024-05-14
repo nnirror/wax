@@ -316,18 +316,19 @@ let startPoint = null;
 /* BEGIN event handlers */
 jsPlumb.bind("connectionDetached", function(info) {
     let sourceDevice = devices[info.sourceId];
-    let targetDevice = devices[info.targetId];
-    if (sourceDevice && targetDevice && sourceDevice.connections) {
-        let connection = sourceDevice.connections.find(conn => conn.target === info.targetId);
+    if (sourceDevice && sourceDevice.connections) {
+        // find the connection in the source device's connections list
+        let jsPlumbConnectionId = info.connection.getId();  
+        let connection = sourceDevice.connections.find(conn => conn.id === jsPlumbConnectionId);
         if (connection) {
             try {
-                sourceDevice.device.node.disconnect(connection.splitter);
+                // disconnect the connection
                 connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
             } catch (error) {
                 console.error('Failed to disconnect:', error);
             }
             // remove the connection from the list
-            sourceDevice.connections = sourceDevice.connections.filter(conn => conn !== connection);
+            sourceDevice.connections = sourceDevice.connections.filter(conn => conn.id !== jsPlumbConnectionId);
         }
     }
 });
@@ -779,9 +780,7 @@ function finishConnection(deviceId, inputIndex) {
             splitter.connect(channelMerger, sourceOutputIndex, inputIndex);
         }
 
-        let connectionId = Date.now();
         devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
-        devices[sourceDeviceId].connections.push({ id: connectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex });
         devices[sourceDeviceId].splitter = splitter;
 
         let targetDeviceInputName;
@@ -794,7 +793,7 @@ function finishConnection(deviceId, inputIndex) {
         let sourceDeviceOutputName = devices[sourceDeviceId].device.it.T.outlets[sourceOutputIndex].comment;
 
         // visualize the connection
-        const connection = jsPlumb.connect({
+        const jsPlumbConnection = jsPlumb.connect({
             source: sourceDeviceId,
             target: deviceId,
             anchors: [
@@ -820,6 +819,11 @@ function finishConnection(deviceId, inputIndex) {
                 }]
             ],
         });
+
+        let jsPlumbConnectionId = jsPlumbConnection.getId();
+        let connection = { id: jsPlumbConnectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex };
+        devices[sourceDeviceId].connections.push(connection);
+    
         sourceDeviceId = null;
         sourceOutputIndex = null;
     }
