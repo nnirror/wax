@@ -888,6 +888,87 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 }
             });
         }
+        else if (filename === "toggle") {
+            const silenceGenerator = context.createConstantSource();
+            silenceGenerator.offset.value = 0;
+            silenceGenerator.start();
+        
+            // create the device
+            const device = {
+                node: silenceGenerator,
+                source: silenceGenerator,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'signal out' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "toggle", false);
+        
+            // create a toggle button
+            const toggleButton = document.createElement('button');
+            toggleButton.textContent = 'Toggle';
+            const inputContainer = deviceDiv.querySelector('.input-container');
+            inputContainer.insertAdjacentElement('afterend', toggleButton);
+        
+            // add initial class and text
+            toggleButton.className = 'toggle-button toggle-off';
+            toggleButton.textContent = 'off';
+
+            // add event listener to the toggle button
+            toggleButton.addEventListener('click', () => {
+                // toggle the value between 1 and 0
+                silenceGenerator.offset.value = 1 - silenceGenerator.offset.value;
+
+                // toggle the class and text
+                if (toggleButton.className === 'toggle-button toggle-off') {
+                    toggleButton.className = 'toggle-button toggle-on';
+                    toggleButton.textContent = 'on';
+                } else {
+                    toggleButton.className = 'toggle-button toggle-off';
+                    toggleButton.textContent = 'off';
+                }
+            });
+        }
+        else if (filename === "button") {
+            const silenceGenerator = context.createConstantSource();
+            silenceGenerator.offset.value = 0;
+            silenceGenerator.start();
+        
+            // create the device
+            const device = {
+                node: silenceGenerator,
+                source: silenceGenerator,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'signal out' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "button", false);
+        
+            // create a button
+            const button = document.createElement('button');
+            button.textContent = '⬤';
+            const inputContainer = deviceDiv.querySelector('.input-container');
+            inputContainer.insertAdjacentElement('afterend', button);
+            button.className = 'button-ui';
+        
+            // add event listeners to the button
+            button.addEventListener('mousedown', () => {
+                silenceGenerator.offset.value = 1;
+                button.style.color = 'white';
+            });
+        
+            button.addEventListener('mouseup', () => {
+                silenceGenerator.offset.value = 0;
+                button.style.color = 'black';
+            });
+        }
         else if ( filename.startsWith('outputnode') ) {
             deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
         }
@@ -1028,7 +1109,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : `${deviceType}`;
+    deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `${deviceType}`;
     
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';

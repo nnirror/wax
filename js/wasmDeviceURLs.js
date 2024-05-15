@@ -5,6 +5,7 @@ var wasmDeviceURLs = [
     "allpass",
     "and",
     "bpf",
+    "button",
     "change",
     "clip",
     "clock_divider",
@@ -57,6 +58,7 @@ var wasmDeviceURLs = [
     "sqrt",
     "swanramp",
     "times",
+    "toggle",
     "tri",
     "wave",
     "wrap"

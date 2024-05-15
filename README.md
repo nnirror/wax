@@ -50,10 +50,10 @@ For example, if you have a `number` device, and you enter `ri(10,1000)` for its 
 - duplicate selected device(s): `[command] + d`
 - delete selected device(s): `delete`
 - create number device: `f`
-- create comment device: `f`
+- create comment device: `c`
 
 # Managing state
-In Wax, system states can be saved, reloaded, and shared with others.
+In Wax, system states can be saved, reloaded, and shared.
 
 ## Saving a state
 Press the `save` button to save the system state as a zip file, including all audio files that were loaded.
@@ -91,6 +91,9 @@ Computes the logical AND of `signal in 1` `signal in 2`.
 Applies a band-pass filter to `signal in`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff. 
+
+## button
+Outputs a 1 while the button is pressed and otherwise outputs 0.
 
 ## change
 Compares the current sample with the previous sample value in the signal and returns 1 if the current sample value increased, -1 if it decreased, and 0 if it stayed the same.
@@ -275,6 +278,9 @@ Multiplies `signal 1` and `signal 2`.
 
 ## tri
 Generates a triangle wave between -1 and 1, oscillating at `frequency (hz)` and with configurable `pulsewidth`.
+
+## toggle
+Outputs a 0 when the button is `off` and outputs a 1 when the button is `on`. Click the button to switch states.
 
 ## wave
 Reads through an audio file like a wavetable, with `phase` values between 0 and 1 selecting a corresponding relative position in the audio file.

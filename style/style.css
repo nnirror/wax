@@ -357,3 +357,17 @@ mark{
     left: -10px;
     margin-bottom: 0;
 }
+.toggle-button {
+    height: 20px;
+    min-height: 20px;
+    max-height: 20px;
+}
+.toggle-off {
+    background-color: grey;
+}
+.toggle-on {
+    background-color: white;
+}
+.button-ui {
+    background-color: grey;
+}
