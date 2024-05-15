@@ -971,11 +971,13 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
 
             // define the event handler functions
             function handleButtonDown() {
+                event.preventDefault();
                 silenceGenerator.offset.value = 1;
                 button.style.color = 'white';
             }
 
             function handleButtonUp() {
+                event.preventDefault();
                 silenceGenerator.offset.value = 0;
                 button.style.color = 'black';
             }            
