@@ -358,9 +358,9 @@ mark{
     margin-bottom: 0;
 }
 .toggle-button {
-    height: 20px;
-    min-height: 20px;
-    max-height: 20px;
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
 }
 .toggle-off {
     background-color: grey;
@@ -370,4 +370,8 @@ mark{
 }
 .button-ui {
     background-color: grey;
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+    border-radius: 25px;
 }

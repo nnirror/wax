@@ -431,9 +431,20 @@ document.addEventListener('keydown', (event) => {
         event.preventDefault();
         createDeviceByName('number');
     }
+    // 'c' creates a comment
     else if (event.key === 'c' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
         createDeviceByName('comment');
+    }
+    // 'b' creates a button
+    else if (event.key === 'b' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+        event.preventDefault();
+        createDeviceByName('button');
+    }
+    // 't' creates a toggle
+    else if (event.key === 't' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+        event.preventDefault();
+        createDeviceByName('toggle');
     }
 });
 

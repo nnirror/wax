@@ -51,6 +51,8 @@ For example, if you have a `number` device, and you enter `ri(10,1000)` for its 
 - delete selected device(s): `delete`
 - create number device: `f`
 - create comment device: `c`
+- create toggle device: `t`
+- create button device: `b`
 
 # Managing state
 In Wax, system states can be saved, reloaded, and shared.
