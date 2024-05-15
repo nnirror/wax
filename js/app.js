@@ -957,17 +957,23 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const inputContainer = deviceDiv.querySelector('.input-container');
             inputContainer.insertAdjacentElement('afterend', button);
             button.className = 'button-ui';
-        
-            // add event listeners to the button
-            button.addEventListener('mousedown', () => {
+
+            // define the event handler functions
+            function handleButtonDown() {
                 silenceGenerator.offset.value = 1;
                 button.style.color = 'white';
-            });
-        
-            button.addEventListener('mouseup', () => {
+            }
+
+            function handleButtonUp() {
                 silenceGenerator.offset.value = 0;
                 button.style.color = 'black';
-            });
+            }            
+        
+            // add event listeners to the button
+            button.addEventListener('mousedown', handleButtonDown);
+            button.addEventListener('mouseup', handleButtonUp);
+            button.addEventListener('touchstart', handleButtonDown);
+            button.addEventListener('touchend', handleButtonUp);
         }
         else if ( filename.startsWith('outputnode') ) {
             deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
