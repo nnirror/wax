@@ -136,11 +136,11 @@ body {
 }
 .deviceInportLabel {
     display: inline-block;
-    width: 8em;
+    width: 33%;
     font-size: 0.75em;
 }
 .deviceInport {
-    width: calc(100% - 8em);
+    width: 62%;
     display: inline-block;
 }
 .awesompleteContainer {

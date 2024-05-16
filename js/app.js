@@ -673,7 +673,7 @@ function addInputsForDevice(device) {
             let inportText;
             if (device.it.T.inports[0].tag == 'pattern') {
                 inportText = document.createElement('textarea');
-                inportText.style.width = '32em';
+                inportText.style.width = '38em';
                 inportText.style.height = '6em';
             }
             else if (device.it.T.inports[0].tag == 'comment') {
