@@ -678,7 +678,7 @@ function addInputsForDevice(device) {
             }
             else if (device.it.T.inports[0].tag == 'comment') {
                 inportText = document.createElement('textarea');
-                inportText.style.width = '12em';
+                inportText.style.width = '13em';
                 inportText.style.height = '4em';
             }
             else {
@@ -1017,6 +1017,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if (filename == 'pattern') {
             deviceDiv.style.width = '32em';
+        }
+        if (filename == 'comment') {
+            deviceDiv.style.width = '12em';
         }
         return deviceDiv;
     }
