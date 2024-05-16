@@ -1263,7 +1263,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
         });
         inputContainer.appendChild(infoButton);
-        deviceDiv.style.width = `${(deviceWidth/2)+5}em`;
+        deviceDiv.style.width = `${(deviceWidth/2)+6}em`;
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '10em';
         }
