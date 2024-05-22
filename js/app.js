@@ -273,7 +273,7 @@ firstOption.selected = true;
 dropdown.appendChild(firstOption);
 
 // add an option for each file
-['amplitude_modulation.zip', 'audio_file_playback.zip', 'fm.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone.zip'].forEach(function(file) {
+['amplitude_modulation.zip', 'audio_file_playback.zip', 'fm.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone.zip', 'vocoder.zip'].forEach(function(file) {
     var option = document.createElement('option');
     option.value = file;
     // remove underscores and '.zip' from the display text
