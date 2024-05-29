@@ -3388,6 +3388,140 @@ delay2d(delayX, delayY, intensityDecay = 0.5) {
     return this;
 }
 
+  slices (num_slices, command, prob = 1, yes_fade = true) {
+    let out_fp = new FacetPattern();
+    prob = Math.abs(Number(prob));
+    num_slices = Math.abs(Math.round(Number(num_slices)));
+    if ( num_slices == 0 ) {
+      return sequence;
+    }
+    if ( typeof command != 'function' ) {
+      throw `3rd argument must be a function, type found: ${typeof command}`;
+    }
+    this.current_total_slices = num_slices;
+    command = command.toString();
+    command = command.replace(/this./g, 'current_slice.');
+    command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+    let calc_slice_size = Math.round(this.data.length / num_slices);
+    let slice_start_pos, slice_end_pos;
+    let current_slice;
+    let i = this.current_iteration_number;
+    let iters = this.current_total_iterations;
+    for (var s = 0; s < num_slices; s++) {
+      this.current_slice_number = s;
+      slice_start_pos = s * calc_slice_size;
+      slice_end_pos = slice_start_pos + calc_slice_size;
+      current_slice = new FacetPattern().from(this.data).range(slice_start_pos/this.data.length, slice_end_pos/this.data.length);
+      if ( Math.random() < prob ) {
+        current_slice = eval(command);
+      }
+      if (this.data.length >= 1024 && yes_fade == true) {
+        out_fp.sup(current_slice.fadeout(0.01),s/num_slices,this.data.length);
+      }
+      else {
+        // no fade on sizes < 1024 so that it can run on control data too
+        out_fp.sup(current_slice,s/num_slices,this.data.length);
+      }
+    }
+    this.data = out_fp.data;
+    this.flatten();
+    return this;
+  }
+
+  iter (iters, command, prob = 1) {
+    this.original_data = this.data;
+    prob = Math.abs(Number(prob));
+    iters = Math.abs(Math.round(Number(iters)));
+    if ( iters == 0 ) {
+      return this;
+    }
+    if ( typeof command != 'function' ) {
+      throw `3rd argument to .iter() must be a function, type found: ${typeof command}`;
+    }
+    this.current_total_iterations = iters;
+    command = command.toString();
+    command = command.replace(/current_slice./g, 'this.');
+    command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+    let s = this.current_slice_number;
+    let num_slices = this.current_total_slices;
+    for (var i = 0; i < iters; i++) {
+      this.current_iteration_number = i;
+      if ( Math.random() < prob ) {
+        eval(command);
+      }
+    }
+    return this;
+  }
+
+  parallel (commands) {
+    if ( typeof commands != 'object' && Array.isArray(commands) == false ) {
+      throw `input to parallel() must be an array of functions, type found: ${typeof commands}`;
+    }
+    let initial_maximum_value = this.getMaximumValue();
+    let out_fp = new FacetPattern();
+    let initial_fp = new FacetPattern().from(this.data);
+    let i = this.current_iteration_number;
+    let iters = this.current_total_iterations;
+    let s = this.current_slice_number;
+    let num_slices = this.current_total_slices;
+    for (let [key, command] of Object.entries(commands)) {
+      this.data = initial_fp.data;
+      command = command.toString();
+      command = command.replace(/current_slice./g, 'this.');
+      command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+      eval(command);
+      out_fp.sup(this,0);
+    }
+    this.data = out_fp.data;
+    this.fixnan();
+    this.full(initial_maximum_value);
+    return this;
+  }
+
+  sometimes (prob, command) {
+    if ( typeof command != 'function' ) {
+      throw `2nd argument must be a function, type found: ${typeof command}`;
+    }
+    command = command.toString();
+    command = command.replace(/current_slice./g, 'this.');
+    command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+    prob = Math.abs(Number(prob));
+    let i = this.current_iteration_number;
+    let iters = this.current_total_iterations;
+    let s = this.current_slice_number;
+    let num_slices = this.current_total_slices;
+    if ( Math.random() < prob ) {
+      eval(command);
+    }
+    return this;
+  }
+
+  run (command) {
+    this.sometimes(1,command);
+    return this;
+  }
+
+  mix ( wet, command) {
+    if ( typeof command != 'function' ) {
+      throw `2nd argument must be a function, type found: ${typeof command}`;
+    }
+    command = command.toString();
+    command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+    command = command.replace(/current_slice./g, 'this.');
+    wet = Math.abs(Number(wet));
+    let dry = Math.abs(wet-1);
+    let dry_data = new FacetPattern().from(this.data).times(dry);
+    let i = this.current_iteration_number;
+    let iters = this.current_total_iterations;
+    let s = this.current_slice_number;
+    let num_slices = this.current_total_slices;
+    eval(command);
+    let wet_data = new FacetPattern().from(this.data).times(wet);
+    let mixed_data = dry_data.sup(wet_data, 0);
+    this.data = mixed_data.data;
+    return this;
+  }
+
 }
 
 function $ (n) {
@@ -3480,3 +3614,4 @@ function $ (n) {
   function scale(oldValue, oldMin, oldMax, newMin, newMax) {
 	return (newMax - newMin) * (oldValue - oldMin) / (oldMax - oldMin) + newMin;
   }
+  

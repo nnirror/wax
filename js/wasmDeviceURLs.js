@@ -28,6 +28,7 @@ var wasmDeviceURLs = [
     "less",
     "limi",
     "lpf",
+    "mix",
     "mstohz",
     "mstosamps",
     "mtof",

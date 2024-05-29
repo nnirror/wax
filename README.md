@@ -116,7 +116,7 @@ Stores text in the workspace which can be saved and loaded as part of system pre
 Imparts the spectral envelope of `modulator signal in` onto `carrier signal in`.
 
 ## counter
-Counts upwards from 0 to `maximum`, incrementing every time `trigger` goes above 0.5.
+Counts upwards from 0 to `maximum`, incrementing every time `trigger` goes above 0.5. `hit maximum` will output a 1 while the counter is at its maximum and a 0 otherwise.
 - `set` immediately sets the counter to that value.
 
 ## cycle
@@ -171,6 +171,9 @@ Applies a low-pass filter to `signal in`.
 
 ## microphone input
 Returns the selected `microphone input` device as a signal. **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
+
+## mix
+Mixes `signal in 1` and `signal in 2` together using a `crossfade` parameter between 0 and 1. A `crossfade` value of 0.5 will mix the signals together equally, and a `crossfade` value of 0 or 1 will return only the signal at that input.
 
 ## mstohz
 Converts an input value in  `ms` to its equivalent number in `hz`.

@@ -745,6 +745,7 @@ async function scheduleDeviceEvent(device, inport, value) {
         }
         device.scheduleEvent(messageEvent);
     } catch (error) {
+        console.log(error);
         showGrowlNotification(`Error in device parameter: ${value}, ${error}`);
     }
 }
