@@ -206,7 +206,7 @@ Generates a customizable wavetable using [Facet](https://github.com/nnirror/face
 	- `_.from([20,40,40,80,80,80,80,160,160,160,160,160,160,160,160]).shuffle().palindrome()`
 
 ## play
-Plays an audio file at `rate` every time `trigger` goes above 0.5.
+Plays an audio file at `rate` every time `trigger` goes above 0.5. The `sync` outlet signal is the current playback position normalized between 0 and 1.
 
 ## phasor
 Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.
