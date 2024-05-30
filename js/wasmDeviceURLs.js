@@ -5,6 +5,7 @@ var wasmDeviceURLs = [
     "allpass",
     "and",
     "bpf",
+    "buffer",
     "button",
     "change",
     "clip",

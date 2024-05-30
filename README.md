@@ -94,6 +94,9 @@ Applies a band-pass filter to `signal in`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff. 
 
+## buffer
+Loads an audio buffer into the workpace so it can be accessed by the `pattern` object via the `sample()` Facet method. 
+
 ## button
 Outputs a 1 while the button is pressed and otherwise outputs 0.
 
@@ -209,7 +212,7 @@ Generates a customizable wavetable using [Facet](https://github.com/nnirror/face
 	- `_.from([20,40,40,80,80,80,80,160,160,160,160,160,160,160,160]).shuffle().palindrome()`
 
 ## play
-Plays an audio file at `rate` every time `trigger` goes above 0.5. The `sync` outlet signal is the current playback position normalized between 0 and 1.
+Plays an audio file at `rate` every time `trigger` goes above 0.5. The `sync` outlet signal is the current playback position normalized between 0 and 1. A signal above 0.5 for the `loop` signal will loop file playback.
 
 ## phasor
 Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.

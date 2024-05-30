@@ -720,17 +720,37 @@ function addInputsForDevice(device) {
 
 async function scheduleDeviceEvent(device, inport, value) {
     try {
-        let values, messageEvent;
-        value = value.replace(/_\./g, '$().');
+        let values;
+        value = value.replace(/_\./g, '$().')
+
         if (device.dataBufferIds == 'pattern') {
-            values = eval(value).data;
-            const float32Array = new Float32Array(values);
-            // create a new AudioBuffer
-            const audioBuffer = context.createBuffer(1, float32Array.length, context.sampleRate);
-            // copy the Float32Array to the AudioBuffer
-            audioBuffer.copyToChannel(float32Array, 0);
-            // set the AudioBuffer as the data buffer for the device
-            await device.setDataBuffer('pattern', audioBuffer);
+            const evalWorker = new Worker('js/evalWorker.js');
+            // send the data to be evaluated to the worker
+            let audioBuffersCopy = {};
+
+            for (let name in audioBuffers) {
+                let audioBuffer = audioBuffers[name];
+                let float32Array = audioBuffer.getChannelData(0);
+                audioBuffersCopy[name] = Array.from(float32Array);
+            }
+
+            evalWorker.postMessage({ code: value, audioBuffers: audioBuffersCopy });
+            evalWorker.onmessage = async (event) => {
+                values = event.data;
+                if (Array.isArray(values.data) && values.data.length > 0) {
+                    const float32Array = new Float32Array(values.data);
+                    // create a new AudioBuffer
+                    const audioBuffer = context.createBuffer(1, float32Array.length, context.sampleRate);
+                    // copy the Float32Array to the AudioBuffer
+                    audioBuffer.copyToChannel(float32Array, 0);
+                    // set the AudioBuffer as the data buffer for the device
+                    await device.setDataBuffer('pattern', audioBuffer);
+                }
+                if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
+                    let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
+                    device.scheduleEvent(messageEvent);
+                }
+            };
         }
         else {
             if (inport.tag !== 'comment') {
@@ -738,14 +758,13 @@ async function scheduleDeviceEvent(device, inport, value) {
             }
         }
         if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
-            messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
+            let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
+            device.scheduleEvent(messageEvent);
         }
         else {
             messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, -60101123);
         }
-        device.scheduleEvent(messageEvent);
     } catch (error) {
-        console.log(error);
         showGrowlNotification(`Error in device parameter: ${value}, ${error}`);
     }
 }
@@ -997,7 +1016,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const patcher = await response.json();
             const device = await RNBO.createDevice({ context, patcher });
             deviceDiv = addDeviceToWorkspace(device, filename, false);
-            if ( filename == 'wave' ||  filename == 'play' ) {
+            if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' ) {
                 createAudioLoader(device, context, deviceDiv);
                 if (audioBuffer) {
                     await device.setDataBuffer('buf', audioBuffer.buffer);
@@ -1020,6 +1039,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.width = '32em';
         }
         if (filename == 'comment') {
+            deviceDiv.style.width = '12em';
+        }
+        if (filename == 'buffer') {
             deviceDiv.style.width = '12em';
         }
         return deviceDiv;

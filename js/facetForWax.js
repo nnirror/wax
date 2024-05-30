@@ -3522,6 +3522,19 @@ delay2d(delayX, delayY, intensityDecay = 0.5) {
     return this;
   }
 
+  sample(name) {
+    if (!name.endsWith('.wav')) {
+        name += '.wav';
+    }
+    let audioBuffer = audioBuffers[name];
+    if (audioBuffer) {
+        this.data = audioBuffer;
+    } else {
+        throw `No buffer found with the name ${name}`;
+    }
+    return this;
+  }
+
 }
 
 function $ (n) {
