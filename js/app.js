@@ -736,6 +736,9 @@ async function scheduleDeviceEvent(device, inport, value) {
 
             evalWorker.postMessage({ code: value, audioBuffers: audioBuffersCopy });
             evalWorker.onmessage = async (event) => {
+                if (event.data.error) {
+                    showGrowlNotification(`${event.data.error}`);
+                }
                 values = event.data;
                 if (Array.isArray(values.data) && values.data.length > 0) {
                     const float32Array = new Float32Array(values.data);
@@ -1154,7 +1157,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `${deviceType}`;
+    deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `${deviceType.replace(/_/g, ' ')}`;
     
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';

@@ -83,7 +83,6 @@ Generates an attack-decay-release envelope every time `trigger in` goes above 0.
 
 ## allpass
 Applies an allpass filter to `signal in`.
-- `gain` controls the gain of the allpass filter.
 - `delay (ms)` controls the delay of the allpass filter.  
 
 ## and
@@ -156,10 +155,10 @@ Applies a high-pass filter to `signal in`.
 - `q` controls the resonance of the filter at the cutoff.
 
 ## hztoms
-Converts an input value in  `hz` to its equivalent number in `milliseconds`.
+Converts an input value in `hz` to its equivalent number in `milliseconds`.
 
 ## hztosamps
-Converts an input value in  `hz` to its equivalent number in `samples`.  
+Converts an input value in `hz` to its equivalent number in `samples`.  
 
 ## less
 Computes the boolean representation of whether `signal in 1` is greater than `signal in 2`.
@@ -179,10 +178,10 @@ Returns the selected `microphone input` device as a signal. **NOTE:** if audio i
 Mixes `signal in 1` and `signal in 2` together using a `crossfade` parameter between 0 and 1. A `crossfade` value of 0.5 will mix the signals together equally, and a `crossfade` value of 0 or 1 will return only the signal at that input.
 
 ## mstohz
-Converts an input value in  `ms` to its equivalent number in `hz`.
+Converts an input value in `ms` to its equivalent number in `hz`.
 
 ## mstosamps
-Converts an input value in  `ms` to its equivalent number in `samples`.
+Converts an input value in `ms` to its equivalent number in `samples`.
 
 ## mtof
 Converts an input value of a MIDI note number to its corresponding frequency in `hz`.
@@ -206,19 +205,19 @@ Overdrives `signal in` by `amount`, which expects a range of floats 0 - 1. Highe
 Generates a customizable wavetable using [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. 
 - `phase` values between 0 and 1 select a corresponding relative position in the wavetable.
 - Every time the `enter` key is pressed, the pattern will reevaluate. Hold the `command` key while pressing `enter` in order to avoid creating a newline.
+- The `size` outlet returns a signal corresponding to the number of samples in the pattern.
 - **NOTE:** FacetPatterns must be initialized with `_`. So the all `pattern` devices should have code looking like the following examples, which are all valid:
 	- `_.noise(16)`
 	- `_.ramp(100,30,32).key('c','minor').mtof()`
 	- `_.from([20,40,40,80,80,80,80,160,160,160,160,160,160,160,160]).shuffle().palindrome()`
 
 ## play
-Plays an audio file at `rate` every time `trigger` goes above 0.5. The `sync` outlet signal is the current playback position normalized between 0 and 1. A signal above 0.5 for the `loop` signal will loop file playback.
+Plays an audio file at `rate` every time `trigger` goes above 0.5.
+- The `sync` outlet signal is the current playback position normalized between 0 and 1. A signal above 0.5 for the `loop` signal will loop file playback.
+- The `start pos` and `end pos` text inputs control the relative start and end point of audio file playback and expect values between 0 and 1.
 
 ## phasor
 Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.
-
-## pow
-Computes `signal in` to the `operand` power.
 
 ## random
 Returns a random number between 0 and `maximum`, every time `trigger` goes above 0.5.
@@ -248,10 +247,10 @@ Applies a sample-and-hold effect to `signal in`, holding its value every time `t
 Generates a sawtooth wave between -1 and 1, oscillating at `frequency (hz)`. 
 
 ## sampstohz
-Converts an input value in  `samples` to its equivalent number in `hz`.
+Converts an input value in `samples` to its equivalent number in `hz`.
 
 ## sampstoms
-Converts an input value in  `samples` to its equivalent number in `ms`.
+Converts an input value in `samples` to its equivalent number in `ms`.
 
 ## scale
 Translates `signal in` into a different number range.
@@ -295,3 +294,4 @@ Reads through an audio file like a wavetable, with `phase` values between 0 and 
 
 ## wrap
 Wraps any values in `signal in 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount exceeded plus `minimum` . If the input value is below `minimum`, the output will be the amount below subtracted from `maximum`. 
+- The `size` outlet returns a signal corresponding to the number of samples in the pattern.
