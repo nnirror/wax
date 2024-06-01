@@ -1100,7 +1100,7 @@ function createAudioLoader(device, context, deviceDiv) {
     // create a new file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = 'audio/*';
+    fileInput.accept = 'audio/wav,audio/mp3,audio/mpeg,audio/*';
 
     // create a new p element for the file name
     const fileNameElement = document.createElement('p');
