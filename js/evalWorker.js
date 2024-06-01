@@ -5,7 +5,7 @@ self.onmessage = function(event) {
     let code = event.data.code;
     try {
         const result = eval(code);
-        self.postMessage({ result: result });
+        self.postMessage(result);
     } catch (error) {
         self.postMessage({ error: error.toString() });
     }

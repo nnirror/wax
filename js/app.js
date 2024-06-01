@@ -204,7 +204,7 @@ window.onbeforeunload = function() {
 
 // add the initial speaker objects and getting started text
 window.onload = async function() {
-    mousePosition.x = (document.documentElement.clientWidth / 2) - 158;
+    mousePosition.x = (document.documentElement.clientWidth / 2) - 210;
     mousePosition.y = document.documentElement.clientHeight * 0.8;
     let speaker1Div = await createDeviceByName('outputnode');
     let inputElement = speaker1Div.querySelector('input');
@@ -1516,6 +1516,7 @@ async function reconstructWorkspaceState() {
         let patcherState = await zip.file(jsonFileName).async('string');
         deviceStates = JSON.parse(patcherState);
         await reconstructDevicesAndConnections(deviceStates, zip, false);
+        deselectAllNodes();
     };
 
     fileInput.click();
