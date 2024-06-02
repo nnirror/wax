@@ -132,89 +132,6 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
-									"id" : "obj-25",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 765.606613159179688, 66.903227210044861, 81.0, 23.0 ],
-									"rnbo_classname" : "loadmess",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "loadmess_obj-25",
-									"rnboinfo" : 									{
-										"needsInstanceInfo" : 1,
-										"argnames" : 										{
-											"input" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Bang to trigger message.",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 0,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"inlet" : 1,
-												"type" : "bang"
-											}
-,
-											"message" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Message when patcher is loaded.",
-												"defaultarg" : 1,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"outlet" : 1,
-												"type" : "list",
-												"defaultValue" : ""
-											}
-,
-											"startupbang" : 											{
-												"attrOrProp" : 1,
-												"digest" : "startupbang",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "bang"
-											}
-
-										}
-,
-										"inputs" : [ 											{
-												"name" : "input",
-												"type" : "bang",
-												"digest" : "Bang to trigger message.",
-												"hot" : 1,
-												"docked" : 0
-											}
- ],
-										"outputs" : [ 											{
-												"name" : "message",
-												"type" : "list",
-												"digest" : "Message when patcher is loaded.",
-												"defaultarg" : 1,
-												"docked" : 0
-											}
- ],
-										"helpname" : "loadmess",
-										"aliasOf" : "loadmess",
-										"classname" : "loadmess",
-										"operator" : 0,
-										"versionId" : -361086158,
-										"changesPatcherIO" : 0
-									}
-,
-									"text" : "loadmess 100"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"id" : "obj-24",
 									"maxclass" : "newobj",
 									"numinlets" : 2,
@@ -285,89 +202,6 @@
 									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "*~_obj-20",
 									"text" : "*~"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-19",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 1064.05736780166626, 16.903227210044861, 77.0, 23.0 ],
-									"rnbo_classname" : "loadmess",
-									"rnbo_serial" : 2,
-									"rnbo_uniqueid" : "loadmess_obj-19",
-									"rnboinfo" : 									{
-										"needsInstanceInfo" : 1,
-										"argnames" : 										{
-											"input" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Bang to trigger message.",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 0,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"inlet" : 1,
-												"type" : "bang"
-											}
-,
-											"message" : 											{
-												"attrOrProp" : 1,
-												"digest" : "Message when patcher is loaded.",
-												"defaultarg" : 1,
-												"isalias" : 0,
-												"aliases" : [  ],
-												"settable" : 1,
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"outlet" : 1,
-												"type" : "list",
-												"defaultValue" : ""
-											}
-,
-											"startupbang" : 											{
-												"attrOrProp" : 1,
-												"digest" : "startupbang",
-												"isalias" : 0,
-												"aliases" : [  ],
-												"attachable" : 0,
-												"isparam" : 0,
-												"deprecated" : 0,
-												"type" : "bang"
-											}
-
-										}
-,
-										"inputs" : [ 											{
-												"name" : "input",
-												"type" : "bang",
-												"digest" : "Bang to trigger message.",
-												"hot" : 1,
-												"docked" : 0
-											}
- ],
-										"outputs" : [ 											{
-												"name" : "message",
-												"type" : "list",
-												"digest" : "Message when patcher is loaded.",
-												"defaultarg" : 1,
-												"docked" : 0
-											}
- ],
-										"helpname" : "loadmess",
-										"aliasOf" : "loadmess",
-										"classname" : "loadmess",
-										"operator" : 0,
-										"versionId" : -361086158,
-										"changesPatcherIO" : 0
-									}
-,
-									"text" : "loadmess 0.5"
 								}
 
 							}
@@ -2193,14 +2027,6 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-3", 1 ],
-									"midpoints" : [ 1073.55736780166626, 53.0, 1052.0, 53.0, 1052.0, 105.0, 984.642604351043701, 105.0 ],
-									"source" : [ "obj-19", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"order" : 0,
 									"source" : [ "obj-2", 0 ]
@@ -2260,14 +2086,6 @@
 								"patchline" : 								{
 									"destination" : [ "obj-4", 0 ],
 									"source" : [ "obj-24", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-17", 0 ],
-									"midpoints" : [ 775.106613159179688, 103.0, 638.106613159179688, 103.0 ],
-									"source" : [ "obj-25", 0 ]
 								}
 
 							}

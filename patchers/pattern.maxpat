@@ -126,6 +126,133 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-25",
+									"maxclass" : "newobj",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 273.0, 396.0, 55.0, 23.0 ],
+									"rnbo_classname" : "pipe",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "pipe_obj-25",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"in1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Anything to be delayed",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+,
+											"out1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Delayed number",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "number"
+											}
+,
+											"time" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Delay time",
+												"defaultarg" : 2,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number",
+												"defaultValue" : "125"
+											}
+,
+											"flush" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Stop delay and output current value",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "bang"
+											}
+,
+											"stop" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Stop delay",
+												"isalias" : 0,
+												"aliases" : [ "clear" ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "bang"
+											}
+,
+											"clear" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Stop delay",
+												"isalias" : 1,
+												"aliasOf" : "stop",
+												"aliases" : [  ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "bang"
+											}
+
+										}
+,
+										"inputs" : [ 											{
+												"name" : "in1",
+												"type" : "number",
+												"digest" : "Anything to be delayed",
+												"defaultarg" : 1,
+												"hot" : 1,
+												"docked" : 0
+											}
+, 											{
+												"name" : "time",
+												"type" : "number",
+												"digest" : "Delay time",
+												"defaultarg" : 2,
+												"docked" : 0
+											}
+ ],
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "number",
+												"digest" : "Delayed number",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "pipe",
+										"aliasOf" : "pipe",
+										"classname" : "pipe",
+										"operator" : 0,
+										"versionId" : 734053540,
+										"changesPatcherIO" : 0
+									}
+,
+									"text" : "pipe 125"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-24",
 									"maxclass" : "newobj",
 									"numinlets" : 2,
@@ -133,7 +260,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 977.0, 466.0, 79.0, 23.0 ],
 									"rnbo_classname" : "speedlim",
-									"rnbo_serial" : 6,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "speedlim_obj-24",
 									"text" : "speedlim 250"
 								}
@@ -163,7 +290,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 286.0, 467.0, 98.0, 23.0 ],
 									"rnbo_classname" : "loadmess",
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "loadmess_obj-22",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -254,7 +381,7 @@
 										"interp" : "linear"
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "wave~_obj-19",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -504,7 +631,7 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 162.5, 426.0, 41.0, 23.0 ],
 									"rnbo_classname" : "edge~",
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "edge~_obj-17",
 									"text" : "edge~"
 								}
@@ -519,7 +646,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 162.5, 390.0, 42.0, 23.0 ],
 									"rnbo_classname" : ">~",
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : ">~_obj-18",
 									"text" : ">~ 0.5"
 								}
@@ -554,7 +681,7 @@
 										"length" : 0.0
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "pak_obj-14",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -760,7 +887,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "in~_obj-10",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -992,7 +1119,7 @@
 										"interp" : "linear"
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "wave~_obj-15",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1543,7 +1670,7 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 977.0, 426.0, 41.0, 23.0 ],
 									"rnbo_classname" : "edge~",
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "edge~_obj-21",
 									"text" : "edge~"
 								}
@@ -1558,7 +1685,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 977.0, 390.0, 42.0, 23.0 ],
 									"rnbo_classname" : ">~",
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : ">~_obj-20",
 									"text" : ">~ 0.5"
 								}
@@ -1595,7 +1722,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 5,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "in~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1785,7 +1912,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "in~_obj-1",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1978,6 +2105,14 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-16", 0 ],
+									"midpoints" : [ 282.5, 424.0, 259.0, 424.0 ],
+									"source" : [ "obj-25", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-20", 0 ],
 									"source" : [ "obj-4", 0 ]
 								}
@@ -1987,6 +2122,15 @@
 								"patchline" : 								{
 									"destination" : [ "obj-16", 0 ],
 									"midpoints" : [ 402.785688102245331, 385.0, 259.0, 385.0 ],
+									"order" : 2,
+									"source" : [ "obj-6", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-25", 0 ],
+									"midpoints" : [ 402.785688102245331, 386.0, 282.5, 386.0 ],
 									"order" : 1,
 									"source" : [ "obj-6", 0 ]
 								}
