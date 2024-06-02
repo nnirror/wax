@@ -39,6 +39,9 @@
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
 }
+html {
+    overscroll-behavior: none;
+}
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -376,6 +379,7 @@ mark{
 .button-ui {
     background-color: grey;
     height: 50px;
+    width: 96px;
     min-height: 50px;
     max-height: 50px;
     border-radius: 25px;

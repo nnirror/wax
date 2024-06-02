@@ -311,6 +311,13 @@ let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
 let selectionDiv = null;
 let startPoint = null;
+const evalWorker = new Worker('js/evalWorker.js');
+let handleWorkerMessage = null;
+evalWorker.onmessage = (event) => {
+    if (handleWorkerMessage) {
+        handleWorkerMessage(event);
+    }
+};
 /* END globally acessible objects */
 
 /* BEGIN event handlers */
@@ -724,7 +731,6 @@ async function scheduleDeviceEvent(device, inport, value) {
         value = value.replace(/_\./g, '$().')
 
         if (device.dataBufferIds == 'pattern') {
-            const evalWorker = new Worker('js/evalWorker.js');
             // send the data to be evaluated to the worker
             let audioBuffersCopy = {};
 
@@ -735,7 +741,7 @@ async function scheduleDeviceEvent(device, inport, value) {
             }
 
             evalWorker.postMessage({ code: value, audioBuffers: audioBuffersCopy });
-            evalWorker.onmessage = async (event) => {
+            handleWorkerMessage = async (event) => {
                 if (event.data.error) {
                     showGrowlNotification(`${event.data.error}`);
                 }
