@@ -772,6 +772,7 @@ async function scheduleDeviceEvent(device, inport, value) {
         }
         else {
             messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, -60101123);
+            device.scheduleEvent(messageEvent);
         }
     } catch (error) {
         showGrowlNotification(`Error in device parameter: ${value}, ${error}`);

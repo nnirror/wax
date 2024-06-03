@@ -367,6 +367,7 @@ mark{
 }
 .toggle-button {
     height: 50px;
+    width: 96px;
     min-height: 50px;
     max-height: 50px;
 }

@@ -216,7 +216,7 @@ Generates a customizable wavetable using [Facet](https://github.com/nnirror/face
 ## play
 Plays an audio file at `rate` every time `trigger` goes above 0.5.
 - The `sync` outlet signal is the current playback position normalized between 0 and 1. A signal above 0.5 for the `loop` signal will loop file playback.
-- The `start pos` and `end pos` text inputs control the relative start and end point of audio file playback and expect values between 0 and 1.
+- The `start pos` and `end pos` values control the relative start and end point of audio file playback and expect values between 0 and 1.
 
 ## phasor
 Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.
