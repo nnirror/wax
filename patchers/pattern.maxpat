@@ -268,21 +268,6 @@
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-23",
-									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 552.0, 446.0, 56.0, 23.0 ],
-									"rnbo_classname" : "dcblock~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "dcblock~_obj-23",
-									"text" : "dcblock~"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"id" : "obj-22",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -374,11 +359,11 @@
 									"patching_rect" : [ 462.0, 399.367129445075989, 85.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
-										"boundmode" : "wrap",
-										"channelmode" : "wrap",
 										"channels" : 1.0,
+										"boundmode" : "wrap",
+										"interp" : "linear",
 										"indexmode" : "wave",
-										"interp" : "linear"
+										"channelmode" : "wrap"
 									}
 ,
 									"rnbo_serial" : 1,
@@ -851,7 +836,7 @@
 ,
 									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "message_obj-13",
-									"text" : "0 0 1 1"
+									"text" : "0 0 1 0"
 								}
 
 							}
@@ -1112,11 +1097,11 @@
 									"patching_rect" : [ 552.0, 399.367129445075989, 85.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
-										"boundmode" : "wrap",
-										"channelmode" : "wrap",
 										"channels" : 1.0,
+										"boundmode" : "wrap",
+										"interp" : "linear",
 										"indexmode" : "wave",
-										"interp" : "linear"
+										"channelmode" : "wrap"
 									}
 ,
 									"rnbo_serial" : 2,
@@ -1370,10 +1355,10 @@
 									"patching_rect" : [ 393.285688102245331, 349.935498952865601, 89.0, 23.0 ],
 									"rnbo_classname" : "buffer~",
 									"rnbo_extra_attributes" : 									{
-										"file" : "",
 										"samplerate" : 0.0,
-										"type" : "",
-										"fill" : ""
+										"fill" : "",
+										"file" : "",
+										"type" : ""
 									}
 ,
 									"rnbo_serial" : 1,
@@ -2033,7 +2018,7 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-23", 0 ],
+									"destination" : [ "obj-2", 0 ],
 									"source" : [ "obj-15", 0 ]
 								}
 
@@ -2061,8 +2046,8 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-23", 0 ],
-									"midpoints" : [ 471.5, 433.0, 561.5, 433.0 ],
+									"destination" : [ "obj-2", 0 ],
+									"midpoints" : [ 471.5, 436.363612174987793, 561.5, 436.363612174987793 ],
 									"source" : [ "obj-19", 0 ]
 								}
 
@@ -2086,13 +2071,6 @@
 									"destination" : [ "obj-13", 1 ],
 									"midpoints" : [ 295.5, 500.0, 199.0, 500.0 ],
 									"source" : [ "obj-22", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-2", 0 ],
-									"source" : [ "obj-23", 0 ]
 								}
 
 							}
