@@ -54,6 +54,7 @@ For example, if you have a `number` device, and you enter `ri(10,1000)` for its 
 - create number device: `f`
 - create comment device: `c`
 - create toggle device: `t`
+- create slider device: `s`
 - create button device: `b`
 
 # Managing state
@@ -145,8 +146,8 @@ Computes the logical EQUALS of `signal in 1` `signal in 2`.
 ## fold
 Folds any values in `signal in 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`. 
 
-## freqshift
-Applies a time-domain frequency shift effect of `shift amount (hz)` to `signal in`.  Outlet 1 is the positive sideband of the ring modulation; Outlet 2 is the negative sideband. 
+## pitchshift
+Applies a time-domain frequency shift effect of `shift amount` to `signal in`. A `shift amount` of 2 will be twice as high frequency. The `signal out 1` and `signal out 2` outlets both return unique signals that have different phase rotations of the input signal. `signal out 1` contains phase rotations at 0 and 180 degrees, and `signal out 2` contains phase rotations at 90 and 270 degrees.
 
 ## greater
 Computes the boolean representation of whether `signal in 1` is greater than `signal in 2`.
@@ -221,6 +222,9 @@ Plays an audio file at `rate` every time `trigger` goes above 0.5.
 ## phasor
 Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.
 
+## pitchshift
+Applies a time-domain pitch shift effect of `shift amount` to `signal in`. The `signal out 1` and `signal out 2` outlets both return unique signals that have different phase rotations of the input signal. `signal out 1` contains phase rotations at 0 and 180 degrees, and `signal out 2` contains phase rotations at 90 and 270 degrees.
+
 ## random
 Returns a random number between 0 and `maximum`, every time `trigger` goes above 0.5.
 
@@ -267,7 +271,10 @@ Translates `signal in` into a different number range.
 Decides whether to pass or mute `signal in` every time the signal goes above 0.1, based on `prob`.
 
 ## slide
-Smooths `signal in` by logarithmically ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`.  
+Smooths `signal in` by logarithmically ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`.
+
+## slider
+Outputs a float between 0 and 1. Move the slider to change the offset.
 
 ## speaker
 Connects to the speakers of the computer's selected audio output device on channel `speaker channel`.

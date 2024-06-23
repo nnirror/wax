@@ -133,6 +133,13 @@ document.body.addEventListener('click', async (event) => {
                             saveButton.textContent = 'Save';
                             modalContent.appendChild(saveButton);
 
+                            // add event listener for the Enter key
+                            input.addEventListener('keydown', (event) => {
+                                if (event.key === 'Enter') {
+                                    saveButton.click();
+                                }
+                            });
+
                             // create a cancel button
                             let cancelButton = document.createElement('button');
                             cancelButton.textContent = 'Cancel';
@@ -447,6 +454,11 @@ document.addEventListener('keydown', (event) => {
     else if (event.key === 'b' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
         createDeviceByName('button');
+    }
+    // 's' creates a slider
+    else if (event.key === 's' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+        event.preventDefault();
+        createDeviceByName('slider');
     }
     // 't' creates a toggle
     else if (event.key === 't' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
@@ -953,6 +965,13 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             toggleButton.textContent = 'Toggle';
             const inputContainer = deviceDiv.querySelector('.input-container');
             inputContainer.insertAdjacentElement('afterend', toggleButton);
+
+             // create a hidden input
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.value = '0'; 
+            hiddenInput.id = 'toggleHiddenInput';
+            deviceDiv.appendChild(hiddenInput);
         
             // add initial class and text
             toggleButton.className = 'toggle-button toggle-off';
@@ -962,6 +981,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             toggleButton.addEventListener('click', () => {
                 // toggle the value between 1 and 0
                 silenceGenerator.offset.value = 1 - silenceGenerator.offset.value;
+                
+                // update the hidden input value
+                hiddenInput.value = silenceGenerator.offset.value;
 
                 // toggle the class and text
                 if (toggleButton.className === 'toggle-button toggle-off') {
@@ -971,6 +993,41 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     toggleButton.className = 'toggle-button toggle-off';
                     toggleButton.textContent = 'off';
                 }
+            });
+        }
+        else if (filename === "slider") {
+            const silenceGenerator = context.createConstantSource();
+            silenceGenerator.offset.value = 0;
+            silenceGenerator.start();
+        
+            // create the device
+            const device = {
+                node: silenceGenerator,
+                source: silenceGenerator,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'signal out' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "slider", false);
+        
+            // create a slider
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.min = '0';
+            slider.max = '1';
+            slider.step = '0.001';
+            slider.value = '0';
+            const inputContainer = deviceDiv.querySelector('.input-container');
+            inputContainer.insertAdjacentElement('afterend', slider);
+        
+            // add event listener to the slider
+            slider.addEventListener('input', () => {
+                // update the silenceGenerator offset value
+                silenceGenerator.offset.value = slider.value;
             });
         }
         else if (filename === "button") {
@@ -1589,6 +1646,14 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             if (deviceState.inputs[input.id]) {
                 input.value = deviceState.inputs[input.id];
                 input.dispatchEvent(new Event('change'));
+            }
+
+            // set any toggles "on" that were saved that way
+            if ( deviceElement.id.includes('toggle') && deviceState.inputs[input.id] == 1 ) {
+                const button = deviceElement.querySelector('button.toggle-button');
+                if (button) {
+                    button.click();
+                }
             }
         }
 

@@ -8,7 +8,21 @@ class FacetPattern {
     this.current_slice_number = 0;
     this.current_total_slices = 0;
     this.current_total_iterations = 0;
+    this.set_pattern_name_after_evaluation = false;
     this.data = [];
+  }
+
+  set ( pattern_name ) {
+    this.set_pattern_name_after_evaluation = pattern_name;
+    return this;
+  }
+
+  get ( pattern_name) {
+    if (stored_patterns[pattern_name] == undefined) {
+      throw `pattern not found: ${pattern_name}`;
+    }
+    this.data = stored_patterns[pattern_name];
+    return this;
   }
 
   // BEGIN generator operations
