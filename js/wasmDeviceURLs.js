@@ -43,6 +43,7 @@ var wasmDeviceURLs = [
     "pitchshift",
     "random",
     "rampsmooth",
+    "record",
     "rect",
     "reverb",
     "rotator",

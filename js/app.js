@@ -641,23 +641,47 @@ async function createMicrophoneDevice() {
     return device;
 }
 
-function attachOutports(device,deviceDiv) {
+async function attachOutports(device,deviceDiv) {
     const outports = device.outports;
     if (typeof outports =='undefined' || outports.length < 1) {
         return;
     }
     // listen on outports for any "regen" events to regenerate its parameters
-    device.messageEvent.subscribe((ev) => {
+    device.messageEvent.subscribe(async (ev) => {
         // ignore message events that don't belong to an outport
         if (outports.findIndex(elt => elt.tag === ev.tag) < 0) return;
-        // select all input elements within the deviceDiv
-        const inputElements = deviceDiv.querySelectorAll('input, textarea');
-
-        inputElements.forEach((inputElement) => {
-            // create/trigger a change event
-            const event = new Event('change');
-            inputElement.dispatchEvent(event);
-        });
+        // handle regen outport events
+        if ( outports[0].tag == 'regen' ) {
+            const inputElements = deviceDiv.querySelectorAll('input, textarea');
+            inputElements.forEach((inputElement) => {
+                // create/trigger a change event
+                const event = new Event('change');
+                inputElement.dispatchEvent(event);
+            });
+        }
+        else if ( outports[0].tag == 'save_recording' ) {
+            const dataBuffer = await device.releaseDataBuffer('buf');
+            let audioBuffer = dataBuffer.getAsAudioBuffer(context);
+            const wavArrayBuffer = audioBufferToWav(audioBuffer);
+            const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+            const audioURL = URL.createObjectURL(wavBlob);
+            // create a download link
+            let downloadLink = document.createElement('a');
+            downloadLink.href = audioURL;
+            let fileName = `recording_${Date.now()}.wav`;
+            downloadLink.download = fileName;
+            downloadLink.textContent = 'Download recording';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            // triggers a change to the inlets of the recorder the after the wav has been saved
+            // which resets the audio buffer. needed to record more than one recording in a given session
+            const inputElements = deviceDiv.querySelectorAll('input, textarea');
+            inputElements.forEach((inputElement) => {
+                // create/trigger a change event
+                const event = new Event('change');
+                inputElement.dispatchEvent(event);
+            });
+        }
     });
 }
 
