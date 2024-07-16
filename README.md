@@ -143,11 +143,11 @@ Generates a new value in a random walk of values between 0 and `maximum`, with `
 ## equals
 Computes the logical EQUALS of `signal in 1` `signal in 2`.
 
+## ffilter
+Applies a FFT-based bandpass filter to the input signal, passing only frequencies between `low` and `high`.
+
 ## fold
 Folds any values in `signal in 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`. 
-
-## pitchshift
-Applies a time-domain frequency shift effect of `shift amount` to `signal in`. A `shift amount` of 2 will be twice as high frequency. The `signal out 1` and `signal out 2` outlets both return unique signals that have different phase rotations of the input signal. `signal out 1` contains phase rotations at 0 and 180 degrees, and `signal out 2` contains phase rotations at 90 and 270 degrees.
 
 ## greater
 Computes the boolean representation of whether `signal in 1` is greater than `signal in 2`.
@@ -213,6 +213,9 @@ Generates a customizable wavetable using [Facet](https://github.com/nnirror/face
 	- `_.noise(16)`
 	- `_.ramp(100,30,32).key('c','minor').mtof()`
 	- `_.from([20,40,40,80,80,80,80,160,160,160,160,160,160,160,160]).shuffle().palindrome()`
+
+## pitchshift
+Applies a time-domain frequency shift effect of `shift amount` to `signal in`. A `shift amount` of 2 will be twice as high frequency. The `signal out 1` and `signal out 2` outlets both return unique signals that have different phase rotations of the input signal. `signal out 1` contains phase rotations at 0 and 180 degrees, and `signal out 2` contains phase rotations at 90 and 270 degrees.
 
 ## play
 Plays an audio file at `rate` every time `trigger` goes above 0.5.

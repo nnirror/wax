@@ -20,6 +20,7 @@ var wasmDeviceURLs = [
     "downsamp",
     "drunk",
     "equals",
+    "ffilter",
     "fold",
     "greater",
     "hpf",
