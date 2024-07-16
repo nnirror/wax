@@ -63,129 +63,6 @@ createButtonForNavBar(
     }
 );
 
-createButtonForNavBar(
-    'start record',
-    'recordButton navbarButton',
-    ()=>{}
-);
-
-document.body.addEventListener('click', async (event) => {
-    if (event.target.classList.contains('recordButton')) {
-        if (!isRecording) {
-            // start recording
-            destination = context.createMediaStreamDestination();
-            channelMerger.connect(destination);
-            recorder = RecordRTC(destination.stream, { type: 'audio', type: 'audio/wav' });
-            recorder.startRecording();
-            event.target.textContent = 'stop record';
-            isRecording = true;
-        } else {
-            isRecording = false;
-            // stop recording
-            recorder.stopRecording(async function() {
-                const blob = recorder.getBlob();
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const arrayBuffer = reader.result;
-                    try {
-                        context.decodeAudioData(arrayBuffer, audioBuffer => {
-                            const wavArrayBuffer = audioBufferToWav(audioBuffer);
-                            const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
-                            const audioURL = URL.createObjectURL(wavBlob);
-                            
-                            // create a modal dialog
-                            let modal = document.createElement('div');
-                            modal.style.position = 'fixed';
-                            modal.style.left = '0';
-                            modal.style.top = '0';
-                            modal.style.width = '100%';
-                            modal.style.height = '100%';
-                            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                            modal.style.display = 'flex';
-                            modal.style.justifyContent = 'center';
-                            modal.style.alignItems = 'center';
-                            modal.style.zIndex = '1005';
-
-                            // create a modal content container
-                            let modalContent = document.createElement('div');
-                            modalContent.style.backgroundColor = '#fff';
-                            modalContent.style.padding = '20px';
-                            modalContent.style.borderRadius = '10px';
-                            modalContent.style.width = '50%';
-                            modalContent.style.maxWidth = '500px';
-                            modal.appendChild(modalContent);
-
-                            // create a text element
-                            let text = document.createElement('p');
-                            text.textContent = 'Save file as:';
-                            modalContent.appendChild(text);
-
-                            // create an input field
-                            let input = document.createElement('input');
-                            input.type = 'text';
-                            input.value = `recording_${Date.now()}.wav`;
-                            input.style.width = '100%';
-                            input.style.marginBottom = '10px';
-                            modalContent.appendChild(input);
-
-                            // create a save button
-                            let saveButton = document.createElement('button');
-                            saveButton.textContent = 'Save';
-                            modalContent.appendChild(saveButton);
-
-                            // add event listener for the Enter key
-                            input.addEventListener('keydown', (event) => {
-                                if (event.key === 'Enter') {
-                                    saveButton.click();
-                                }
-                            });
-
-                            // create a cancel button
-                            let cancelButton = document.createElement('button');
-                            cancelButton.textContent = 'Cancel';
-                            modalContent.appendChild(cancelButton);
-
-                            // when the cancel button is clicked, remove the modal dialog
-                            cancelButton.addEventListener('click', () => {
-                                document.body.removeChild(modal);
-                            });
-
-                            // when the save button is clicked, save the file with the inputted name
-                            saveButton.addEventListener('click', () => {
-                                let fileName = input.value;
-                                if (!fileName.endsWith('.wav')) {
-                                    fileName += '.wav';
-                                }
-
-                                // create a download link
-                                let downloadLink = document.createElement('a');
-                                downloadLink.href = audioURL;
-                                downloadLink.download = fileName;
-                                downloadLink.textContent = 'Download recording';
-                                document.body.appendChild(downloadLink);
-                                downloadLink.click();
-
-                                // remove the modal dialog
-                                document.body.removeChild(modal);
-                            });
-
-                            // add the modal dialog to the document
-                            document.body.appendChild(modal);
-                        }, error => {
-                            console.error('Failed to decode audio data:', error);
-                        });
-                    } catch (error) {
-                        console.error('An error occurred:', error);
-                    }
-                };
-                reader.readAsArrayBuffer(blob);
-                recorder = null;
-            });
-            event.target.textContent = 'start record';
-        }
-    }
-});
-
 // create the button
 var toggleButton = document.createElement('button');
 toggleButton.id = 'toggleNavbarButton';
@@ -304,11 +181,9 @@ dropdown.addEventListener('change', async function(event) {
 /* BEGIN globally acessible objects */
 let chunks = [];
 let destination;
-let recorder = null;
 let lastClicked = null;
 let deviceCounts = {};
 let isAudioPlaying = false;
-let isRecording = false;
 let devices = {};
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
@@ -681,6 +556,8 @@ async function attachOutports(device,deviceDiv) {
                 const event = new Event('change');
                 inputElement.dispatchEvent(event);
             });
+            await stopAudio();
+            await startAudio(); 
         }
     });
 }
@@ -955,6 +832,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             
                 // create a new source with the new stream
                 const newSource = context.createMediaStreamSource(device.stream);
+                console.log(newSource);
             
                 // update the source and node
                 device.source = newSource;

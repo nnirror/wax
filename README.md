@@ -234,6 +234,11 @@ Returns a random number between 0 and `maximum`, every time `trigger` goes above
 ## rampsmooth
 Smooths `signal in` by linearly ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`.
 
+## record
+Records `signal in L` and `signal in R` to a stereo audio buffer for `length (seconds)` seconds.
+- A signal that rises above 0.5 in `start/stop` will start the recording, and a signal that falls below 0.5 will stop it. You can use a `toggle` UI element to control `start/stop`.
+- To export the last recording, send a signal that rises above 0.5 to `save`. You can use a `button` UI element to control `save`.
+
 ## rect
 Generates a rectangle wave between -1 and 1, oscillating at `frequency (hz)` and with configurable `pulsewidth`.
 
