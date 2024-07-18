@@ -42,6 +42,7 @@ var wasmDeviceURLs = [
     "play",
     "phasor",
     "pitchshift",
+    "pluck",
     "random",
     "rampsmooth",
     "record",
