@@ -809,7 +809,6 @@ function reconnectNodeConnections(nodeId) {
         });
 
         // update the device connections
-        device.connections = connectionsData;
     }
 }
 async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
@@ -832,7 +831,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             
                 // create a new source with the new stream
                 const newSource = context.createMediaStreamSource(device.stream);
-                console.log(newSource);
             
                 // update the source and node
                 device.source = newSource;
@@ -1040,7 +1038,15 @@ async function createInputDeviceSelector(device, context, deviceDiv) {
     // listen for changes
     select.addEventListener('change', async (event) => {
         const deviceId = event.target.value;
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: deviceId } });
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                autoGainControl: false,
+                noiseSuppression: false,
+                echoCancellation: false,
+                sampleRate: 44100,
+                deviceId: deviceId
+            }
+        });
         // emit a custom event with the new stream
         const streamChangedEvent = new CustomEvent('streamChanged', { detail: stream });
         deviceDiv.dispatchEvent(streamChangedEvent);
