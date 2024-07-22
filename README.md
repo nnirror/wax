@@ -175,7 +175,7 @@ Applies a low-pass filter to `signal in`.
 - `q` controls the resonance of the filter at the cutoff.
 
 ## microphone input
-Returns the selected `microphone input` device as a signal. Due to web audio API limitations, the first two input channels of the microphone are available via `signal out 1` and `signal out 2`. If the microphone has one input channel, that channel will be available on both `signal out 1` and `signal out 2`.
+Returns the selected `microphone input` device as a signal. Due to web audio API limitations, the first two input channels of the microphone are available via `signal out 1` and `signal out 2`. If the microphone has one input channel, that channel will be available on `signal out 1`.
 
 **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
 

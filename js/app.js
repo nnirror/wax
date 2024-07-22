@@ -492,10 +492,15 @@ async function createMicrophoneDevice() {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
 
-    // identify the default device
-    const defaultDevice = audioInputDevices.find(device => device.deviceId === 'default');
+    let defaultDevice;
 
-    // if there is no device with id 'default', use the first device
+    // check if deviceIds are available
+    if (audioInputDevices[0] && audioInputDevices[0].deviceId) {
+        // identify the default device
+        defaultDevice = audioInputDevices.find(device => device.deviceId === 'default');
+    }
+
+    // if there is no device with id 'default', or deviceIds are not available, use the first device
     if (!defaultDevice) {
         defaultDevice = audioInputDevices[0];
     }
