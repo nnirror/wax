@@ -488,12 +488,25 @@ function initializeAwesomplete () {
 }
 
 async function createMicrophoneDevice() {
+    // get the list of available input devices
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+
+    // identify the default device
+    const defaultDevice = audioInputDevices.find(device => device.deviceId === 'default');
+
+    // if there is no device with id 'default', use the first device
+    if (!defaultDevice) {
+        defaultDevice = audioInputDevices[0];
+    }
+
     const constraints = {
         audio: {
             autoGainControl: false,
             noiseSuppression: false,
             echoCancellation: false,
-            sampleRate: 44100
+            sampleRate: 44100,
+            deviceId: defaultDevice.deviceId
         }
     };
     // get access to the microphone
@@ -508,7 +521,7 @@ async function createMicrophoneDevice() {
         source: source,
         it: {
             T: {
-                outlets: [{ comment: 'signal out' }], // these need to exist so they work like the other WASM modules built with RNBO
+                outlets: [{ comment: 'signal out 1' },{ comment: 'signal out 2' }], // these need to exist so they work like the other WASM modules built with RNBO
                 inlets: [{ comment: 'microphone input' }]
             }
         }
