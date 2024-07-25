@@ -60,6 +60,9 @@ For example, if you have a `number` device, and you enter `ri(10,1000)` for its 
 # Managing state
 In Wax, system states can be saved, reloaded, and shared.
 
+## Sharing a state
+Press the `share URL` button to copy the system state to your clipboard as a URL. **NOTE:** audio files will not be included and need to be sent separately.
+
 ## Saving a state
 Press the `save` button to save the system state as a zip file, including all audio files that were loaded.
 
