@@ -278,20 +278,20 @@ mark{
     .startAudioButton {
         top: calc(10% - 4.75%);
     }
-    .saveStateButton {
+    .shareStateButton {
         top: calc(19% - 4.75%);
     }
-    .reloadStateButton {
+    .saveStateButton {
         top: calc(28% - 4.75%);
+    }
+    .reloadStateButton {
+        top: calc(37% - 4.75%);
     }
     #exampleFiles {
         width: 20%;
         top: calc(55% - 4.75%);
     }
     .viewAllDevices {
-        top: calc(37% - 4.75%);
-    }
-    .recordButton {
         top: calc(46% - 4.75%);
     }
     .helpButton {
