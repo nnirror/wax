@@ -37,6 +37,8 @@ createButtonForNavBar(
 // create a button for saving workspace state
 createButtonForNavBar('save', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
 
+createButtonForNavBar('share URL', 'shareStateButton navbarButton', ()=>{getWorkspaceState(false,true)});
+
 // create a button for reloading workspace state
 createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
@@ -143,6 +145,8 @@ window.onload = async function() {
     // add the close button to the info div and the info div to body
     infoDiv.appendChild(closeButton);
     document.body.appendChild(infoDiv);
+
+    checkForQueryStringParams();
 };
 
 // create a dropdown select
@@ -1352,7 +1356,7 @@ function createButtonForNavBar(text, className, clickHandler) {
     navBar.appendChild(button);
 }
 
-async function getWorkspaceState(saveToFile = false) {
+async function getWorkspaceState(saveToFile = false, createShareLink = false) {
     let workspaceState = [];
     let zip = new JSZip();
 
@@ -1407,6 +1411,23 @@ async function getWorkspaceState(saveToFile = false) {
         }
 
         workspaceState.push(deviceState);
+    }
+
+    if ( createShareLink == true ) {
+        let encodedState = LZString.compressToEncodedURIComponent(JSON.stringify(workspaceState));
+        // format as a query string
+        let queryString = `state=${encodedState}`;
+        
+        // get the current URL without query parameters
+        let currentUrl = window.location.origin + window.location.pathname;
+        
+        // combine the current URL with the query string
+        let fullUrl = `${currentUrl}?${queryString}`;
+        
+        // copy to clipboard
+        navigator.clipboard.writeText(fullUrl).then(function() {
+            alert('successfully copied to clipboard!');
+        }, function(err) {});
     }
 
     if (saveToFile) {
@@ -1491,25 +1512,29 @@ async function copySelectedNodes() {
     selectionDiv = null;
 }
 
-async function reconstructWorkspaceState() {
-    let deviceStates;
+async function reconstructWorkspaceState(deviceStates = null) {
+    if (deviceStates === null) {
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.zip';
 
-    let fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.zip';
+        fileInput.onchange = async function(event) {
+            deleteAllNodes();
+            let file = event.target.files[0];
+            let zip = await JSZip.loadAsync(file);
+            let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
+            let patcherState = await zip.file(jsonFileName).async('string');
+            deviceStates = JSON.parse(patcherState);
+            await reconstructDevicesAndConnections(deviceStates, zip, false);
+            deselectAllNodes();
+        };
 
-    fileInput.onchange = async function(event) {
+        fileInput.click();
+    } else {
         deleteAllNodes();
-        let file = event.target.files[0];
-        let zip = await JSZip.loadAsync(file);
-        let jsonFileName = Object.keys(zip.files).find(name => name.endsWith('.json'));
-        let patcherState = await zip.file(jsonFileName).async('string');
-        deviceStates = JSON.parse(patcherState);
-        await reconstructDevicesAndConnections(deviceStates, zip, false);
+        await reconstructDevicesAndConnections(deviceStates, null, false);
         deselectAllNodes();
-    };
-
-    fileInput.click();
+    }
 }
 
 async function loadExampleFile(filePath) {
@@ -1551,8 +1576,14 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
         }
         else if (deviceState.audioFileName && !zip ) {
-            let audioBuffer = audioBuffers[deviceState.audioFileName];
-            deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
+            if ( audioBuffers[deviceState.audioFileName] ) {
+                let audioBuffer = audioBuffers[deviceState.audioFileName];
+                deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
+            }
+            else {
+                deviceElement = await createDeviceByName(deviceName, null, devicePosition);
+                showGrowlNotification(`Make sure to load the missing audio file: "${deviceState.audioFileName}", since audio files are not stored with shared state URLs`);
+            }
         }
         else {
             if ( deviceName == 'microphone input') {
@@ -1717,4 +1748,25 @@ function toggleNavbar() {
         exampleFiles.style.display = 'none';
     }
 }
+
+function checkForQueryStringParams() {
+    // get the query string from the current URL
+    let params = new URLSearchParams(window.location.search);
+
+    // check if the 'state' parameter is present
+    if (params.has('state')) {
+        // get the 'state' parameter
+        let encodedState = params.get('state');
+
+        // decode the state
+        let serializedState = LZString.decompressFromEncodedURIComponent(encodedState);
+
+        // parse the state
+        let workspaceState = JSON.parse(serializedState);
+
+        // load the workspace state
+        reconstructWorkspaceState(workspaceState);
+    }
+}
+
 /* END functions */

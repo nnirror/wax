@@ -96,17 +96,20 @@ body {
     color: white;
     background: linear-gradient(to right, #005925, #002e13);
 }
-.saveStateButton {
+.shareStateButton {
     top: 110px;
 }
-.reloadStateButton {
+.saveStateButton {
     top: 160px;
 }
-.viewAllDevices {
+.reloadStateButton {
     top: 210px;
 }
-.helpButton {
+.viewAllDevices {
     top: 310px;
+}
+.helpButton {
+    top: 360px;
 }
 #exampleFiles {
     position: fixed;
