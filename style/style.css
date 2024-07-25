@@ -208,7 +208,7 @@ mark{
     text-align: center;
     display: none;
     font-size: 1.5em;
-    z-index: 1001;
+    z-index: 1004;
 }
 #viewAllDevices {
     cursor: pointer;
@@ -245,7 +245,7 @@ mark{
     top: 50%;
     transform: translate(-50%, -50%);
     border: 1px solid black;
-    z-index: 1002;
+    z-index: 1005;
     display: none;
     background-color: #f8f9fa;
     padding: 20px;
@@ -264,16 +264,12 @@ mark{
 /* screens smaller than 600px */
 @media (max-width: 600px) {
     #exampleFiles, #viewAllDevices {
-        width: 20%;
         height: 8%;
         min-height: 4vh;
-        font-size: 22px;
     }
     .navbarButton {
         height: 8%;
-        font-size: 22px;
         min-height: 4vh;
-        width: 20%;
     }
     .startAudioButton {
         top: calc(10% - 4.75%);
@@ -288,7 +284,6 @@ mark{
         top: calc(37% - 4.75%);
     }
     #exampleFiles {
-        width: 20%;
         top: calc(55% - 4.75%);
     }
     .viewAllDevices {
@@ -300,9 +295,8 @@ mark{
     #toggleNavbarButton {
         height: 4%;
         min-height: 4%;
-        width: 20%;
-        font-size: 18px;
-        font-size: 2vh;
+        width: 10em;
+        font-size: 1em;
     }
 }
 .hamburger {
