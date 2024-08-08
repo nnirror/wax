@@ -366,6 +366,13 @@ function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
     deviceDropdown.appendChild(micInputOption);
 }
 
+function addMotionDeviceToDropdown (deviceDropdown) {
+    const motionInputOption = document.createElement('option');
+    motionInputOption.value = "motion";
+    motionInputOption.innerText = "motion";
+    deviceDropdown.appendChild(motionInputOption);
+}
+
 function openAwesompleteUI() {
     // get the dropdown element
     var dropdown = document.querySelector('.deviceDropdown');
@@ -536,6 +543,52 @@ async function createMicrophoneDevice() {
         }
     };
     return device;
+}
+
+async function createMotionDevice(context) {
+    // check if DeviceOrientationEvent is supported
+    if (window.DeviceOrientationEvent) {
+        // request permission for DeviceMotionEvent
+        const response = await DeviceMotionEvent.requestPermission();
+        if (response === 'granted') {
+            // create a ConstantSourceNode for each axis
+            const betaNode = context.createConstantSource();
+            const gammaNode = context.createConstantSource();
+            betaNode.start();
+            gammaNode.start();
+            // add event listener for deviceorientation
+            window.addEventListener('deviceorientation', function(event) {
+                // normalize each axis to the range of -1 to 1
+                betaNode.offset.value = event.beta / 90; // pitch
+                gammaNode.offset.value = event.gamma / 90; // roll
+            });
+
+            // create a ChannelMergerNode to combine the outputs of the two nodes
+            const merger = context.createChannelMerger(3);
+            betaNode.connect(merger, 0, 0);
+            gammaNode.connect(merger, 0, 1);
+
+            // create a wrapper object for the device
+            const device = {
+                node: merger,
+                source: merger,
+                it: {
+                    T: {
+                        outlets: [
+                            { comment: 'pitch' },
+                            { comment: 'roll' }
+                        ], 
+                        inlets: []
+                    }
+                }
+            };
+            return device;
+        } else {
+            showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
+        }
+    } else {
+        showGrowlNotification(`Sorry, your device does not support DeviceOrientationEvent`);
+    }
 }
 
 async function attachOutports(device,deviceDiv) {
@@ -836,7 +889,11 @@ function reconnectNodeConnections(nodeId) {
 async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
     try {
         let deviceDiv;
-        if (filename === "mic") {
+        if (filename === "motion") {
+            const device = await createMotionDevice(context);
+            deviceDiv = addDeviceToWorkspace(device, "motion", false);
+        }
+        else if (filename === "mic") {
             if ( !isAudioPlaying ) {
                 await startAudio();
             }
@@ -1317,6 +1374,22 @@ function createDropdownofAllDevices () {
     navBar.appendChild(deviceDropdown);
     // create microphone input module
     addMicrophoneInputDeviceToDropdown(deviceDropdown);
+     // create motion input device, if available and working
+     if (window.DeviceOrientationEvent) {
+        let deviceOrientationWorks = false;
+        const testDeviceOrientation = function(event) {
+            if (event.alpha !== null || event.beta !== null || event.gamma !== null) {
+                deviceOrientationWorks = true;
+            }
+            window.removeEventListener('deviceorientation', testDeviceOrientation);
+        };
+        window.addEventListener('deviceorientation', testDeviceOrientation);
+        setTimeout(function() {
+            if (deviceOrientationWorks) {
+                addMotionDeviceToDropdown(deviceDropdown);
+            }
+        }, 1000);
+    }
     return deviceDropdown;
 }
 

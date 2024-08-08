@@ -185,6 +185,12 @@ Returns the selected `microphone input` device as a signal. Due to web audio API
 ## mix
 Mixes `signal in 1` and `signal in 2` together using a `crossfade` parameter between 0 and 1. A `crossfade` value of 0.5 will mix the signals together equally, and a `crossfade` value of 0 or 1 will return only the signal at that input.
 
+## motion
+Outputs two floats between -1 and 1 corresponding to the device's orientation in space.
+- The `pitch` outlet returns the device's tilt upwards or downwards: pointing straight up is 1; pointing straight down is -1; and resting flat is 0.
+- The `roll` outlet returns the device's rotational position around its front-to-back axis.
+- **NOTE:** this device is only available on mobile devices which report device motion data via [DeviceMotionEvents](https://developer.mozilla.org/en-US/docs/Web/API/Device_orientation_events).
+
 ## mstohz
 Converts an input value in `ms` to its equivalent number in `hz`.
 
