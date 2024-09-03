@@ -161,7 +161,7 @@ firstOption.selected = true;
 dropdown.appendChild(firstOption);
 
 // add an option for each file
-['amplitude_modulation.zip', 'audio_file_playback.zip', 'fm.zip', 'hello_world_tri.zip', 'patterns_with_facet.zip', 'regen_example.zip', 'microphone.zip', 'vocoder.zip'].forEach(function(file) {
+['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip', 'microphone.zip'].forEach(function(file) {
     var option = document.createElement('option');
     option.value = file;
     // remove underscores and '.zip' from the display text
@@ -1003,8 +1003,12 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const inputContainer = deviceDiv.querySelector('.input-container');
             inputContainer.insertAdjacentElement('afterend', slider);
         
-            // add event listener to the slider
+            // add event listeners to the slider
             slider.addEventListener('input', () => {
+                // update the silenceGenerator offset value
+                silenceGenerator.offset.value = slider.value;
+            });
+            slider.addEventListener('change', () => {
                 // update the silenceGenerator offset value
                 silenceGenerator.offset.value = slider.value;
             });
