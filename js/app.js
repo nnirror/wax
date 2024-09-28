@@ -374,6 +374,7 @@ function addMotionDeviceToDropdown (deviceDropdown) {
 }
 
 function openAwesompleteUI() {
+    deselectAllNodes();
     // get the dropdown element
     var dropdown = document.querySelector('.deviceDropdown');
     
@@ -385,6 +386,7 @@ function openAwesompleteUI() {
     var deviceSelectTextDiv = document.createElement('div');
     deviceSelectTextDiv.textContent = "type to select a device...";
     deviceSelectTextDiv.className = 'deviceSelectText';
+    deviceSelectTextDiv.style.fontSize = '0.9em';
 
     // create a new div element for autocomplete
     var div = document.createElement('div');
@@ -409,6 +411,23 @@ function openAwesompleteUI() {
     // focus the input
     input.focus();
 
+    let selectCompleteTriggered = false;
+    // add event listener for awesomplete-selectcomplete event
+    awesomplete.input.addEventListener('awesomplete-selectcomplete', async function() {
+        selectCompleteTriggered = true;
+        var selectedOption = awesomplete.input.value;
+        if (selectedOption == 'microphone input') {
+            await createDeviceByName('mic');
+        }
+        else if (selectedOption == 'speaker') {
+            await createDeviceByName('outputnode');
+        }
+        else {
+            await createDeviceByName(selectedOption);
+        }
+        hideAwesomplete();
+    });
+
     // function for hiding the Awesomplete widget
     var hideAwesomplete = function() {
         if (!awesomplete.selected) {
@@ -425,13 +444,6 @@ function openAwesompleteUI() {
         }
         catch(err) {}
     };
-
-    // create a new button element
-    var button = document.createElement('button');
-    button.textContent = 'add';
-    button.className = 'awesomplete-submit';
-    div.appendChild(button);
-
 
     // function to handle the creation of the device by name
     async function handleCreateDeviceByName() {
@@ -457,19 +469,16 @@ function openAwesompleteUI() {
         }
     }
 
-    // add event listener for click event on the button
-    button.addEventListener('mousedown', function(event) {
-        event.preventDefault();
-        handleCreateDeviceByName();
-    });
 
     // add event listener for keydown event on the input
     input.addEventListener('keydown', async function(event) {
         // if enter key is pressed, call the createDeviceByName function
         if (event.key === 'Enter') {
-            event.preventDefault();
-            await handleCreateDeviceByName();
-            hideAwesomplete();
+            if (!selectCompleteTriggered) {
+                event.preventDefault();
+                await handleCreateDeviceByName();
+                hideAwesomplete();
+            }
         }
         // if escape key is pressed, hide autocomplete
         else if (event.key === 'Escape') {
@@ -633,6 +642,24 @@ async function attachOutports(device,deviceDiv) {
             });
             await stopAudio();
             await startAudio(); 
+        }
+        else if ( outports[0].tag == 'value to print' ) {
+            let hr = deviceDiv.querySelector('.device-hr');
+            let span = deviceDiv.querySelector('.printvalue');
+
+            // if the span for printing values doesn't exist yet, create it
+            if (!span) {
+                span = document.createElement('span');
+                span.className = 'printvalue';
+                deviceDiv.insertBefore(span, hr);
+            }
+
+            // update the print span's value
+            if (typeof ev.payload === 'number' && ev.payload % 1 !== 0) {
+                span.textContent = ev.payload.toFixed(2);
+            } else {
+                span.textContent = ev.payload;
+            }
         }
     });
 }
@@ -1753,12 +1780,15 @@ function displayAllDevices() {
     ul.className = 'deviceList';
 
     // add each option in the dropdown to the list
-    for (var i = 0; i < options.length; i++) {
-        var li = document.createElement('li');
-        var a = document.createElement('a');
+    for (let i = 0; i < options.length; i++) {
+        let li = document.createElement('li');
+        let a = document.createElement('a');
         a.textContent = options[i].text;
-        a.href = `https://github.com/nnirror/wax/blob/main/README.md#${options[i].text.toLowerCase()}`;
-        a.target = '_blank';
+        a.addEventListener('click', async function(event) {
+            event.preventDefault();
+            await createDeviceByName(options[i].text.toLowerCase());
+            modal.style.display = 'none';
+        });
         li.appendChild(a);
         li.className = 'deviceListItem';
         ul.appendChild(li);
@@ -1778,6 +1808,8 @@ function displayAllDevices() {
     });
     return modal;
 }
+
+
 
 function connectionManagementClickHandler() {
     // listen for all clicks on the document

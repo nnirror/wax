@@ -111,7 +111,7 @@ Compares the current sample with the previous sample value in the signal and ret
 ## clip
 Clips any values in `signal in 1` below `minimum` or above `maximum` to be equal to `minimum` and `maximum`, respectively. 
 
-## clock_divider
+## clock
 Returns metronomic subdivisions of `root click time (ms)`. Each outlet runs at a different, increasingly faster speed.
 
 ## comb
@@ -128,7 +128,7 @@ Counts upwards from 0 to `maximum`, incrementing every time `trigger` goes above
 - `set` immediately sets the counter to that value.
 
 ## cycle
-Generates a sine wave between -1 and 1, oscillating at `frequency (hz)`.    
+Generates a sine wave between -1 and 1, oscillating at `frequency (hz)`. The phase of the sine wave can be modified at signal-rate with `phase`,which will be added to the `frequency (hz)` parameter.
 
 ## delay
 Applies a delay effect to `signal in`, lasting `delay time (ms)` and feeding back based on `feedback`.
@@ -242,6 +242,9 @@ Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.
 ## pitchshift
 Applies a time-domain pitch shift effect of `shift amount` to `signal in`. The `signal out 1` and `signal out 2` outlets both return unique signals that have different phase rotations of the input signal. `signal out 1` contains phase rotations at 0 and 180 degrees, and `signal out 2` contains phase rotations at 90 and 270 degrees.
 
+## print
+Displays the current value of the connected signal every 100ms. Helpful for debugging.
+
 ## random
 Returns a random number between 0 and `maximum`, every time `trigger` goes above 0.5.
 
@@ -315,7 +318,7 @@ Applies a declicking algorithm to the input signal with user control over when t
 Multiplies `signal 1` and `signal 2`. 
 
 ## tri
-Generates a triangle wave between -1 and 1, oscillating at `frequency (hz)` and with configurable `pulsewidth`.
+Generates a triangle wave between -1 and 1, oscillating at `frequency (hz)` and with configurable `pulsewidth`. The phase of the triangle wave can be modified at signal-rate with `phase`,which will be added to the `frequency (hz)` parameter.
 
 ## toggle
 Outputs a 0 when the button is `off` and outputs a 1 when the button is `on`. Click the button to switch states.

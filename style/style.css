@@ -146,25 +146,20 @@ body {
     display: inline-block;
 }
 .awesompleteContainer {
-    width: 12em;
+    width: 10em;
     padding: 0.5em;
     border-radius: 10px;
     background: linear-gradient(to right, #f2f2f2, #c4c4c4);
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     z-index: 1004 !important;
 }
-.awesomplete-submit {
-    position: absolute;
-    left: 12em;
-}
 .allDevicesButton {
     position: absolute;
     left: 13em;
 }
 .awesomplete input {
-    width: 8.5em !important;
+    width: 100%;
 }
-
 .awesomplete .awesomplete-highlight {
     background-color: #bde4ff;
 }
@@ -260,6 +255,9 @@ mark{
 }
 .deviceListItem {
     margin: 10px;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
 }
 /* screens smaller than 600px */
 @media (max-width: 600px) {

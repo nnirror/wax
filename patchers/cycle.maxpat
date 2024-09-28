@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -53,13 +53,19 @@
 								"type" : "signal",
 								"index" : 2,
 								"tag" : "in2",
+								"comment" : "phase"
+							}
+, 							{
+								"type" : "signal",
+								"index" : 3,
+								"tag" : "in3",
 								"comment" : "regen"
 							}
  ]
 					}
 ,
 					"maxclass" : "newobj",
-					"numinlets" : 2,
+					"numinlets" : 3,
 					"numoutlets" : 2,
 					"outletInfo" : 					{
 						"IOInfo" : [ 							{
@@ -76,8 +82,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 6,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -114,15 +120,110 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-7",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 327.0, 245.0, 132.0, 23.0 ],
+									"rnbo_classname" : "in~",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "in~_obj-7",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"out1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "signal from inlet with index 2",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "signal"
+											}
+,
+											"index" : 											{
+												"attrOrProp" : 2,
+												"digest" : "inlet number",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number",
+												"mandatory" : 1
+											}
+,
+											"comment" : 											{
+												"attrOrProp" : 2,
+												"digest" : "mouse over comment",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol"
+											}
+,
+											"meta" : 											{
+												"attrOrProp" : 2,
+												"digest" : "A JSON formatted string containing metadata for use by the exported code",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"defaultValue" : "",
+												"label" : "Metadata",
+												"displayorder" : 3
+											}
+
+										}
+,
+										"inputs" : [  ],
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "signal",
+												"digest" : "signal from inlet with index 2",
+												"displayName" : "phase",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "in~",
+										"aliasOf" : "in~",
+										"classname" : "in~",
+										"operator" : 0,
+										"versionId" : -176007711,
+										"changesPatcherIO" : 1
+									}
+,
+									"text" : "in~ 2 @comment phase"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-5",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 549.0, 302.983198583126068, 77.0, 23.0 ],
+									"patching_rect" : [ 510.0, 245.0, 77.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
 										"args" : [  ],
+										"receivemode" : "local",
 										"polyphony" : -1.0,
 										"voicecontrol" : "simple",
 										"exposevoiceparams" : 0,
@@ -342,11 +443,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 308.403342962265015, 108.0, 23.0 ],
+									"patching_rect" : [ 172.0, 245.0, 108.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
 										"args" : [  ],
+										"receivemode" : "local",
 										"polyphony" : -1.0,
 										"voicecontrol" : "simple",
 										"exposevoiceparams" : 0,
@@ -593,7 +694,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 360.504180192947388, 251.000002801418304, 127.0, 23.0 ],
+									"patching_rect" : [ 362.0, 178.0, 127.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -612,20 +713,20 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 549.0, 251.000002801418304, 130.0, 23.0 ],
+									"patching_rect" : [ 510.0, 178.0, 130.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 5,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "in~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
 										"argnames" : 										{
 											"out1" : 											{
 												"attrOrProp" : 1,
-												"digest" : "signal from inlet with index 2",
+												"digest" : "signal from inlet with index 3",
 												"isalias" : 0,
 												"aliases" : [  ],
 												"settable" : 0,
@@ -683,7 +784,7 @@
 										"outputs" : [ 											{
 												"name" : "out1",
 												"type" : "signal",
-												"digest" : "signal from inlet with index 2",
+												"digest" : "signal from inlet with index 3",
 												"displayName" : "regen",
 												"docked" : 0
 											}
@@ -696,7 +797,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 2 @comment regen"
+									"text" : "in~ 3 @comment regen"
 								}
 
 							}
@@ -707,13 +808,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 251.000002801418304, 175.0, 23.0 ],
+									"patching_rect" : [ 172.0, 178.0, 175.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "in~_obj-9",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -801,7 +902,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 171.0, 399.865548372268677, 168.0, 23.0 ],
+									"patching_rect" : [ 171.0, 352.0, 168.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -897,7 +998,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 2,
 									"outlettype" : [ "signal", "signal" ],
-									"patching_rect" : [ 171.0, 354.983195781707764, 320.0, 23.0 ],
+									"patching_rect" : [ 171.0, 309.0, 175.0, 23.0 ],
 									"rnbo_classname" : "cycle~",
 									"rnbo_extra_attributes" : 									{
 										"buffername" : "RNBODefaultSinus",
@@ -936,8 +1037,15 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-13", 1 ],
-									"midpoints" : [ 370.004180192947388, 289.915949106216431, 269.5, 289.915949106216431 ],
+									"midpoints" : [ 371.5, 223.915946304798126, 270.5, 223.915946304798126 ],
 									"source" : [ "obj-3", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 1 ],
+									"source" : [ "obj-7", 0 ]
 								}
 
 							}
@@ -978,11 +1086,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.1",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}
