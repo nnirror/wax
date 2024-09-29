@@ -53,7 +53,7 @@
 								"type" : "signal",
 								"index" : 2,
 								"tag" : "in2",
-								"comment" : "phase"
+								"comment" : "regen"
 							}
  ]
 					}
@@ -125,7 +125,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 8,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "in~_obj-22",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,

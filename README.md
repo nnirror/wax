@@ -33,7 +33,7 @@ When a device is selected, press `delete` or click the `x` button to delete the 
 ## Device parameters
 Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers or expressions in [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. Press `enter` to transmit the number or expression into the device, or if on a mobile device, press the `regen` button.
 
-**IMPORTANT:** Many parameters are available via both the text input _and_ as an audio rate data flow connection. In this case, the text input takes precedence, and the audio rate data flow connection will only modulate the parameter if the corresponding text input is empty.
+**IMPORTANT:** Many parameters are available via both the text input _and_ as an audio rate data flow connection. In this case, the signal input takes precedence, and the corresponding text input will have no effect until the signal is disconnected.
 
 As an example, here are several useful Facet commands, which allow you add tunable randomness to device parameters:
 - `choose()`. For example: `choose([1,2,34]) // each time it's regenerated, it will choose either 1,2,3, or 4`
@@ -206,6 +206,9 @@ Computes the modulo `operand` of `signal in`.
 ## noise
 Generates white noise.
 
+## not
+Computes the logical NOT of `signal in 1`.
+
 ## number
 Returns `value` as a signal.
 
@@ -310,6 +313,9 @@ Slows a signal down so it only changes once for every `interval (ms)` that passe
 
 ## sqrt
 Computes the square root of `signal in 1`.
+
+## subtract
+Subtracts `signal 2` from `signal 1`.
 
 ## swanramp
 Applies a declicking algorithm to the input signal with user control over when to avoid clicks. From the [Cyling '74 RNBO Documentation of swanramp:](https://rnbo.cycling74.com/objects/ref/swanramp~): "Performs click compensation using Miller Puckette's switch-and-ramp technique. When the right inlet receives a positive value, swanramp~ triggers a ramp that starts from the value of the last sample in the left inlet and goes down to zero over the number of samples specified. This ramp is mixed with the input signal to prevent clicks."

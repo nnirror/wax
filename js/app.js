@@ -223,6 +223,10 @@ let workspaceElement = document.getElementById('workspace');
 let selectionDiv = null;
 let startPoint = null;
 const evalWorker = new Worker('js/evalWorker.js');
+let defaultValues = null;
+getDefaultValues().then(data => {
+    defaultValues = data;
+});
 let handleWorkerMessage = null;
 evalWorker.onmessage = (event) => {
     if (handleWorkerMessage) {
@@ -252,6 +256,12 @@ jsPlumb.bind("connectionDetached", function(info) {
 });
 
 connectionManagementClickHandler();
+
+document.body.addEventListener('click', function(event) {
+    if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *')) {
+        showVisualConfirmationOfConnectionButtonClick(event);
+    }
+});
 
 // listen for mousedown events on the workspaceElement
 workspaceElement.addEventListener('mousedown', (event) => {
@@ -704,7 +714,7 @@ function removeDeviceFromWorkspace(deviceId) {
     delete devices[deviceId];
 }
 
-function addInputsForDevice(device) {
+function addInputsForDevice(device, deviceType) {
     const inportForm = document.createElement('form');
     inportForm.autocomplete = 'off';
     const inportContainer = document.createElement('div');
@@ -758,6 +768,14 @@ function addInputsForDevice(device) {
             inportContainer.appendChild(inportLabel);
             inportContainer.appendChild(inportText);
             inportContainer.appendChild(lineBreak);
+
+             // set the default value for this device's parameter
+            if (defaultValues.hasOwnProperty(deviceType)) {
+                if (defaultValues[deviceType].hasOwnProperty(inport.tag)) {
+                    inportText.value = defaultValues[deviceType][inport.tag];
+                    inportText.dispatchEvent(new Event('change'));
+                }
+            }
         });
     
         inportForm.appendChild(inportContainer);
@@ -811,7 +829,7 @@ async function scheduleDeviceEvent(device, inport, value) {
             device.scheduleEvent(messageEvent);
         }
         else {
-            messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, -60101123);
+            messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, 0);
             device.scheduleEvent(messageEvent);
         }
     } catch (error) {
@@ -1107,6 +1125,36 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
         }
         else {
+            if (filename == "*" ) {
+                filename = "times";
+            }
+            else if (filename == "+" ) {
+                filename = "add";
+            }
+            else if (filename == "-" ) {
+                filename = "subtract";
+            }
+            else if (filename == "/" ) {
+                filename = "divide";
+            }
+            else if (filename == "==" ) {
+                filename = "equals";
+            }
+            else if (filename == ">" ) {
+                filename = "greater";
+            }
+            else if (filename == "<" ) {
+                filename = "less";
+            }
+            else if (filename == "&&" ) {
+                filename = "and";
+            }
+            else if (filename == "||" ) {
+                filename = "or";
+            }
+            else if (filename == "!" ) {
+                filename = "not";
+            }
             const response = await fetch(`wasm/${filename}.json`);
             const patcher = await response.json();
             const device = await RNBO.createDevice({ context, patcher });
@@ -1340,7 +1388,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         deviceDiv.append(inputContainer);
         deviceDiv.appendChild(speakerChannelSelectorInput);
     } else {
-        const inportForm = addInputsForDevice(device);
+        const inportForm = addInputsForDevice(device,deviceType);
         inportForm.addEventListener('submit', function(event) {
             event.preventDefault();
         });
@@ -1904,6 +1952,29 @@ function checkForQueryStringParams() {
 
         // load the workspace state
         reconstructWorkspaceState(workspaceState);
+    }
+}
+
+function showVisualConfirmationOfConnectionButtonClick(event) {
+    const clickedElement = event.target;
+    const originalBackground = clickedElement.style.background;
+    const originalColor = clickedElement.style.color;
+    // change the background and text color
+    clickedElement.style.background = 'white';
+    clickedElement.style.color = 'rgb(8,56,78)';
+    setTimeout(() => {
+        clickedElement.style.background = originalBackground;
+        clickedElement.style.color = originalColor;
+    }, 100);
+}
+
+async function getDefaultValues() {
+    try {
+        const response = await fetch('js/defaultValues.json');
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error:', error);
     }
 }
 

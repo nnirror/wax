@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 8,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -88,8 +88,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -133,7 +133,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 1074.268914043903351, 65.07308554649353, 67.0, 23.0 ],
 									"rnbo_classname" : "loadmess",
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "loadmess_obj-17",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -217,9 +217,9 @@
 									"patching_rect" : [ 1353.025218725204468, 122.762096345424652, 133.58139443397522, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
-										"polyphony" : -1.0,
 										"args" : [  ],
+										"polyphony" : -1.0,
+										"receivemode" : "local",
 										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
 										"voicecontrol" : "simple"
@@ -677,9 +677,9 @@
 									"patching_rect" : [ 1716.444467902183533, 122.663847506046295, 77.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
-										"polyphony" : -1.0,
 										"args" : [  ],
+										"polyphony" : -1.0,
+										"receivemode" : "local",
 										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
 										"voicecontrol" : "simple"
@@ -901,9 +901,9 @@
 									"patching_rect" : [ 516.303235113620758, 122.762096345424652, 133.58139443397522, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
-										"polyphony" : -1.0,
 										"args" : [  ],
+										"polyphony" : -1.0,
+										"receivemode" : "local",
 										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
 										"voicecontrol" : "simple"
@@ -1563,11 +1563,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}

@@ -1,0 +1,100 @@
+{
+    "adr": {
+        "attack (ms)": 0,
+        "decay (ms)": 1,
+        "release (ms)": 125,
+        "level": 1
+    },
+    "allpass": {
+        "delay (ms)": 100
+    },
+    "bpf": {
+        "cutoff": 1000,
+        "q": 0.1
+    },
+    "clip": {
+        "minimum": -1,
+        "maximum": 1
+    },
+    "clock": {
+        "root click time (ms)": 1000
+    },
+    "comb": {
+        "delay time (ms)": 25,
+        "feedback": 0.84
+    },
+    "delay": {
+        "delay time (ms)": 250,
+        "feedback": 0.5,
+        "wet": 0.5
+    },
+    "downsamp": {
+        "amount": 0.5
+    },
+    "ffilter": {
+        "low": 20,
+        "high": 22050
+    },
+    "fold": {
+        "minimum": -1,
+        "maximum": 1
+    },
+    "hpf": {
+        "cutoff": 1000,
+        "q": 0.1
+    },
+    "lpf": {
+        "cutoff": 1000,
+        "q": 0.1
+    },
+    "mix": {
+        "crossfade": 0.5
+    },
+    "overdrive": {
+        "amount": 0.5
+    },
+    "pitchshift": {
+        "shift amount": 1,
+        "window size (ms)": 50
+    },
+    "play": {
+        "rate": 1,
+        "start pos": 0,
+        "end pos": 1
+    },
+    "pluck": {
+        "damping": 0.25
+    },
+    "rampsmooth": {
+        "up slope (ms)": 30,
+        "down slope (ms)": 30
+    },
+    "rect": {
+        "pulsewidth": 0.5
+    },
+    "reverb": {
+        "size": 1,
+        "feedback": 0.84,
+        "wet": 0.5
+    },
+    "sah": {
+        "threshold": 0
+    },
+    "scale": {
+        "exponent": 1
+    },
+    "skipper": {
+        "prob": 0.5
+    },
+    "slide": {
+        "up slope (ms)": 30,
+        "down slope (ms)": 30
+    },
+    "tri": {
+        "pulsewidth": 0.5
+    },
+    "wrap": {
+        "minimum": -1,
+        "maximum": 1
+    }
+}

@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 8,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -82,8 +82,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -131,7 +131,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 6,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "in~_obj-22",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -222,15 +222,15 @@
 									"patching_rect" : [ 768.194011569023132, 200.925740122795105, 77.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
-										"polyphony" : -1.0,
 										"args" : [  ],
+										"polyphony" : -1.0,
+										"receivemode" : "local",
 										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
 										"voicecontrol" : "simple"
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "p_obj-20",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -446,15 +446,15 @@
 									"patching_rect" : [ 525.5, 229.403342962265015, 108.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"receivemode" : "local",
-										"polyphony" : -1.0,
 										"args" : [  ],
+										"polyphony" : -1.0,
+										"receivemode" : "local",
 										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
 										"voicecontrol" : "simple"
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "p_obj-13",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -700,7 +700,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "inport_obj-7",
 									"text" : "inport \"delay (ms)\""
 								}
@@ -719,7 +719,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "in~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -909,7 +909,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "in~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1079,11 +1079,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}

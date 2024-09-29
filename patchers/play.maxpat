@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 8,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -106,8 +106,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -151,7 +151,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 577.757613837718964, 351.351351141929626, 67.0, 23.0 ],
 									"rnbo_classname" : "loadmess",
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "loadmess_obj-24",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -234,7 +234,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 311.0, 351.351351141929626, 67.0, 23.0 ],
 									"rnbo_classname" : "loadmess",
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "loadmess_obj-19",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -353,11 +353,11 @@
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
 										"args" : [  ],
-										"receivemode" : "local",
 										"polyphony" : -1.0,
+										"receivemode" : "local",
+										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple",
-										"exposevoiceparams" : 0
+										"voicecontrol" : "simple"
 									}
 ,
 									"rnbo_serial" : 1,
@@ -733,11 +733,11 @@
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
 										"args" : [  ],
-										"receivemode" : "local",
 										"polyphony" : -1.0,
+										"receivemode" : "local",
+										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple",
-										"exposevoiceparams" : 0
+										"voicecontrol" : "simple"
 									}
 ,
 									"rnbo_serial" : 2,
@@ -1599,11 +1599,11 @@
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
 										"args" : [  ],
-										"receivemode" : "local",
 										"polyphony" : -1.0,
+										"receivemode" : "local",
+										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple",
-										"exposevoiceparams" : 0
+										"voicecontrol" : "simple"
 									}
 ,
 									"rnbo_serial" : 3,
@@ -1937,11 +1937,11 @@
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
 										"args" : [  ],
-										"receivemode" : "local",
 										"polyphony" : -1.0,
+										"receivemode" : "local",
+										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple",
-										"exposevoiceparams" : 0
+										"voicecontrol" : "simple"
 									}
 ,
 									"rnbo_serial" : 4,
@@ -2502,10 +2502,10 @@
 									"patching_rect" : [ 400.701656579971313, 42.0, 68.0, 23.0 ],
 									"rnbo_classname" : "buffer~",
 									"rnbo_extra_attributes" : 									{
+										"file" : "",
 										"samplerate" : 0.0,
 										"fill" : "",
-										"type" : "",
-										"file" : ""
+										"type" : ""
 									}
 ,
 									"rnbo_serial" : 1,
@@ -2803,9 +2803,9 @@
 									"patching_rect" : [ 250.656174063682556, 392.048290550708771, 298.090965032577515, 23.0 ],
 									"rnbo_classname" : "groove~",
 									"rnbo_extra_attributes" : 									{
-										"channels" : 1.0,
 										"synctype" : "relative",
-										"syncmode" : "phase"
+										"syncmode" : "phase",
+										"channels" : 1.0
 									}
 ,
 									"rnbo_serial" : 1,
@@ -3323,11 +3323,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}

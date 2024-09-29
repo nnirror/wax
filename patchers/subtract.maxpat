@@ -903,11 +903,11 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 286.09375, 372.0, 192.5, 23.0 ],
-									"rnbo_classname" : "+~",
+									"patching_rect" : [ 286.09375, 372.0, 192.90625, 23.0 ],
+									"rnbo_classname" : "-~",
 									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "+~_obj-2",
-									"text" : "+~"
+									"rnbo_uniqueid" : "-~_obj-2",
+									"text" : "-~"
 								}
 
 							}
@@ -1065,7 +1065,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "add.json"
+									"file_name" : "subtract.json"
 								}
 
 							}
