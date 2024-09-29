@@ -21,9 +21,15 @@ const navBar = document.getElementById('ui-container');
 // create dropdown of all audio devices
 let deviceDropdown = createDropdownofAllDevices();
 
+createButtonForNavBar(
+    'WAX',
+    'waxButton',
+    (event) => {}
+);
+
 // create a button for starting audio
 createButtonForNavBar(
-    'start audio',
+    'ON',
     'startAudioButton navbarButton',
     async () => {
         if (isAudioPlaying) {
@@ -35,19 +41,19 @@ createButtonForNavBar(
 );
 
 // create a button for saving workspace state
-createButtonForNavBar('save', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
+createButtonForNavBar('Save', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
 
-createButtonForNavBar('share URL', 'shareStateButton navbarButton', ()=>{getWorkspaceState(false,true)});
+createButtonForNavBar('Share', 'shareStateButton navbarButton', ()=>{getWorkspaceState(false,true)});
 
 // create a button for reloading workspace state
-createButtonForNavBar('load', 'reloadStateButton navbarButton', async () => {
+createButtonForNavBar('Load', 'reloadStateButton navbarButton', async () => {
     await reconstructWorkspaceState();
     await startAudio();
 });
 
 // create button for viewing all devices
 createButtonForNavBar(
-    'all devices',
+    'Devices',
     'viewAllDevices navbarButton',
     (event) => {
         event.stopPropagation(); // stop the click event from propagating to the window
@@ -56,8 +62,52 @@ createButtonForNavBar(
     }
 );
 
+// create a button for example files
 createButtonForNavBar(
-    '?',
+    'Examples',
+    'exampleFilesButton navbarButton',
+    (event) => {
+        event.stopPropagation();
+
+        var modal = document.getElementById('deviceListModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+        // create a div for the example files
+        var exampleFilesDiv = document.createElement('div');
+        exampleFilesDiv.className = 'exampleFilesDiv';
+        exampleFilesDiv.id = 'exampleFiles';
+
+        // add a link for each file
+        ['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip', 'microphone.zip'].forEach(function(file) {
+            var link = document.createElement('a');
+            link.href = '#';
+            link.textContent = file.replace(/_/g, ' ').replace('.zip', '');
+            link.addEventListener('click', async function(event) {
+                event.preventDefault();
+                // replace spaces with underscores and add '.zip' back
+                var selectedFile = file;
+                await loadExampleFile('examples/' + selectedFile);
+                await startAudio();
+            });
+            exampleFilesDiv.appendChild(link);
+        });
+
+        // add the div to the body
+        document.body.appendChild(exampleFilesDiv);
+
+        // add an event listener to the document to close the div when anything outside of it is clicked
+        document.addEventListener('click', function(event) {
+            if (event.target.id !== 'exampleFiles' && !exampleFilesDiv.contains(event.target)) {
+                exampleFilesDiv.style.display = 'none';
+            }
+        });
+    }
+);
+
+createButtonForNavBar(
+    'About',
     'helpButton navbarButton',
     (event) => {
         document.getElementById('infoDiv').style.display = 'block';
@@ -90,6 +140,9 @@ window.onbeforeunload = function() {
 
 // add the initial speaker objects and getting started text
 window.onload = async function() {
+    setTimeout(function() {
+        window.scrollTo(0, 0);
+    }, 10);
     mousePosition.x = (document.documentElement.clientWidth / 2) - 210;
     mousePosition.y = document.documentElement.clientHeight * 0.8;
     let speaker1Div = await createDeviceByName('outputnode');
@@ -114,15 +167,15 @@ window.onload = async function() {
     infoDiv.id = 'infoDiv';
     var link = document.createElement('a');
     link.href = "https://github.com/nnirror/wax/blob/main/README.md";
-    link.textContent = "full documentation";
+    link.textContent = "documentation";
     link.target = "_blank"; // to open the link in a new tab
 
-    infoDiv.textContent = "Wax is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the ";
+    infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the full ";
     infoDiv.appendChild(link);
 
     var period = document.createTextNode(".");
     infoDiv.appendChild(period);
-    infoDiv.style.display = 'none';
+    infoDiv.style.display = 'block';
 
     // stop propagation of click event in infoDiv
     infoDiv.onclick = function(event) {
@@ -132,6 +185,8 @@ window.onload = async function() {
     // create the button to close the info div
     let closeButton = document.createElement('button');
     closeButton.textContent = 'x';
+    closeButton.id = 'closeInfoButton';
+
     closeButton.onclick = function(event) {
         infoDiv.style.display = 'none';
         event.stopPropagation();
@@ -149,37 +204,6 @@ window.onload = async function() {
     checkForQueryStringParams();
 };
 
-// create a dropdown select
-var dropdown = document.createElement('select');
-dropdown.id = 'exampleFiles';
-
-// add an unselectable first option
-var firstOption = document.createElement('option');
-firstOption.text = 'examples';
-firstOption.disabled = true;
-firstOption.selected = true;
-dropdown.appendChild(firstOption);
-
-// add an option for each file
-['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip', 'microphone.zip'].forEach(function(file) {
-    var option = document.createElement('option');
-    option.value = file;
-    // remove underscores and '.zip' from the display text
-    option.text = file.replace(/_/g, ' ').replace('.zip', '');
-    dropdown.appendChild(option);
-});
-
-// add the dropdown to the body
-document.body.appendChild(dropdown);
-
-// add an event listener to the dropdown to load the selected file when changed
-dropdown.addEventListener('change', async function(event) {
-    // replace spaces with underscores and add '.zip' back
-    var selectedFile = event.target.value.replace(/ /g, '_');
-    await loadExampleFile('examples/' + selectedFile);
-    await startAudio();
-});
-
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -192,6 +216,7 @@ let devices = {};
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
+let sourceButtonId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
@@ -816,12 +841,24 @@ function handleButtonClick(deviceId, index, isInputButton) {
 function startConnection(deviceId, outputIndex) {
     sourceDeviceId = deviceId;
     sourceOutputIndex = outputIndex;
+    sourceButtonId = document.querySelector(`#${deviceId} .output-container button:nth-child(${outputIndex + 1})`).id;
 }
 
 function finishConnection(deviceId, inputIndex) {
     if (sourceDeviceId) {
         const sourceDevice = devices[sourceDeviceId].device;
         const targetDevice = devices[deviceId] ? devices[deviceId].device : null;
+        const targetButtonId = document.querySelector(`#${deviceId} .input-container button:nth-child(${deviceId.includes('outputnode') ? 1 : inputIndex + 1})`).id;
+        const sourceButton = document.getElementById(sourceButtonId);
+        const targetButton = document.getElementById(targetButtonId);
+        const sourcePosition = [
+            (sourceButton.offsetLeft + sourceButton.offsetWidth / 2) / sourceButton.parentNode.offsetWidth,
+           1
+        ];
+        const targetPosition = [
+            (targetButton.offsetLeft + targetButton.offsetWidth / 2) / targetButton.parentNode.offsetWidth,
+            0
+        ];
         // create channel splitter
         let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
 
@@ -846,34 +883,15 @@ function finishConnection(deviceId, inputIndex) {
         else {
             targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
         }
-        let sourceDeviceOutputName = devices[sourceDeviceId].device.it.T.outlets[sourceOutputIndex].comment;
-
         // visualize the connection
         const jsPlumbConnection = jsPlumb.connect({
             source: sourceDeviceId,
             target: deviceId,
-            anchors: [
-                ["Perimeter", { shape: "Rectangle", anchorCount: 50 }],
-                ["Perimeter", { shape: "Rectangle", anchorCount: 50 }]
-            ],
+            anchors: [sourcePosition, targetPosition],
             endpoint: ["Dot", { radius: 8 }],
-            paintStyle: { stroke: "grey", strokeWidth: 2, fill: "transparent" },
-            endpointStyle: { fill: "black", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
-            connector: ["StateMachine"],
-            overlays: [
-                ["Arrow", { width: 12, length: 12, location: 1 }],
-                ["Custom", {
-                    create: function() {
-                        return document.createElement("div");
-                    },
-                    id: "customOverlay"
-                }],
-                ["Label", {
-                    label: `${sourceDeviceOutputName} -> ${targetDeviceInputName}`,
-                    cssClass: "aLabelClass",
-                    location: 0.85
-                }]
-            ],
+            paintStyle: { stroke: "white", strokeWidth: 2, fill: "transparent" },
+            endpointStyle: { fill: "white", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
+            connector: ["Straight"]
         });
 
         let jsPlumbConnectionId = jsPlumbConnection.getId();
@@ -925,7 +943,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 await startAudio();
             }
             const device = await createMicrophoneDevice();
-            deviceDiv = addDeviceToWorkspace(device, "microphone input", false);
+            deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
             await createInputDeviceSelector(device, context, deviceDiv);
             // listen for the streamChanged event
             deviceDiv.addEventListener('streamChanged', async (event) => {
@@ -1239,7 +1257,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.innerText = isSpeakerChannelDevice ? `speaker channel🔊` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `${deviceType.replace(/_/g, ' ')}`;
+    deviceDiv.innerHTML = isSpeakerChannelDevice ? `speaker channel🔊` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `<b style="font-size: 1.25em;">${deviceType.replace(/[_-]/g, ' ')}</b>`;
     
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';
@@ -1261,7 +1279,6 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     const inputContainer = document.createElement('div');
     inputContainer.className = 'input-container';
-    deviceDiv.appendChild(inputContainer);
 
     const deleteButton = document.createElement('button');
     deleteButton.innerText = 'x';
@@ -1279,6 +1296,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     if(isSpeakerChannelDevice){
         const button = document.createElement('button');
         button.innerText = 'signal in';
+        button.className = 'input-button'
         const speakerChannelSelectorInput = document.createElement('input');
         speakerChannelSelectorInput.type = 'number';
         speakerChannelSelectorInput.className = 'speakerChannelSelectorInput';
@@ -1309,6 +1327,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                 });
             });
         };
+        button.id = `${deviceDiv.id}-inlet-${0}`;
         button.onclick = () => handleButtonClick(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1, true);
         inputContainer.appendChild(button);
         inputContainer.appendChild(deleteButton);
@@ -1327,10 +1346,6 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         });
         deviceDiv.appendChild(inportForm);
 
-        const hrElement = document.createElement('hr');
-        hrElement.className = 'device-hr';
-        deviceDiv.appendChild(hrElement);
-
         const outputContainer = document.createElement('div');
         outputContainer.className = 'output-container';
         deviceDiv.appendChild(outputContainer);
@@ -1339,6 +1354,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             const outputButton = document.createElement('button');
             outputButton.innerText = `${output.comment}`;
             outputButton.className = 'output-button';
+            outputButton.id = `${deviceDiv.id.replace(' ', '-')}-outlet-${index}`;
             outputButton.onclick = () => handleButtonClick(deviceDiv.id, index, false);
             outputContainer.appendChild(outputButton);
         });
@@ -1346,6 +1362,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             device.it.T.inlets.forEach((input, index) => {
                 const inputButton = document.createElement('button');
                 inputButton.innerText = `${input.comment}`;
+                inputButton.id = `${deviceDiv.id}-inlet-${index}`;
                 inputButton.className = 'input-button';
                 inputButton.onclick = () => {
                     if (input.comment == 'regen') {
@@ -1378,6 +1395,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         attachOutports(device,deviceDiv);
     }
 
+    deviceDiv.insertBefore(inputContainer, deviceDiv.firstChild);
     workspace.appendChild(deviceDiv);
     // Add a drag event listener to the deviceDiv
     jsPlumb.draggable(deviceDiv, {
@@ -1700,7 +1718,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
 
         deviceElement.classList.add('selectedNode');
         jsPlumb.addToDragSelection(deviceElement);
-        
+
         // set the values of its input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
@@ -1757,6 +1775,17 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
 }
 
 function displayAllDevices() {
+    var elements = document.getElementsByClassName('exampleFilesDiv');
+while(elements.length > 0){
+    elements[0].parentNode.removeChild(elements[0]);
+}
+
+    // remove any existing .deviceListModal elements
+    var existingModals = document.querySelectorAll('.deviceListModal');
+    existingModals.forEach(function(modal) {
+        modal.parentNode.removeChild(modal);
+    });
+
     // get the dropdown select
     var dropdown = document.querySelector('.deviceDropdown');
 
@@ -1766,14 +1795,12 @@ function displayAllDevices() {
     // create a div for the modal
     var modal = document.createElement('div');
     modal.className = 'deviceListModal';
+    modal.id = 'deviceListModal';   
 
-    // create a close button for the modal
-    var closeButton = document.createElement('button');
-    closeButton.innerText = 'x';
-    closeButton.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
-    modal.appendChild(closeButton);
+    // create a div for the content
+    var content = document.createElement('div');
+    content.className = 'deviceListModalContent';
+    modal.appendChild(content);
 
     // create a ul for the list
     var ul = document.createElement('ul');
@@ -1794,8 +1821,8 @@ function displayAllDevices() {
         ul.appendChild(li);
     }
 
-    // add the list to the modal
-    modal.appendChild(ul);
+    // add the list to the content div
+    content.appendChild(ul);
 
     // add the modal to the body
     document.body.appendChild(modal);
@@ -1808,8 +1835,6 @@ function displayAllDevices() {
     });
     return modal;
 }
-
-
 
 function connectionManagementClickHandler() {
     // listen for all clicks on the document
@@ -1828,16 +1853,20 @@ async function stopAudio() {
     const button = document.querySelector('.startAudioButton');
     await new Promise(resolve => setTimeout(resolve, 10));
     await context.suspend();
-    button.textContent = 'start audio';
-    button.style.background = 'linear-gradient(to right, #005925, #002e13)';
+    button.textContent = 'ON';
+    button.style.border = '3px solid rgb(101,255,229)';
+    button.style.background = 'rgb(101,255,229)';
+    button.style.color = 'rgb(8,56,78)';
     isAudioPlaying = false;
 }
 
 async function startAudio() {
     const button = document.querySelector('.startAudioButton');
     await context.resume();
-    button.textContent = 'mute audio';
-    button.style.background = 'linear-gradient(to right, #ab2222, #7b0000)';
+    button.textContent = 'OFF';
+    button.style.border = '3px solid rgb(255,0,94)';
+    button.style.background = 'rgb(255,0,94)';
+    button.style.color = 'rgb(255,255,255)';
     isAudioPlaying = true;
 }
 

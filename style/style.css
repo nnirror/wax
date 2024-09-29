@@ -1,7 +1,7 @@
 .node {
     position: absolute;
-    padding: 36px 10px 0px 10px;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
+    padding: 0px 10px 0px 10px;
+    background: rgb(255,255,255);
     border-radius: 10px;
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     display: table;
@@ -9,33 +9,56 @@
     -webkit-user-select: none;
     user-select: none;
     width: auto;
-    border: 3px solid #333;
+    border: 3px solid rgb(8,56,78);
     z-index: 1001;
 }
+.node form {
+    margin-top: 5px;
+}
 .input-container {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    padding-top: 4px;
-    width: calc(100% - 4px);
+    margin-left: -10px;
+    padding-top: 2px;
+    padding-bottom: 0px;
+    padding-left: 6px;
+    margin-bottom: 5px;
+    width: calc(100% + 16px);
     overflow-x: auto;
     padding-left: 4px;
-    height: 26px;
+    height: 24px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    background: #898989;
+    background: rgb(203,203,203);
 }
-.input-container button, .output-container button {
-    background: white;
+.input-container button, .output-container button, #infoDiv button {
+    font-size: 0.75em;
+    cursor: pointer;
+    color: white;
+    border-radius: 10px;
+    border: 0;
+}
+.input-button, .output-button, .info-button {
+    background: rgb(8,56,78);
+    margin-right: 4px;
+}
+.delete-button, #closeInfoButton {
+    background: rgb(255,0,94);
+}
+#closeInfoButton {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+}
+.delete-button, .info-button {
+    margin-top: 3px;
 }
 .output-container {
-    position: relative;
-    left: -10px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    margin-left: -10px;
+    padding-top: 1px;
+    padding-bottom: 3px;
     padding-left: 6px;
+    margin-top: 10px;
     width: calc(100% + 14px);
-    background: #898989;
+    background: rgb(203,203,203);
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
 }
@@ -47,7 +70,7 @@ body {
     font-family: Arial, sans-serif;
 }
 #workspace {
-    background-color: #222;
+    background-color: rgb(8,56,78);
     width: 5000px;
     height: 10000px;
     position: relative;
@@ -67,63 +90,124 @@ body {
 }
 #toggleNavbarButton {
     position: fixed;
-    top: 1vh;
     right: 1vh;
     height: 40px;
     padding: 8px 4px;
 }
 .navbarButton {
     position: fixed;
-    width: 10em;
-    right: 1vh;
+    width: 7em;
+    top: 3vh;
     z-index: 1003;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
-    color: #000;
+    padding: 3px 20px;
+    border-radius: 10px;
+    border: 3px solid white;
+    background: rgb(8,56,78);
+    color: white;
     font-size: 1em;
     cursor: pointer;
     min-height: 20px;
 }
-.navbarButton:hover {
-    background: linear-gradient(to right, #c4c4c4, #f2f2f2);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+.navbarButton:not(.startAudioButton):hover, #exampleFiles:hover {
+    background: white;
+    color: rgb(8,56,78);
+}
+.waxButton {
+    position: fixed;
+    left: 110px;
+    top: calc(3vh - 4px);
+    color: white;
+    z-index: 1;
+    font-size: 2em;
+    background: rgb(8, 56, 78);
+    border: 0;
+    font-weight: bold;
 }
 .startAudioButton {
-    top: 60px;
-    color: white;
-    background: linear-gradient(to right, #005925, #002e13);
+    left: calc(100px + 8em * 1);
+    color: rgb(8,56,78);
+    border: 3px solid rgb(101,255,229);
+    background: rgb(101,255,229);
 }
 .shareStateButton {
-    top: 110px;
+    left: calc(100px + 8em * 4);
 }
 .saveStateButton {
-    top: 160px;
+    left: calc(100px + 8em * 2);
 }
 .reloadStateButton {
-    top: 210px;
+    left: calc(100px + 8em * 3);
 }
 .viewAllDevices {
-    top: 310px;
+    left: calc(100px + 8em * 5);
 }
 .helpButton {
-    top: 360px;
+    left: calc(100px + 8em * 7);
+}
+.exampleFilesButton {
+    left: calc(100px + 8em * 6);
+}
+.exampleFilesDiv::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 3px;
+    height: 10px;
+    background-color: white;
 }
 #exampleFiles {
     position: fixed;
-    top: 260px;
-    right: 1vh;
-    z-index: 1003;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    width: 10em;
-    font-size: 1em;
-    text-align: center;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+    top: calc(3vh + 40px);
+    left: calc(2em + 8em * 6);
+    background: white;
+    padding: 2em;
+    border-radius: 10px;
+}
+#exampleFiles a, .deviceListModal a {
+    color: rgb(8, 56, 78);
+    padding: 5px;
+    display: block;
+}
+.deviceListModal {
+    position: fixed;
+    left: calc(65px + 8em * 5);
+    top: calc(3vh + 40px);
+    border: 1px solid black;
+    z-index: 1005;
+    display: none;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    max-height: 90vh; /* Set a maximum height */
+}
+
+.deviceListModalContent {
+    overflow: auto;
+    max-height: 90vh; /* Set a maximum height */
+}
+
+.deviceListModal::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 3px;
+    height: 10px;
+    background-color: white;
+}
+
+.deviceList {
+    list-style-type: none;
+    margin: 0;
+    padding-left: 0;
+    justify-content: center;
+}
+
+.deviceListItem {
+    color: rgb(8, 56, 78);
+    text-decoration: underline;
+    cursor: pointer;
 }
 .allDevicesButton {
     position: absolute;
@@ -196,14 +280,18 @@ mark{
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 1em;
+    border-radius: 10px;
     text-align: center;
     display: none;
     font-size: 1.5em;
     z-index: 1004;
+}
+#infoDiv a {
+    color: rgb(8,56,78);
+    font-weight: bold;
 }
 #viewAllDevices {
     cursor: pointer;
@@ -233,31 +321,6 @@ mark{
     20% { opacity: 1; }
     80% { opacity: 1; }
     100% { opacity: 0; }
-}
-.deviceListModal {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    border: 1px solid black;
-    z-index: 1005;
-    display: none;
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 5px;
-}
-.deviceList {
-    list-style-type: none;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-.deviceListItem {
-    margin: 10px;
-    color: blue;
-    text-decoration: underline;
-    cursor: pointer;
 }
 /* screens smaller than 600px */
 @media (max-width: 600px) {
@@ -322,20 +385,6 @@ mark{
 
 .output-button {
     cursor: pointer;  
-}
-
-.input-container button {
-    cursor: pointer;
-}
-
-.device-hr {
-    border: 0;
-    height: 1px;
-    background: #333;
-    width: calc(100% + 20px);
-    position: relative;
-    left: -10px;
-    margin-bottom: 0;
 }
 .toggle-button {
     height: 50px;
