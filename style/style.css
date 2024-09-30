@@ -112,6 +112,9 @@ body {
 .mobileMenuToggleButton {
     display: none;
 }
+body .sliderMin, body .sliderMax {
+    width: 60%;
+}
 #mobileMenu {
     color: rgb(8,56,78);
     position: fixed;

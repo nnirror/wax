@@ -1083,9 +1083,61 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             slider.max = '1';
             slider.step = '0.001';
             slider.value = '0';
-            const inputContainer = deviceDiv.querySelector('.input-container');
-            inputContainer.insertAdjacentElement('afterend', slider);
-        
+            slider.id = 'slider';
+
+            // find the existing form in the device
+            const form = deviceDiv.querySelector('form');
+
+            // create a div to hold the labels and inputs
+            const div = document.createElement('div');
+
+            // create min input and its label
+            const minInput = document.createElement('input');
+            minInput.type = 'text';
+            minInput.value = slider.min;
+            minInput.id = 'min';
+            minInput.className = 'deviceInport sliderMin';
+
+            const minInputLabel = document.createElement('label');
+            minInputLabel.for = 'min';
+            minInputLabel.textContent = 'min';
+            minInputLabel.className = 'deviceInportLabel';
+
+            // create max input and its label
+            const maxInput = document.createElement('input');
+            maxInput.type = 'text';
+            maxInput.value = slider.max;
+            maxInput.id = 'max';
+            maxInput.className = 'deviceInport sliderMax';
+
+            const maxInputLabel = document.createElement('label');
+            maxInputLabel.for = 'max';
+            maxInputLabel.textContent = 'max';
+            maxInputLabel.className = 'deviceInportLabel';
+
+            // append labels and inputs to the div
+            div.appendChild(minInputLabel);
+            div.appendChild(minInput);
+            div.appendChild(document.createElement('br'));
+            div.appendChild(maxInputLabel);
+            div.appendChild(maxInput);
+            div.appendChild(document.createElement('br'));
+
+            // append the div to the form
+            form.appendChild(div);
+
+            // add event listeners to the min and max inputs
+            minInput.addEventListener('change', () => {
+                slider.min = minInput.value;
+            });
+
+            maxInput.addEventListener('change', () => {
+                slider.max = maxInput.value;
+            });
+
+            // insert the slider before the form in the deviceDiv
+            deviceDiv.insertBefore(slider, form);
+
             // add event listeners to the slider
             slider.addEventListener('input', () => {
                 // update the silenceGenerator offset value
@@ -1807,6 +1859,13 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                     button.click();
                 }
             }
+        }
+
+        // if the device is a slider, re-trigger a change on the range slider element after the state has been recalled,
+        // because the min and max need to be set before the correct range is recalled
+        if (deviceName === 'slider') {
+            inputs[0].value = deviceState.inputs['slider']
+            inputs[0].dispatchEvent(new Event('change'));
         }
 
         // set the values of its textarea elements
