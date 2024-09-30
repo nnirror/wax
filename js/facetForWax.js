@@ -3549,6 +3549,437 @@ delay2d(delayX, delayY, intensityDecay = 0.5) {
     return this;
   }
 
+  fftPhase ( complexNumber ) {
+    return Math.atan2(complexNumber[1], complexNumber[0]);
+  }
+
+  fftMag ( complexNumber ) {
+    return Math.sqrt(complexNumber[0]**2 + complexNumber[1]**2);
+  }
+
+  ftilt(rotations) {
+    if ( this.isFacetPattern(rotations) ) {
+      rotations = rotations.data;
+    }
+    let dataLength = this.data.length;
+    let nextPowerOfTwo = nextPowerOfTwo(dataLength);
+    if (dataLength !== nextPowerOfTwo) {
+        this.data.push(...Array(nextPowerOfTwo - dataLength).fill(0));
+    }
+    const phasors = fft(this.data);
+    const numContainers = rotations.length;
+
+    // calculate the number of bins per container
+    const binsPerContainer = Math.floor(phasors.length / numContainers);
+
+    // normalize rotations to range [-PI, PI]
+    const normalizedRotations = rotations.map(rotation => rotation * Math.PI);
+
+    // apply rotations to each container
+    for (let i = 0; i < numContainers; i++) {
+      for (let j = 0; j < binsPerContainer; j++) {
+          const binIndex = i * binsPerContainer + j;
+          if (binIndex < phasors.length) {
+              // calculate frequency of this bin
+              const frequency = binIndex * SAMPLE_RATE / phasors.length;
+
+              // calculate time delay for this container
+              const timeDelay = normalizedRotations[i];
+
+              // calculate phase shift for this bin
+              const phaseShift = 2 * Math.PI * frequency * timeDelay;
+
+              // extract magnitude and phase
+              const magnitude = this.fftMag(phasors[binIndex]);
+              let phase = this.fftPhase(phasors[binIndex]);
+
+              // apply phase shift
+              phase += phaseShift;
+
+              // convert back to rectangular form
+              phasors[binIndex] = [magnitude * Math.cos(phase), magnitude * Math.sin(phase)];
+          }
+      }
+    }
+
+    // inverse FFT to resynthesize audio
+    const complexData = ifft(phasors);
+
+    // convert complex data to 1D signal by taking the magnitude of each complex number
+    const resynthesizedData = complexData.map(complexNumber => Math.sqrt(complexNumber[0]**2 + complexNumber[1]**2));
+
+    this.data = resynthesizedData;
+    this.audio().truncate(dataLength);
+    return this;
+  }
+
+  flookup ( lookup ) {
+    if ( this.isFacetPattern(lookup) ) {
+      lookup.clip(0,1).size(this.data.length/4);
+      lookup = lookup.data;
+    }
+    const numContainers = lookup.length;
+    const frameSize = Math.floor(this.data.length / numContainers);
+    const hopSize = Math.floor(frameSize / 2); // 50% overlap
+    const original_size = this.data.length;
+
+    // divide this.data into overlapping frames
+    const frames = [];
+    for (let i = 0; i <= this.data.length - frameSize; i += hopSize) {
+        let frame = this.data.slice(i, i + frameSize);
+        let nextPowerOfTwo = nextPowerOfTwo(frame.length);
+        if (frame.length !== nextPowerOfTwo) {
+            frame.push(...Array(nextPowerOfTwo - frame.length).fill(0));
+        }
+        frames.push(frame);
+    }
+
+    // apply FFT to each frame
+    const phasors = frames.map(frame => fft(frame));
+
+    // use repeated lookup array to rearrange frames
+    const rearrangedFrames = lookup.map(value => {
+      const frameIndex = Math.floor(value * (phasors.length - 1));
+      return phasors[frameIndex];
+    });
+
+    // apply inverse FFT to each frame
+    const resynthesizedFrames = rearrangedFrames.map(frame => ifft(frame));
+
+    // overlap-add frames to resynthesize signal
+    const resynthesizedSignal = new Array(this.data.length).fill(0);
+    for (let i = 0; i < resynthesizedFrames.length; i++) {
+        for (let j = 0; j < resynthesizedFrames[i].length; j++) {
+            if (i * hopSize + j < resynthesizedSignal.length) {
+                resynthesizedSignal[i * hopSize + j] += resynthesizedFrames[i][j][0]; // assuming ifft returns complex numbers
+            }
+        }
+    }
+    this.data = resynthesizedSignal;
+    this.trim().size(original_size).audio();
+    return this;
+}
+
+fgate(binThresholds, invert = 0) {
+  if (typeof binThresholds == 'number' || Array.isArray(binThresholds) === true) {
+    binThresholds = new FacetPattern().from(binThresholds);
+  }
+  binThresholds.reduce(256);
+  binThresholds = binThresholds.data;
+  let original_size = this.data.length;
+  let resynthesizedSignal = new FacetPattern();
+
+  for (let s = 0; s < binThresholds.length; s++) {
+      let binThreshold = Math.min(Math.max(binThresholds[s], 0), 1);
+
+      let sliceSize = Math.ceil(this.data.length / binThresholds.length);
+      let sliceStart = s * sliceSize;
+      let sliceEnd = sliceStart + sliceSize;
+      let dataSlice = this.data.slice(sliceStart, sliceEnd);
+
+      let next_power_of_two = nextPowerOfTwo(dataSlice.length);
+      dataSlice.push(...Array(next_power_of_two-dataSlice.length).fill(0));
+      let n = dataSlice.length;
+      let m = Math.log2(n);
+
+      if (Math.pow(2, m) !== n) {
+          throw new Error('Input size must be a power of 2');
+      }
+
+      let inputComplex = dataSlice.map(x => new Complex(x, 0));
+      let output = new Array(n);
+      for (let i = 0; i < n; i++) {
+          let j = reverseBits(i, m);
+          output[j] = inputComplex[i];
+      }
+      for (let s = 1; s <= m; s++) {
+          let m2 = Math.pow(2, s);
+          let wm = new Complex(Math.cos(-2 * Math.PI / m2), Math.sin(-2 * Math.PI / m2));
+          for (let k = 0; k < n; k += m2) {
+              let w = new Complex(1, 0);
+              for (let j = 0; j < m2 / 2; j++) {
+                  let t = w.mul(output[k + j + m2 / 2]);
+                  let u = output[k + j];
+                  output[k + j] = u.add(t);
+                  output[k + j + m2 / 2] = u.sub(t);
+                  w = w.mul(wm);
+              }
+          }
+      }
+
+      // each entry in magnitude_fp is a frequency bin. normalized magnitude between 0 and 1.
+      let magnitude_fp = new FacetPattern().from(computeMagnitudes(output)).scale(0,1);
+      for (var a = 0; a < output.length; a++ ) {
+        // look up bin's relative magnitude - if less than bin threshold, set to 0
+        if (invert) {
+          if (magnitude_fp.data[a] >= binThreshold) {
+            output[a] = new Complex(0,0);
+          }
+        } else {
+          if (magnitude_fp.data[a] < binThreshold) {
+            output[a] = new Complex(0,0);
+          }
+        }
+      }
+      let ifftOutput = ifft(output);
+      resynthesizedSignal.append(new FacetPattern().from(ifftOutput.map(x => x.real)).reverse().truncate(sliceSize).fadeinSamples(Math.round(SAMPLE_RATE*.002)).fadeoutSamples(Math.round(SAMPLE_RATE*.002)));
+  }
+
+  this.data = resynthesizedSignal.data;
+  this.truncate(original_size);
+  return this;
+}
+
+tune (key_letter = "C", binThreshold = 0.005) {
+  let chroma_key = this.parseKeyAndScale(key_letter,new FacetPattern().from(1));
+  chroma_key = chroma_key.split('');
+  let notes_in_key = [];
+  let octave_count = 0;
+  for (let i = 0; i < 128; i++) {
+    if ( chroma_key[i%12] == 1 ) {
+      notes_in_key.push((i%12) + octave_count);
+    }
+    if ( i > 11 && i % 12 == 0) {
+      octave_count += 12;
+    }
+  }
+  this.fkey(new FacetPattern().from(notes_in_key),binThreshold);
+  return this;
+}
+
+fkey (midiNotes, binThreshold = 0.005, maxHarmonic = 10) {
+  if (typeof midiNotes == 'number' || Array.isArray(midiNotes) === true) {
+    midiNotes = new FacetPattern().from(midiNotes);
+  }
+  midiNotes = midiNotes.data;
+
+  let original_size = this.data.length;
+  let next_power_of_two = nextPowerOfTwo(this.data.length);
+  this.append(new FacetPattern().silence(next_power_of_two-this.data.length));
+  let n = this.data.length;
+  let m = Math.log2(n);
+
+  if (Math.pow(2, m) !== n) {
+      throw new Error('Input size must be a power of 2');
+  }
+  let inputComplex = this.data.map(x => new Complex(x, 0));
+  let output = new Array(n);
+  for (let i = 0; i < n; i++) {
+      let j = reverseBits(i, m);
+      output[j] = inputComplex[i];
+  }
+  for (let s = 1; s <= m; s++) {
+      let m = Math.pow(2, s);
+      let wm = new Complex(Math.cos(-2 * Math.PI / m), Math.sin(-2 * Math.PI / m));
+      for (let k = 0; k < n; k += m) {
+          let w = new Complex(1, 0);
+          for (let j = 0; j < m / 2; j++) {
+              let t = w.mul(output[k + j + m / 2]);
+              let u = output[k + j];
+              output[k + j] = u.add(t);
+              output[k + j + m / 2] = u.sub(t);
+              w = w.mul(wm);
+          }
+      }
+  }
+
+  // convert MIDI notes to frequencies
+  let midiFrequencies = midiNotes.map(note => 440 * Math.pow(2, (note - 69) / 12));
+
+  // get the bin frequencies
+  let binFrequencies = [];
+  for (let i = 0; i < n/2; i++) {
+      binFrequencies.push(i * SAMPLE_RATE/n);
+  }
+
+  // gate the bins
+  for (let i = 0; i < binFrequencies.length; i++) {
+      let binFrequency = binFrequencies[i];
+      let isCloseToMidiFrequency = false;
+      for (let j = 0; j < midiFrequencies.length; j++) {
+          let midiFrequency = midiFrequencies[j];
+          if (Math.abs(binFrequency - midiFrequency) <= binThreshold * midiFrequency) {
+              isCloseToMidiFrequency = true;
+              break;
+          }
+          // check harmonics
+          for (let k = 2; k <= maxHarmonic; k++) {
+              if (Math.abs(binFrequency - k*midiFrequency) <= binThreshold * k*midiFrequency) {
+                  isCloseToMidiFrequency = true;
+                  break;
+              }
+          }
+          if (isCloseToMidiFrequency) break;
+      }
+      if (!isCloseToMidiFrequency) {
+          output[i] = new Complex(0,0);
+          output[n-i-1] = new Complex(0,0);
+      }
+  }
+
+  let ifftOutput = ifft(output);
+  let resynthesizedSignal = ifftOutput.map(x => x.real);
+  this.data = resynthesizedSignal;
+  this.reverse();
+  this.truncate(original_size);
+  this.fadeinSamples(Math.round(SAMPLE_RATE*.002)).fadeoutSamples(Math.round(SAMPLE_RATE*.002));
+  return this;
+}
+
+ffilter (minFreqs, maxFreqs, invertMode = false) {
+  if (typeof minFreqs == 'number' || Array.isArray(minFreqs) === true) {
+    minFreqs = new FacetPattern().from(minFreqs);
+  }
+  if (typeof maxFreqs == 'number' || Array.isArray(maxFreqs) === true) {
+    maxFreqs = new FacetPattern().from(maxFreqs);
+  }
+  this.makePatternsTheSameSize(minFreqs,maxFreqs);
+  minFreqs = minFreqs.data;
+  maxFreqs = maxFreqs.data;
+  let original_size = this.data.length;
+  let resynthesizedSignal = new FacetPattern();
+
+  for (let s = 0; s < minFreqs.length; s++) {
+      let minFreq = Math.max(minFreqs[s], 0);
+      let maxFreq = Math.max(maxFreqs[s], 0);
+
+      let sliceSize = Math.ceil(this.data.length / minFreqs.length);
+      let sliceStart = s * sliceSize;
+      let sliceEnd = sliceStart + sliceSize;
+      let dataSlice = this.data.slice(sliceStart, sliceEnd);
+
+      let next_power_of_two = nextPowerOfTwo(dataSlice.length);
+      dataSlice.push(...Array(next_power_of_two-dataSlice.length).fill(0));
+      let n = dataSlice.length;
+      let m = Math.log2(n);
+
+      if (Math.pow(2, m) !== n) {
+          throw new Error('Input size must be a power of 2');
+      }
+
+      let inputComplex = dataSlice.map(x => new Complex(x, 0));
+      let output = new Array(n);
+      for (let i = 0; i < n; i++) {
+          let j = reverseBits(i, m);
+          output[j] = inputComplex[i];
+      }
+      for (let s = 1; s <= m; s++) {
+          let m2 = Math.pow(2, s);
+          let wm = new Complex(Math.cos(-2 * Math.PI / m2), Math.sin(-2 * Math.PI / m2));
+          for (let k = 0; k < n; k += m2) {
+              let w = new Complex(1, 0);
+              for (let j = 0; j < m2 / 2; j++) {
+                  let t = w.mul(output[k + j + m2 / 2]);
+                  let u = output[k + j];
+                  output[k + j] = u.add(t);
+                  output[k + j + m2 / 2] = u.sub(t);
+                  w = w.mul(wm);
+              }
+          }
+      }
+
+      // filter out bins whose frequency is less than minFreq or greater than maxFreq
+      let binSize = SAMPLE_RATE / n;
+      for (var a = 0; a < output.length/2; a++ ) {
+        // calculate bin frequency
+        let binFreq = a * binSize;
+        if (invertMode === false) {
+          if (binFreq < minFreq || binFreq > maxFreq) {
+            output[a] = new Complex(0,0);
+            output[output.length-a-1] = new Complex(0,0);
+          }
+        }
+        else {
+          if (binFreq > minFreq && binFreq < maxFreq) {
+            output[a] = new Complex(0,0);
+            output[output.length-a-1] = new Complex(0,0);
+          }
+        }
+      }
+
+      let ifftOutput = ifft(output);
+      resynthesizedSignal.append(new FacetPattern().from(ifftOutput.map(x => x.real)).reverse().truncate(sliceSize));
+    }
+    this.data = resynthesizedSignal.data;
+    this.truncate(original_size);
+    this.fadeinSamples(Math.round(SAMPLE_RATE*.002)).fadeoutSamples(Math.round(SAMPLE_RATE*.002));
+    return this;
+  }
+
+  fshift(shiftAmounts) {
+    if (typeof shiftAmounts == 'number' || Array.isArray(shiftAmounts) === true) {
+      shiftAmounts = new FacetPattern().from(shiftAmounts);
+    }
+    shiftAmounts = shiftAmounts.data;
+    let original_size = this.data.length;
+    let resynthesizedSignal = new FacetPattern();
+
+    for (let s = 0; s < shiftAmounts.length; s++) {
+        let shiftAmount = Math.min(Math.max(shiftAmounts[s], -1), 1);
+        if (shiftAmount >= 0) {
+            shiftAmount = Math.abs(shiftAmount) * 0.5;
+        } else {
+            shiftAmount = (1 + shiftAmount) * 0.5;
+        }
+
+        let sliceSize = Math.ceil(this.data.length / shiftAmounts.length);
+        let sliceStart = s * sliceSize;
+        let sliceEnd = sliceStart + sliceSize;
+        let dataSlice = this.data.slice(sliceStart, sliceEnd);
+
+        let next_power_of_two = nextPowerOfTwo(dataSlice.length);
+        dataSlice.push(...Array(next_power_of_two-dataSlice.length).fill(0));
+        let n = dataSlice.length;
+        let m = Math.log2(n);
+
+        if (Math.pow(2, m) !== n) {
+            throw new Error('Input size must be a power of 2');
+        }
+
+        let inputComplex = dataSlice.map(x => new Complex(x, 0));
+        let output = new Array(n);
+        for (let i = 0; i < n; i++) {
+            let j = reverseBits(i, m);
+            output[j] = inputComplex[i];
+        }
+        for (let s = 1; s <= m; s++) {
+            let m2 = Math.pow(2, s);
+            let wm = new Complex(Math.cos(-2 * Math.PI / m2), Math.sin(-2 * Math.PI / m2));
+            for (let k = 0; k < n; k += m2) {
+                let w = new Complex(1, 0);
+                for (let j = 0; j < m2 / 2; j++) {
+                    let t = w.mul(output[k + j + m2 / 2]);
+                    let u = output[k + j];
+                    output[k + j] = u.add(t);
+                    output[k + j + m2 / 2] = u.sub(t);
+                    w = w.mul(wm);
+                }
+            }
+        }
+
+        // shift the FFT bins by the specified amount
+        let shiftBins = Math.round(shiftAmount * n);
+        let shiftedOutput = new Array(n);
+        if (shiftAmount > 0) {
+            for (let i = 0; i < n; i++) {
+                shiftedOutput[(i + shiftBins) % n] = output[i];
+            }
+        } else {
+            for (let i = n -1 ; i >=0 ; i--) {
+                shiftedOutput[(i + shiftBins + n) % n] = output[i];
+            }
+        }
+
+        let ifftOutput = ifft(shiftedOutput);
+        let abc = new FacetPattern().from(ifftOutput.map(x => x.real));
+        resynthesizedSignal.append(abc.reverse().truncate(sliceSize).fadeinSamples(Math.round(SAMPLE_RATE*.002)).fadeoutSamples(Math.round(SAMPLE_RATE*.002)));
+    }
+
+    this.data = resynthesizedSignal.data;
+    this.truncate(original_size);
+    return this;
+  }
+
 }
 
 function $ (n) {
