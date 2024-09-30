@@ -21,117 +21,130 @@ const navBar = document.getElementById('ui-container');
 // create dropdown of all audio devices
 let deviceDropdown = createDropdownofAllDevices();
 
-createButtonForNavBar(
-    'WAX',
-    'waxButton',
-    (event) => {}
-);
-
-// create a button for starting audio
-createButtonForNavBar(
-    'ON',
-    'startAudioButton navbarButton',
-    async () => {
-        if (isAudioPlaying) {
-            await stopAudio();
-        } else {
-            await startAudio();
-        }
+async function handleOnButtonClick() {
+    if (isAudioPlaying) {
+        await stopAudio();
+    } else {
+        await startAudio();
     }
-);
-
-// create a button for saving workspace state
-createButtonForNavBar('Save', 'saveStateButton navbarButton', ()=>{getWorkspaceState(true)});
-
-createButtonForNavBar('Share', 'shareStateButton navbarButton', ()=>{getWorkspaceState(false,true)});
-
-// create a button for reloading workspace state
-createButtonForNavBar('Load', 'reloadStateButton navbarButton', async () => {
-    await reconstructWorkspaceState();
-    await startAudio();
-});
-
-// create button for viewing all devices
-createButtonForNavBar(
-    'Devices',
-    'viewAllDevices navbarButton',
-    (event) => {
-        event.stopPropagation(); // stop the click event from propagating to the window
-        var modal = displayAllDevices();
-        modal.style.display = 'block';
-    }
-);
-
-// create a button for example files
-createButtonForNavBar(
-    'Examples',
-    'exampleFilesButton navbarButton',
-    (event) => {
-        event.stopPropagation();
-
-        var modal = document.getElementById('deviceListModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-
-        // create a div for the example files
-        var exampleFilesDiv = document.createElement('div');
-        exampleFilesDiv.className = 'exampleFilesDiv';
-        exampleFilesDiv.id = 'exampleFiles';
-
-        // add a link for each file
-        ['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip', 'microphone.zip'].forEach(function(file) {
-            var link = document.createElement('a');
-            link.href = '#';
-            link.textContent = file.replace(/_/g, ' ').replace('.zip', '');
-            link.addEventListener('click', async function(event) {
-                event.preventDefault();
-                // replace spaces with underscores and add '.zip' back
-                var selectedFile = file;
-                await loadExampleFile('examples/' + selectedFile);
-                await startAudio();
-            });
-            exampleFilesDiv.appendChild(link);
-        });
-
-        // add the div to the body
-        document.body.appendChild(exampleFilesDiv);
-
-        // add an event listener to the document to close the div when anything outside of it is clicked
-        document.addEventListener('click', function(event) {
-            if (event.target.id !== 'exampleFiles' && !exampleFilesDiv.contains(event.target)) {
-                exampleFilesDiv.style.display = 'none';
-            }
-        });
-    }
-);
-
-createButtonForNavBar(
-    'About',
-    'helpButton navbarButton',
-    (event) => {
-        document.getElementById('infoDiv').style.display = 'block';
-        event.stopPropagation();
-    }
-);
-
-// create the button
-var toggleButton = document.createElement('button');
-toggleButton.id = 'toggleNavbarButton';
-toggleButton.className = 'hamburger';
-
-// create the hamburger icon
-for (let i = 0; i < 3; i++) {
-    var line = document.createElement('div');
-    line.className = 'hamburger-line';
-    toggleButton.appendChild(line);
 }
 
-// add the event listener
-toggleButton.addEventListener('click', toggleNavbar);
+function handleSaveButtonClick() {
+    getWorkspaceState(true);
+}
 
-// append the button to the body
-document.body.appendChild(toggleButton);
+function handleShareButtonClick() {
+    getWorkspaceState(false, true);
+}
+
+async function handleLoadButtonClick() {
+    await reconstructWorkspaceState();
+    await startAudio();
+}
+
+function handleDevicesButtonClick(event) {
+    event.stopPropagation();
+    hideMobileMenu();
+    var modal = displayAllDevices();
+    modal.style.display = 'block';
+}
+
+async function handleExamplesButtonClick(event) {
+    event.stopPropagation();
+
+    var modal = document.getElementById('deviceListModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+
+    hideMobileMenu();
+
+    var exampleFilesDiv = document.createElement('div');
+    exampleFilesDiv.className = 'exampleFilesDiv';
+    exampleFilesDiv.id = 'exampleFiles';
+
+    // create a header for the list - visible on mobile
+    var header = document.createElement('div');
+    header.id = 'exampleListHeader';
+    header.textContent = ' Examples';
+    var triangle = document.createElement('span');
+    triangle.className = 'mobileButtonTriangle';
+    triangle.textContent = '◀';
+    header.prepend(triangle);
+
+    // add onclick event listener to the header
+    header.onclick = function() {
+        exampleFilesDiv.style.display = 'none';
+        showMobileMenu();
+    };
+
+    exampleFilesDiv.appendChild(header);
+
+    ['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip', 'microphone.zip'].forEach(function(file) {
+        var link = document.createElement('a');
+        link.href = '#';
+        link.textContent = file.replace(/_/g, ' ').replace('.zip', '');
+        link.addEventListener('click', async function(event) {
+            event.preventDefault();
+            var selectedFile = file;
+            await loadExampleFile('examples/' + selectedFile);
+            await startAudio();
+        });
+        exampleFilesDiv.appendChild(link);
+    });
+
+    document.body.appendChild(exampleFilesDiv);
+
+    document.addEventListener('click', function(event) {
+        if (event.target.id !== 'exampleFiles' && !exampleFilesDiv.contains(event.target)) {
+            exampleFilesDiv.style.display = 'none';
+        }
+    });
+}
+
+function handleAboutButtonClick(event) {
+    document.getElementById('infoDiv').style.display = 'block';
+    event.stopPropagation();
+}
+
+function handleMenuButtonClick(event) {
+    var mobileMenu = document.getElementById('mobileMenu');
+    var deviceListModal = document.getElementById('deviceListModal');
+    var exampleFiles = document.getElementById('exampleFiles');
+
+    var isMobileMenuVisible = mobileMenu && window.getComputedStyle(mobileMenu).display !== 'none';
+    var isDeviceListModalVisible = deviceListModal && window.getComputedStyle(deviceListModal).display !== 'none';
+    var isExampleFilesVisible = exampleFiles && window.getComputedStyle(exampleFiles).display !== 'none';
+
+if (isDeviceListModalVisible || isExampleFilesVisible || isMobileMenuVisible) {
+    hideMobileMenu();
+} else {
+        showMobileMenu(event);
+    }
+}
+
+function hideMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenu.style.display = 'none';
+}
+
+function showMobileMenu(event) {
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenu.style.display = 'block';
+    if (event) {
+        event.stopPropagation();
+    }
+}
+
+createButtonForNavBar('WAX', 'waxButton navbarButton', ()=>{});
+createButtonForNavBar('ON', 'startAudioButton navbarButton', handleOnButtonClick);
+createButtonForNavBar('Save', 'saveStateButton navbarButton', handleSaveButtonClick);
+createButtonForNavBar('Share', 'shareStateButton navbarButton', handleShareButtonClick);
+createButtonForNavBar('Load', 'reloadStateButton navbarButton', handleLoadButtonClick);
+createButtonForNavBar('Devices', 'viewAllDevices navbarButton', handleDevicesButtonClick);
+createButtonForNavBar('Examples', 'exampleFilesButton navbarButton', handleExamplesButtonClick);
+createButtonForNavBar('About', 'helpButton navbarButton', handleAboutButtonClick);
+createButtonForNavBar('Menu', 'mobileMenuToggleButton navbarButton', handleMenuButtonClick);
 
 // prevent accidental refreshes which would lose unsaved changes
 window.onbeforeunload = function() {
@@ -260,6 +273,13 @@ connectionManagementClickHandler();
 document.body.addEventListener('click', function(event) {
     if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *')) {
         showVisualConfirmationOfConnectionButtonClick(event);
+    }
+    var mobileMenu = document.getElementById('mobileMenu');
+    var style = window.getComputedStyle(mobileMenu);
+    var isMobileMenuVisible = style.display !== 'none';
+
+    if (isMobileMenuVisible && !event.target.closest('#mobileMenu') && event.target.id !== 'deviceListHeader' && event.target.id !== 'exampleListHeader') {
+        hideMobileMenu();
     }
 });
 
@@ -1117,9 +1137,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             // add event listeners to the button
             button.addEventListener('mousedown', handleButtonDown);
-            button.addEventListener('mouseup', handleButtonUp);
             button.addEventListener('touchstart', handleButtonDown);
-            button.addEventListener('touchend', handleButtonUp);
+
+            window.addEventListener('mouseup', handleButtonUp);
+            window.addEventListener('touchend', handleButtonUp);
         }
         else if ( filename.startsWith('outputnode') ) {
             deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
@@ -1452,6 +1473,10 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             deviceDiv.classList.add('selectedNode');
         },
     });
+
+
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenu.style.display = 'none';
     return deviceDiv;
 }
 
@@ -1824,9 +1849,9 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
 
 function displayAllDevices() {
     var elements = document.getElementsByClassName('exampleFilesDiv');
-while(elements.length > 0){
-    elements[0].parentNode.removeChild(elements[0]);
-}
+    while(elements.length > 0){
+        elements[0].parentNode.removeChild(elements[0]);
+    }
 
     // remove any existing .deviceListModal elements
     var existingModals = document.querySelectorAll('.deviceListModal');
@@ -1881,6 +1906,23 @@ while(elements.length > 0){
             modal.style.display = 'none';
         }
     });
+
+    // create a header for the list - visible on mobile
+    var header = document.createElement('div');
+    header.id = 'deviceListHeader';
+    header.textContent = ' Devices';
+    var triangle = document.createElement('span');
+    triangle.className = 'mobileButtonTriangle';
+    triangle.textContent = '◀';
+    header.prepend(triangle);
+    // add onclick event listener to the header
+    header.onclick = function() {
+        document.getElementById('deviceListModal').style.display = 'none';
+        showMobileMenu();
+    };
+
+    content.insertBefore(header, ul);
+
     return modal;
 }
 
@@ -1916,23 +1958,6 @@ async function startAudio() {
     button.style.background = 'rgb(255,0,94)';
     button.style.color = 'rgb(255,255,255)';
     isAudioPlaying = true;
-}
-
-function toggleNavbar() {
-    const buttons = document.querySelectorAll('.navbarButton');
-    buttons.forEach(button => {
-        if (button.style.display === 'none') {
-            button.style.display = 'block';
-        } else {
-            button.style.display = 'none';
-        }
-    });
-    const exampleFiles = document.getElementById('exampleFiles');
-    if (exampleFiles.style.display === 'none') {
-        exampleFiles.style.display = 'block';
-    } else {
-        exampleFiles.style.display = 'none';
-    }
 }
 
 function checkForQueryStringParams() {

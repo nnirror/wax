@@ -44,6 +44,9 @@
     background: rgb(255,0,94);
 }
 #closeInfoButton {
+    border-radius: 10px;
+    color: white;
+    border: 0;
     position: absolute;
     top: 0.5em;
     right: 0.5em;
@@ -88,12 +91,6 @@ body {
     color: white;
     font-size: 0.8em;
 }
-#toggleNavbarButton {
-    position: fixed;
-    right: 1vh;
-    height: 40px;
-    padding: 8px 4px;
-}
 .navbarButton {
     position: fixed;
     width: 7em;
@@ -108,14 +105,158 @@ body {
     cursor: pointer;
     min-height: 20px;
 }
-.navbarButton:not(.startAudioButton):hover, #exampleFiles:hover {
+.navbarButton:not(.startAudioButton):not(.waxButton):hover, #exampleFiles:hover {
     background: white;
     color: rgb(8,56,78);
 }
+.mobileMenuToggleButton {
+    display: none;
+}
+#mobileMenu {
+    color: rgb(8,56,78);
+    position: fixed;
+    top: calc(3vh + 80px);
+    left: 10%;
+    width: 80%;
+    height: auto;
+    z-index: 1001;
+}
+.mobileMenuButton {
+    text-align: center;
+    z-index: 1001;
+    font-size: 60px;
+    cursor: pointer;
+}
+.mobileMenuButton:nth-child(odd) {
+    background: white;
+}
+.mobileMenuButton:nth-child(even) {
+    background: rgb(101,255,229);
+}
+.mobileMenuButton:first-child {
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+}
+.mobileMenuButton:nth-last-child(1) {
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+}
+#deviceListHeader, #exampleListHeader {
+    display: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    font-weight: bold;
+    padding-left: 10px;
+    padding-top: 10px;
+    color: rgb(8, 56, 78);
+    position: absolute;
+    top: 0px;
+}
+@media screen and (min-width: 600px) and (max-width: 1120px) {
+    body .shareStateButton {
+        top: calc(3vh + 40px);
+        left: calc(100px + 8em * 1);
+    }
+    body .viewAllDevices {
+        top: calc(3vh + 40px);
+        left: calc(100px + 8em * 2);
+    }
+    body .deviceListModal {
+        left: calc(70px + 8em * 2);
+        top: calc(3vh + 80px);
+    }
+    body .exampleFilesButton {
+        top: calc(3vh + 40px);
+        left: calc(100px + 8em * 3);
+    }
+    body #exampleFiles {
+        left: calc(30px + 8em * 3);
+        top: calc(3vh + 80px);
+    }
+    body .helpButton {
+        top: calc(3vh + 40px);
+        left: calc(100px + 8em * 4);
+    }
+}
+@media screen and (max-width: 600px) {
+    body #infoDiv {
+        width: 80%;
+    }
+    body .navbarButton:not(.startAudioButton,.waxButton) {
+        display: none;
+    }
+    body #ui-container .mobileMenuToggleButton {
+        left: calc(100px + 8em * 2);
+        display: block;
+    }
+    #mobileMenu {
+        display: none;
+    }
+    body .deviceListModal {
+        top: calc(3vh + 80px);
+        padding: 0;
+        left: 10%;
+        right: 10%;
+    }
+    body .deviceListModal::before {
+        height: 0px;
+        background-color: white;
+    }
+    body #deviceListHeader, body #exampleListHeader {
+        display: block;
+    }
+    .deviceListModalContent {
+        border-radius: 10px;
+        margin-top: 40px;
+    }
+    .deviceListItem {
+        padding-left: 10px;
+    }
+    .deviceListItem:nth-child(odd) {
+        background: white;
+    }
+    .deviceListItem:nth-child(even) {
+        background: rgb(101,255,229);
+    }
+    body #exampleFiles {
+        left: 10%;
+        right: 10%;
+        top: calc(3vh + 80px);
+        z-index: 1001;
+        padding: 0;
+    }
+    body #exampleFiles a {
+        padding-left: 10px;
+    }
+    body .exampleFilesDiv::before {
+        height: 0px;
+    }
+    body #exampleFiles a:nth-child(odd) {
+        background: white;
+    }
+    body #exampleFiles a:nth-child(even) {
+        background: rgb(101,255,229);
+    }
+    body #exampleFiles a:last-child {
+        border-radius: 0px 0px 10px 10px;
+    }
+    body #exampleFiles a:first-of-type {
+        margin-top: 40px;
+    }
+}
+@media screen and (min-width: 601px) {
+    #mobileMenu {
+        display: none !important;
+    }
+}
+.mobileButtonTriangle {
+    font-size: 0.5em;
+    vertical-align: middle;
+}
 .waxButton {
     position: fixed;
-    left: 110px;
-    top: calc(3vh - 4px);
+    left: 56px;
+    top: calc(3vh - 5px);
     color: white;
     z-index: 1;
     font-size: 2em;
@@ -179,12 +320,12 @@ body {
     background-color: #f8f9fa;
     padding: 20px;
     border-radius: 10px;
-    max-height: 90vh; /* Set a maximum height */
+    max-height: 80vh;
 }
 
 .deviceListModalContent {
     overflow: auto;
-    max-height: 90vh; /* Set a maximum height */
+    max-height: 80vh;
 }
 
 .deviceListModal::before {
@@ -248,7 +389,7 @@ body {
     background-color: #bde4ff;
 }
 
-mark{
+mark {
     background-color:lightblue !important;
     padding:0;
     margin:0;
@@ -322,63 +463,6 @@ mark{
     80% { opacity: 1; }
     100% { opacity: 0; }
 }
-/* screens smaller than 600px */
-@media (max-width: 600px) {
-    #exampleFiles, #viewAllDevices {
-        height: 8%;
-        min-height: 4vh;
-    }
-    .navbarButton {
-        height: 8%;
-        min-height: 4vh;
-    }
-    .startAudioButton {
-        top: calc(10% - 4.75%);
-    }
-    .shareStateButton {
-        top: calc(19% - 4.75%);
-    }
-    .saveStateButton {
-        top: calc(28% - 4.75%);
-    }
-    .reloadStateButton {
-        top: calc(37% - 4.75%);
-    }
-    #exampleFiles {
-        top: calc(55% - 4.75%);
-    }
-    .viewAllDevices {
-        top: calc(46% - 4.75%);
-    }
-    .helpButton {
-        top: calc(64% - 4.75%);
-    }
-    #toggleNavbarButton {
-        height: 4%;
-        min-height: 4%;
-        width: 10em;
-        font-size: 1em;
-    }
-}
-.hamburger {
-    width: 10em;
-    font-size: 1em;
-    padding: 15px 30px;
-    height: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    background: linear-gradient(to right, #acacac, #cecece);
-}
-
-.hamburger-line {
-    width: 100%;
-    height: 2px;
-    background-color: #000;
-}
-
 .jtk-endpoint {
     cursor: pointer;
 }

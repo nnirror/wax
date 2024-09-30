@@ -17,6 +17,14 @@
     <noscript>this app requires JavaScript to be enabled.</noscript>
     <div id="ui-container"></div>
     <div id="workspace"></div>
+    <div id="mobileMenu">
+        <div class="mobileMenuButton" onclick="handleSaveButtonClick(event)">Save</div>
+        <div class="mobileMenuButton" onclick="handleLoadButtonClick(event)">Load</div>
+        <div class="mobileMenuButton" onclick="handleShareButtonClick(event)">Share</div>
+        <div class="mobileMenuButton" onclick="handleDevicesButtonClick(event)">Devices <span class="mobileButtonTriangle">▶</span></div>
+        <div class="mobileMenuButton" onclick="handleExamplesButtonClick(event)">Examples <span class="mobileButtonTriangle">▶</span></div>
+        <div class="mobileMenuButton" onclick="handleAboutButtonClick(event)">About</div>
+    </div>
     <script type="text/javascript" src="node_modules/awesomplete/awesomplete.js"></script>
     <script src="node_modules/jsplumb/dist/js/jsplumb.min.js"></script>
     <script type="text/javascript" src="node_modules/@rnbo/js/dist/rnbo.webaudio.js"></script>
