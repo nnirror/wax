@@ -83,9 +83,11 @@ body {
 .delete-button {
     float: right;
     margin-right: 8px;
+    width: 15px;
 }
 .info-button {
     float: right;
+    width: 15px;
 }
 .aLabelClass {
     color: white;
@@ -182,15 +184,38 @@ body .sliderMin, body .sliderMax {
     }
 }
 @media screen and (max-width: 600px) {
+
+    body .waxButton {
+        position: fixed;
+        top: 3vh;
+        left: 8vw;
+        width: 8rem;
+        height: 3rem;
+        z-index: 1001;
+    }
+    
+    body .startAudioButton {
+        position: fixed;
+        top: 3vh;
+        left: 37vw;
+        width: 8rem;
+        height: 3rem;
+    }
+    
+    body #ui-container .mobileMenuToggleButton {
+        position: fixed;
+        top: 3vh;
+        left: 72vw;
+        width: 8rem;
+        height: 3rem;
+        display: block;
+    }
+
     body #infoDiv {
         width: 80%;
     }
     body .navbarButton:not(.startAudioButton,.waxButton) {
         display: none;
-    }
-    body #ui-container .mobileMenuToggleButton {
-        left: calc(100px + 8em * 2);
-        display: block;
     }
     #mobileMenu {
         display: none;
@@ -366,16 +391,16 @@ body .sliderMin, body .sliderMax {
 }
 .deviceInportLabel {
     display: inline-block;
-    width: 33%;
+    width: 8em;
     font-size: 0.75em;
 }
 .deviceInport {
-    width: 62%;
+    width: 8em;
     display: inline-block;
 }
 .awesompleteContainer {
     width: 10em;
-    padding: 0.5em;
+    padding: 0.5em 1em;
     border-radius: 10px;
     background: linear-gradient(to right, #f2f2f2, #c4c4c4);
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
