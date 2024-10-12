@@ -83,11 +83,11 @@ body {
 .delete-button {
     float: right;
     margin-right: 8px;
-    width: 15px;
+    width: 17px;
 }
 .info-button {
     float: right;
-    width: 15px;
+    width: 17px;
 }
 .aLabelClass {
     color: white;
@@ -160,11 +160,11 @@ body .sliderMin, body .sliderMax {
 @media screen and (min-width: 600px) and (max-width: 1120px) {
     body .shareStateButton {
         top: calc(3vh + 40px);
-        left: calc(100px + 8em * 1);
+        left: calc(71px + 8em * 1);
     }
     body .viewAllDevices {
         top: calc(3vh + 40px);
-        left: calc(100px + 8em * 2);
+        left: calc(71px + 8em * 2);
     }
     body .deviceListModal {
         left: calc(70px + 8em * 2);
@@ -172,7 +172,7 @@ body .sliderMin, body .sliderMax {
     }
     body .exampleFilesButton {
         top: calc(3vh + 40px);
-        left: calc(100px + 8em * 3);
+        left: calc(71px + 8em * 3);
     }
     body #exampleFiles {
         left: calc(30px + 8em * 3);
@@ -180,7 +180,7 @@ body .sliderMin, body .sliderMax {
     }
     body .helpButton {
         top: calc(3vh + 40px);
-        left: calc(100px + 8em * 4);
+        left: calc(71px + 8em * 4);
     }
 }
 @media screen and (max-width: 600px) {
@@ -188,7 +188,7 @@ body .sliderMin, body .sliderMax {
     body .waxButton {
         position: fixed;
         top: 3vh;
-        left: 8vw;
+        left: 16vw;
         width: 8rem;
         height: 3rem;
         z-index: 1001;
@@ -197,7 +197,7 @@ body .sliderMin, body .sliderMax {
     body .startAudioButton {
         position: fixed;
         top: 3vh;
-        left: 37vw;
+        left: 41vw;
         width: 8rem;
         height: 3rem;
     }
@@ -205,7 +205,7 @@ body .sliderMin, body .sliderMax {
     body #ui-container .mobileMenuToggleButton {
         position: fixed;
         top: 3vh;
-        left: 72vw;
+        left: 70vw;
         width: 8rem;
         height: 3rem;
         display: block;
@@ -283,7 +283,7 @@ body .sliderMin, body .sliderMax {
 }
 .waxButton {
     position: fixed;
-    left: 56px;
+    left: 24px;
     top: calc(3vh - 5px);
     color: white;
     z-index: 1;
@@ -293,28 +293,28 @@ body .sliderMin, body .sliderMax {
     font-weight: bold;
 }
 .startAudioButton {
-    left: calc(100px + 8em * 1);
+    left: calc(71px + 8em * 1);
     color: rgb(8,56,78);
     border: 3px solid rgb(101,255,229);
     background: rgb(101,255,229);
 }
 .shareStateButton {
-    left: calc(100px + 8em * 4);
+    left: calc(71px + 8em * 4);
 }
 .saveStateButton {
-    left: calc(100px + 8em * 2);
+    left: calc(71px + 8em * 2);
 }
 .reloadStateButton {
-    left: calc(100px + 8em * 3);
+    left: calc(71px + 8em * 3);
 }
 .viewAllDevices {
-    left: calc(100px + 8em * 5);
+    left: calc(71px + 8em * 5);
 }
 .helpButton {
-    left: calc(100px + 8em * 7);
+    left: calc(71px + 8em * 7);
 }
 .exampleFilesButton {
-    left: calc(100px + 8em * 6);
+    left: calc(71px + 8em * 6);
 }
 .exampleFilesDiv::before {
     content: "";
@@ -517,4 +517,21 @@ mark {
     min-height: 50px;
     max-height: 50px;
     border-radius: 25px;
+}
+#logo {
+    position: fixed;
+    height: 70px;
+    height: 70px;
+    top: 10px;
+    left: 10px;
+    z-index: 1001;
+}
+.jtk-hover svg circle {
+    fill: rgb(101,255,229);
+}
+.jtk-hover path {
+    cursor: pointer;
+}
+body .CodeMirror {
+    height: 6em;
 }

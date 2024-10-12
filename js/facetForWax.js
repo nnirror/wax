@@ -2528,7 +2528,7 @@ scaleLT1 (outMin, outMax, exponent = 1) {
     return this;
 }
 
-rechunk (numChunks, probability = 1) {
+rechunk (numChunks, probability = 1, yes_fade = true) {
   // Break the array into numChunks chunks
   let chunkSize = Math.ceil(this.data.length / numChunks);
   let chunks = [];
@@ -2538,7 +2538,7 @@ rechunk (numChunks, probability = 1) {
   }
 
   // Determine number of chunks to shuffle based on probability
-  let numChunksToShuffle = Math.floor(numChunks * probability);
+  let numChunksToShuffle = Math.floor(chunks.length * probability);
 
   // Shuffle the numChunksToShuffle chunks
   for (let i = 0; i < numChunksToShuffle; i++) {
@@ -2550,8 +2550,10 @@ rechunk (numChunks, probability = 1) {
 
   // Assign the chunks array to the data
   this.data = chunks;
-  this.data = this.fadeArrays(this.data);
-  this.data = this.sliceEndFade(this.data);
+  if ( yes_fade === true ) {
+    this.data = this.fadeArrays(this.data);
+    this.data = this.sliceEndFade(this.data);
+  }
   this.flatten();
   this.fixnan();
   return this;

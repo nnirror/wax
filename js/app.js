@@ -217,6 +217,15 @@ window.onload = async function() {
     checkForQueryStringParams();
 };
 
+document.addEventListener('input', function(event) {
+    // force comment textearas to resize vertically
+    if (event.target.tagName.toLowerCase() === 'textarea') {
+        const textarea = event.target;
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+});
+
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -233,6 +242,8 @@ let sourceButtonId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
+let selectedConnection = null;
+let executedTextPatterns = {};
 let selectionDiv = null;
 let startPoint = null;
 const evalWorker = new Worker('js/evalWorker.js');
@@ -268,11 +279,26 @@ jsPlumb.bind("connectionDetached", function(info) {
     }
 });
 
+
+// event listener to detect when a connection is clicked
+jsPlumb.bind("click", function(connection, originalEvent) {
+    deselectAllNodes();
+    selectedConnection = connection;
+    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 2 });
+    connection.endpoints.forEach(endpoint => {
+        endpoint.setPaintStyle({ fill: 'rgb(255,0,94)', outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" });
+    });
+})
+
 connectionManagementClickHandler();
 
 document.body.addEventListener('click', function(event) {
     if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *')) {
         showVisualConfirmationOfConnectionButtonClick(event);
+    }
+    if (selectedConnection && !event.target.closest('.jtk-connector')) {
+        resetConnectionStyle(selectedConnection);
+        selectedConnection = null;
     }
     var mobileMenu = document.getElementById('mobileMenu');
     var style = window.getComputedStyle(mobileMenu);
@@ -369,6 +395,11 @@ document.addEventListener('keydown', (event) => {
                 node.remove();
             }
         });
+
+        if (selectedConnection) {
+            jsPlumb.deleteConnection(selectedConnection);
+            selectedConnection = null;
+        }
 
         // clear the drag selection
         jsPlumb.clearDragSelection();
@@ -548,7 +579,7 @@ function openAwesompleteUI() {
 function initializeAwesomplete () {
     document.addEventListener('keydown', function(event) {
         // check if 'n' key is pressed and no input is focused
-        if (event.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+        if ((event.key === 'n' || event.key === 'N') && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
             event.preventDefault();
             openAwesompleteUI();
         }
@@ -734,7 +765,7 @@ function removeDeviceFromWorkspace(deviceId) {
     delete devices[deviceId];
 }
 
-function addInputsForDevice(device, deviceType) {
+function addInputsForDevice(device, deviceType, deviceId) {
     const inportForm = document.createElement('form');
     inportForm.autocomplete = 'off';
     const inportContainer = document.createElement('div');
@@ -750,13 +781,12 @@ function addInputsForDevice(device, deviceType) {
             let inportText;
             if (device.it.T.inports[0].tag == 'pattern') {
                 inportText = document.createElement('textarea');
-                inportText.style.width = '38em';
-                inportText.style.height = '6em';
             }
             else if (device.it.T.inports[0].tag == 'comment') {
                 inportText = document.createElement('textarea');
                 inportText.style.width = '13em';
-                inportText.style.height = '4em';
+                inportText.style.height = 'auto';
+                inportText.style.height =  '35px';
             }
             else {
                 inportText = document.createElement('input');
@@ -765,13 +795,13 @@ function addInputsForDevice(device, deviceType) {
             inportText.className = 'deviceInport'
             inportText.addEventListener('change', function(event) {
                 if (document.activeElement !== event.target) {
-                    scheduleDeviceEvent(device, inport, this.value);
+                    scheduleDeviceEvent(device, inport, this.value, deviceId);
                 }
             });
             
             inportText.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
-                    scheduleDeviceEvent(device, inport, this.value);
+                    scheduleDeviceEvent(device, inport, this.value, deviceId);
                 }
             });
     
@@ -803,12 +833,13 @@ function addInputsForDevice(device, deviceType) {
     return inportForm;
 }
 
-async function scheduleDeviceEvent(device, inport, value) {
+async function scheduleDeviceEvent(device, inport, value, deviceId) {
     try {
         let values;
-        value = value.replace(/_\./g, '$().')
-
+        value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
+            value = executedTextPatterns[deviceId];
+            value = value.replace(/_\./g, '$().');
             // send the data to be evaluated to the worker
             let audioBuffersCopy = {};
 
@@ -817,7 +848,6 @@ async function scheduleDeviceEvent(device, inport, value) {
                 let float32Array = audioBuffer.getChannelData(0);
                 audioBuffersCopy[name] = Array.from(float32Array);
             }
-
             evalWorker.postMessage({ code: value, audioBuffers: audioBuffersCopy });
             handleWorkerMessage = async (event) => {
                 if (event.data.error) {
@@ -1461,7 +1491,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         deviceDiv.append(inputContainer);
         deviceDiv.appendChild(speakerChannelSelectorInput);
     } else {
-        const inportForm = addInputsForDevice(device,deviceType);
+        const inportForm = addInputsForDevice(device,deviceType,deviceDiv.id);
         inportForm.addEventListener('submit', function(event) {
             event.preventDefault();
         });
@@ -1526,11 +1556,114 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         },
     });
 
+    if (deviceType === 'pattern') {
+        var textarea = deviceDiv.querySelector('textarea');
+        if (textarea) {
+            var editor = CodeMirror.fromTextArea(textarea, {
+                lineNumbers: false,
+                mode: "javascript",
+                value: ``,
+                theme: "mbo",
+                lineWrapping: true,
+                matchBrackets: true,
+                lint: {options: {esversion: 2021, asi: true}}
+            });
+            adjustCodeMirrorHeight(editor);
+            // update the hidden textarea's value
+            editor.on('change', function(instance) {
+                textarea.value = instance.getValue();
+                adjustCodeMirrorHeight(editor);
+            });
+            
+            editor.on('keydown', function(instance, event) {
+                if (event.ctrlKey && (event.keyCode === 13 || event.keyCode === 82)) {
+                    // evaluate facet pattern
+                    let cursor = editor.getCursor();
+                    let line = cursor.line;
+                    let first_line_of_block = getFirstLineOfBlock(line,editor);
+                    let last_line_of_block = getLastLineOfBlock(line,editor);
+                    // highlight the text that will run for 100ms
+                    editor.setSelection({line: first_line_of_block, ch: 0 }, {line: last_line_of_block, ch: 10000 });
+                    // de-highlight, set back to initial cursor position
+                    setTimeout(function(){ editor.setCursor({line: line, ch: cursor.ch }); }, 100);
+                    executedTextPatterns[deviceDiv.id] = instance.getValue();
+                    textarea.dispatchEvent(new Event('change'));
+                }
+
+                if ( event.ctrlKey && event.keyCode === 70 ) {
+                    var cursor = editor.getCursor();
+                    var currentLine = cursor.line;
+                    let scroll_info = editor.getScrollInfo();
+                    editor.setValue(js_beautify(editor.getValue(), {
+                      indent_size: 2,
+                      break_chained_methods: true
+                    }))
+                    editor.focus();
+                    editor.setCursor({
+                      line: currentLine-1
+                    });
+                    editor.scrollTo(scroll_info.left,scroll_info.top);
+                  }
+            });
+        }
+    }
+
 
     const mobileMenu = document.getElementById('mobileMenu');
     mobileMenu.style.display = 'none';
     return deviceDiv;
 }
+
+function adjustCodeMirrorHeight(editor) {
+    const lineHeight = 16;
+    const lines = editor.lineCount();
+    const newHeight = Math.max(lines * lineHeight, 6 * lineHeight); // minimum height of 6em
+    editor.getWrapperElement().style.height = `${newHeight}px`;
+}
+
+function getFirstLineOfBlock(initial_line,cm) {
+    // true if line above is empty or the line number gets to 0
+    let above_line_is_empty = false;
+    let current_line_number = initial_line;
+    let first_line;
+    while ( above_line_is_empty == false && current_line_number >= 0 ) {
+      // check previous line for conditions that would indicate first line
+      // of block; otherwise continue decrementing line number
+      if ( (current_line_number ) == 0 ) {
+        first_line = 0;
+        break;
+      }
+      let line_above = cm.getLine(current_line_number - 1);
+      if ( line_above.trim() == '' ) {
+        above_line_is_empty = true;
+        first_line = current_line_number;
+      }
+      current_line_number--;
+    }
+    return first_line;
+  }
+  
+  function getLastLineOfBlock(initial_line,cm) {
+    // true if line below is empty or the line number gets to cm.lineCount()
+    let below_line_is_empty = false;
+    let current_line_number = initial_line;
+    let last_line;
+    while ( below_line_is_empty == false ) {
+      if ( (current_line_number + 1) == cm.lineCount() ) {
+        last_line = current_line_number;
+        break;
+      }
+      // check below line for conditions that would indicate last line
+      // of block; otherwise continue incrementing line number
+      let line_below = cm.getLine(current_line_number + 1);
+      if ( line_below.trim() == '' ) {
+        below_line_is_empty = true;
+        last_line = current_line_number;
+      }
+      current_line_number++;
+    }
+    return last_line;
+  }
 
 function createDropdownofAllDevices () {
     const deviceDropdown = document.createElement('select');
@@ -1799,6 +1932,15 @@ async function loadExampleFile(filePath) {
     deselectAllNodes();
 }
 
+function loadAllTextareaPatterns() {
+    let textareas = document.querySelectorAll('textarea');
+    textareas.forEach((textarea, index) => {
+        setTimeout(() => {
+            textarea.dispatchEvent(new Event('change'));
+        }, index * 1000); // each pattern is spaced 1000ms apart when added to prevent overload when added all at once
+    });
+}
+
 async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false) {
     let connectionsToMake = [];
     let idMap = {};
@@ -1868,12 +2010,19 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             inputs[0].dispatchEvent(new Event('change'));
         }
 
-        // set the values of its textarea elements
+        // // set the values of its textarea elements
         let textareas = deviceElement.getElementsByTagName('textarea');
         for (let textarea of textareas) {
             if (deviceState.inputs[textarea.id]) {
                 textarea.value = deviceState.inputs[textarea.id];
-                textarea.dispatchEvent(new Event('change'));
+                // Find the associated CodeMirror instance and set its value
+                let codeMirrorElement = textarea.nextElementSibling;
+                if (codeMirrorElement && codeMirrorElement.classList.contains('CodeMirror')) {
+                    let codeMirrorInstance = codeMirrorElement.CodeMirror;
+                    if (codeMirrorInstance) {
+                        codeMirrorInstance.setValue(textarea.value);
+                    }
+                }
             }
         }
 
@@ -1903,7 +2052,8 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
     }
 
     // repaint everything after all devices have been added
-    jsPlumb.repaintEverything();
+    jsPlumb.repaintEverything();    
+    loadAllTextareaPatterns();
 }
 
 function displayAllDevices() {
@@ -2061,5 +2211,13 @@ async function getDefaultValues() {
         console.error('Error:', error);
     }
 }
+
+function resetConnectionStyle(connection) {
+    connection.setPaintStyle({ stroke: "white", strokeWidth: 2, fill: "transparent" });
+    connection.endpoints.forEach(endpoint => {
+        endpoint.setPaintStyle({ fill: "white", outlineStroke: "transparent", outlineWidth: 12 });
+    });
+}
+
 
 /* END functions */
