@@ -49,6 +49,7 @@ var wasmDeviceURLs = [
     "number",
     "or",
     "overdrive",
+    "output",
     "pattern",
     "play",
     "phasor",

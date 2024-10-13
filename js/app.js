@@ -156,16 +156,18 @@ window.onload = async function() {
     setTimeout(function() {
         window.scrollTo(0, 0);
     }, 10);
-    mousePosition.x = (document.documentElement.clientWidth / 2) - 210;
-    mousePosition.y = document.documentElement.clientHeight * 0.8;
-    let speaker1Div = await createDeviceByName('outputnode');
+    
+    mousePosition.x = document.documentElement.clientWidth - 200;
+    mousePosition.y = document.documentElement.clientHeight / 2 - 50;
+    let speaker1Div = await createDeviceByName('output');
     let inputElement = speaker1Div.querySelector('input');
     if (inputElement) {
         inputElement.value = 1;
     }
-    mousePosition.x = (document.documentElement.clientWidth / 2);
-    mousePosition.y = document.documentElement.clientHeight * 0.8;
-    let speaker2Div = await createDeviceByName('outputnode');
+    
+    mousePosition.x = document.documentElement.clientWidth - 200;
+    mousePosition.y = (document.documentElement.clientHeight / 2) + 50;
+    let speaker2Div = await createDeviceByName('output');
     inputElement = speaker2Div.querySelector('input');
     if (inputElement) {
         inputElement.value = 2;
@@ -506,7 +508,7 @@ function openAwesompleteUI() {
             await createDeviceByName('mic');
         }
         else if (selectedOption == 'speaker') {
-            await createDeviceByName('outputnode');
+            await createDeviceByName('output');
         }
         else {
             await createDeviceByName(selectedOption);
@@ -539,7 +541,7 @@ function openAwesompleteUI() {
                 await createDeviceByName('mic');
             }
             else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
-                await createDeviceByName('outputnode');
+                await createDeviceByName('output');
             }
             else {
                 await createDeviceByName(awesomplete.ul.childNodes[0].textContent);
@@ -547,7 +549,7 @@ function openAwesompleteUI() {
         } else {
             // use exactly what the user typed
             if ( input.value == 'speaker' ) {
-                await createDeviceByName('outputnode');
+                await createDeviceByName('output');
             }
             else {
                 await createDeviceByName(input.value);
@@ -756,7 +758,7 @@ function removeDeviceFromWorkspace(deviceId) {
     // remove the device div from the workspace
     div.parentNode.removeChild(div);
 
-    if (!deviceId.startsWith('outputnode')) {
+    if (!deviceId.startsWith('output')) {
         // disconnect the device from the web audio graph
         device.node.disconnect();
     }
@@ -769,18 +771,25 @@ function addInputsForDevice(device, deviceType, deviceId) {
     const inportForm = document.createElement('form');
     inportForm.autocomplete = 'off';
     const inportContainer = document.createElement('div');
+    inportContainer.className = 'labelAndInputContainer';
+    if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock', 'counter'].includes(deviceType) == false) {
+        inportContainer.style.paddingTop = '25px';
+    }
+    else {
+        inportContainer.style.marginTop = '-2px';
+    }
     let inports = [];
-
     const messages = device.messages;
     if (typeof messages !== 'undefined') {
         inports = messages.filter(message => message.type === RNBO.MessagePortType.Inport);
     }
-
     if (inports.length > 0) {
         inports.forEach(inport => {
             let inportText;
             if (device.it.T.inports[0].tag == 'pattern') {
                 inportText = document.createElement('textarea');
+                inportContainer.style.width = '78%';
+                inportContainer.style.padding = '0px 10px 0px 10px';
             }
             else if (device.it.T.inports[0].tag == 'comment') {
                 inportText = document.createElement('textarea');
@@ -836,6 +845,9 @@ function addInputsForDevice(device, deviceType, deviceId) {
 async function scheduleDeviceEvent(device, inport, value, deviceId) {
     try {
         let values;
+        if (value == undefined) {
+            return;
+        }
         value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
             value = executedTextPatterns[deviceId];
@@ -916,16 +928,18 @@ function finishConnection(deviceId, inputIndex) {
     if (sourceDeviceId) {
         const sourceDevice = devices[sourceDeviceId].device;
         const targetDevice = devices[deviceId] ? devices[deviceId].device : null;
-        const targetButtonId = document.querySelector(`#${deviceId} .input-container button:nth-child(${deviceId.includes('outputnode') ? 1 : inputIndex + 1})`).id;
+        const targetButtonId = document.querySelector(`#${deviceId} .input-container button:nth-child(${deviceId.includes('output') ? 1 : inputIndex + 1})`).id;
         const sourceButton = document.getElementById(sourceButtonId);
         const targetButton = document.getElementById(targetButtonId);
+        const verticalOffset = 40;
         const sourcePosition = [
-            (sourceButton.offsetLeft + sourceButton.offsetWidth / 2) / sourceButton.parentNode.offsetWidth,
-           1
+            1,
+            (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
         ];
+
         const targetPosition = [
-            (targetButton.offsetLeft + targetButton.offsetWidth / 2) / targetButton.parentNode.offsetWidth,
-            0
+            0,
+            (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
         ];
         // create channel splitter
         let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
@@ -945,7 +959,7 @@ function finishConnection(deviceId, inputIndex) {
         devices[sourceDeviceId].splitter = splitter;
 
         let targetDeviceInputName;
-        if (deviceId.startsWith('outputnode')) {
+        if (deviceId.startsWith('output')) {
             targetDeviceInputName = `speaker channel`;
         }
         else {
@@ -956,9 +970,7 @@ function finishConnection(deviceId, inputIndex) {
             source: sourceDeviceId,
             target: deviceId,
             anchors: [sourcePosition, targetPosition],
-            endpoint: ["Dot", { radius: 8 }],
             paintStyle: { stroke: "white", strokeWidth: 2, fill: "transparent" },
-            endpointStyle: { fill: "white", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
             connector: ["Straight"]
         });
 
@@ -1224,8 +1236,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             window.addEventListener('mouseup', handleButtonUp);
             window.addEventListener('touchend', handleButtonUp);
         }
-        else if ( filename.startsWith('outputnode') ) {
-            deviceDiv  = addDeviceToWorkspace(null, 'outputnode', true);
+        else if ( filename.startsWith('output') ) {
+            deviceDiv  = addDeviceToWorkspace(null, 'output', true);
         }
         else {
             if (filename == "*" ) {
@@ -1390,6 +1402,7 @@ function createAudioLoader(device, context, deviceDiv) {
     button.style.position = 'relative';
     button.style.display = 'inline';
     button.style.left = '-5px';
+    button.style.color = 'rgb(8,56,78)';
 
     // when the button is clicked, simulate a click on the file input
     button.addEventListener('click', () => fileInput.click());
@@ -1408,7 +1421,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.innerHTML = isSpeakerChannelDevice ? `speaker channel🔊` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `<b style="font-size: 1.25em;">${deviceType.replace(/[_-]/g, ' ')}</b>`;
+    deviceDiv.innerHTML = isSpeakerChannelDevice ? `<b class="deviceLabel">output</b>` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `<b class="deviceLabel">${deviceType.replace(/[_-]/g, ' ')}</b>`;
     
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';
@@ -1448,6 +1461,10 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         const button = document.createElement('button');
         button.innerText = 'signal in';
         button.className = 'input-button'
+        const speakerChannelSelectorLabel = document.createElement('label');
+        speakerChannelSelectorLabel.innerText = 'channel';
+        speakerChannelSelectorLabel.htmlFor = 'output_channel';
+        speakerChannelSelectorLabel.className = 'speakerChannelSelectorLabel';
         const speakerChannelSelectorInput = document.createElement('input');
         speakerChannelSelectorInput.type = 'number';
         speakerChannelSelectorInput.className = 'speakerChannelSelectorInput';
@@ -1481,14 +1498,15 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         button.id = `${deviceDiv.id}-inlet-${0}`;
         button.onclick = () => handleButtonClick(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1, true);
         inputContainer.appendChild(button);
-        inputContainer.appendChild(deleteButton);
-        infoButton.innerText = 'i';
+        deviceDiv.appendChild(deleteButton);
+        infoButton.innerText = '?';
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/wax/blob/main/README.md#speaker`, '_blank');
+            window.open(`https://github.com/nnirror/wax/blob/main/README.md#output`, '_blank');
         });
-        inputContainer.appendChild(infoButton);
+        deviceDiv.appendChild(infoButton);
         deviceDiv.append(inputContainer);
+        deviceDiv.appendChild(speakerChannelSelectorLabel);
         deviceDiv.appendChild(speakerChannelSelectorInput);
     } else {
         const inportForm = addInputsForDevice(device,deviceType,deviceDiv.id);
@@ -1532,16 +1550,17 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         else {
             deviceWidth = 15;
         }
-        inputContainer.appendChild(deleteButton);
-        infoButton.innerText = 'i';
+
+        deviceDiv.style.height = `${Math.max(device.it.T.inlets.length+1,device.it.T.outlets.length+1) * 28}px`;
+        deviceDiv.appendChild(deleteButton);
+        infoButton.innerText = '?';
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
             window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
         });
-        inputContainer.appendChild(infoButton);
-        // deviceDiv.style.width = `${(deviceWidth/2)+6}em`;
+        deviceDiv.appendChild(infoButton);
         if (inportForm.elements.length > 0) {
-            deviceDiv.style.minWidth = '10em';
+            deviceDiv.style.minWidth = '142px';
         }
         attachOutports(device,deviceDiv);
     }
@@ -1617,8 +1636,20 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 function adjustCodeMirrorHeight(editor) {
     const lineHeight = 16;
     const lines = editor.lineCount();
-    const newHeight = Math.max(lines * lineHeight, 6 * lineHeight); // minimum height of 6em
+    const newHeight = Math.max(lines * lineHeight, 6 * lineHeight);
     editor.getWrapperElement().style.height = `${newHeight}px`;
+
+    // find the containining node
+    let nodeElement = editor.getWrapperElement();
+    while (nodeElement && !nodeElement.classList.contains('node')) {
+        nodeElement = nodeElement.parentElement;
+    }
+
+    if (nodeElement) {
+        nodeElement.style.height = 'auto';
+        const nodeHeight = nodeElement.scrollHeight;
+        nodeElement.style.height = `${nodeHeight}px`;
+    }
 }
 
 function getFirstLineOfBlock(initial_line,cm) {

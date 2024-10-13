@@ -70,7 +70,7 @@ Press the `save` button to save the system state as a zip file, including all au
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
 ## Recording a session
-With devices connected to a speaker objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer. **NOTE:** on mobile devices, recordings that include microphone input might sound garbled.
+With devices connected to an `output` objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer. **NOTE:** on mobile devices, recordings that include microphone input might sound garbled.
 
 # Device reference
 
@@ -218,6 +218,10 @@ Computes the logical OR of `signal in 1` `signal in 2`.
 ## overdrive
 Overdrives `signal in` by `amount`, which expects a range of floats 0 - 1. Higher `amount` values produce more distortion.
 
+## output
+Connects the audio stream to the computer's selected audio output device on channel `channel`.
+**NOTE**: if you change want to use a different audio output device, you will need to reload the page. Make sure to save your state beforehand so you can reload it.
+
 ## pattern
 Generates a customizable wavetable using [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. 
 - `phase` values between 0 and 1 select a corresponding relative position in the wavetable.
@@ -303,10 +307,6 @@ Smooths `signal in` by logarithmically ramping from its previous value to its ne
 
 ## slider
 Outputs a float between 0 and 1. Move the slider to change the offset.
-
-## speaker
-Connects to the speakers of the computer's selected audio output device on channel `speaker channel`.
-**NOTE**: if you change want to use a different audio output device, you will need to reload the page. Make sure to save your state beforehand so you can reload it.
 
 ## speedlim
 Slows a signal down so it only changes once for every `interval (ms)` that passes.

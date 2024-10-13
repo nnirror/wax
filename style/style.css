@@ -1,7 +1,7 @@
 .node {
     position: absolute;
     padding: 0px 10px 0px 10px;
-    background: rgb(255,255,255);
+    background: rgb(203,203,203);
     border-radius: 10px;
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     display: table;
@@ -11,34 +11,84 @@
     width: auto;
     border: 3px solid rgb(8,56,78);
     z-index: 1001;
+    min-height: 3.5em;
+    min-width: 100px;
 }
 .node form {
     margin-top: 5px;
 }
 .input-container {
-    margin-left: -10px;
+    position: absolute;
+    top: 1.5em;
+    left: -12px;
+    height: auto;
+    width: 55%;
     padding-top: 2px;
     padding-bottom: 0px;
     padding-left: 6px;
     margin-bottom: 5px;
-    width: calc(100% + 16px);
     overflow-x: auto;
     padding-left: 4px;
-    height: 24px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    background: rgb(203,203,203);
+    color: rgb(8,56,78);
 }
-.input-container button, .output-container button, #infoDiv button {
+.output-container {
+    float: right;
+    position: relative;
+    right: -18px;
+    top: -3px;
+    padding-top: 1.5em;
+    height: auto;
+    margin-left: -10px;
+    padding-top: 1px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    color: rgb(8,56,78);
+}
+.inportContainer {
+    padding-top: 24px;
+}
+.labelAndInputContainer {
+    position: absolute;
+    left: 48px;
+}
+.node .input-button, .node  .output-button {
+    display: block;
+    background: rgb(255,255,255);
+    color: rgb(8,56,78);
+    height: 24px;
+    width: 58px;
+    font-size: 10px;
+    margin-bottom: 4px;
+}
+.node button, #infoDiv button {
     font-size: 0.75em;
     cursor: pointer;
     color: white;
     border-radius: 10px;
     border: 0;
 }
-.input-button, .output-button, .info-button {
+.deviceLabel {
+    display: inline-block;
+    font-size: 1.25em;
+    text-align: center;
+    width: 100%;
+}
+.info-button {
     background: rgb(8,56,78);
-    margin-right: 4px;
+    position: absolute;
+    width: 15px;
+    top: 0;
+    left: 5px;
+}
+.delete-button {
+    width: 15px;
+    position: absolute;
+    top: 0;
+    right: 5px;
 }
 .delete-button, #closeInfoButton {
     background: rgb(255,0,94);
@@ -53,17 +103,6 @@
 }
 .delete-button, .info-button {
     margin-top: 3px;
-}
-.output-container {
-    margin-left: -10px;
-    padding-top: 1px;
-    padding-bottom: 3px;
-    padding-left: 6px;
-    margin-top: 10px;
-    width: calc(100% + 14px);
-    background: rgb(203,203,203);
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
 }
 html {
     overscroll-behavior: none;
@@ -82,7 +121,6 @@ body {
 }
 .delete-button {
     float: right;
-    margin-right: 8px;
     width: 17px;
 }
 .info-button {
@@ -388,15 +426,29 @@ body .sliderMin, body .sliderMax {
 .speakerChannelSelectorInput {
     width: 3em;
     margin-bottom: 6px;
+    float: right;
+    position: relative;
+    top: 5px;
+    left: 34px;
+}
+.speakerChannelSelectorLabel {
+    float: right;
+    position: relative;
+    right: 60px;
+    top: 9px;
+    font-size: 10px;
 }
 .deviceInportLabel {
-    display: inline-block;
+    display: none;
     width: 8em;
     font-size: 0.75em;
 }
 .deviceInport {
-    width: 8em;
-    display: inline-block;
+    width: 4em;
+    font-size: 10px;
+    margin-left: 10px;
+    float: right;
+    height: 22px;
 }
 .awesompleteContainer {
     width: 10em;
