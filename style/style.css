@@ -167,7 +167,8 @@ body .sliderMin, body .sliderMax {
 .mobileMenuButton {
     text-align: center;
     z-index: 1001;
-    font-size: 60px;
+    font-size: 48px;
+    padding: 10px 0px;
     cursor: pointer;
 }
 .mobileMenuButton:nth-child(odd) {
@@ -205,7 +206,7 @@ body .sliderMin, body .sliderMax {
         left: calc(71px + 8em * 2);
     }
     body .deviceListModal {
-        left: calc(70px + 8em * 2);
+        left: calc(40px + 8em * 2);
         top: calc(3vh + 80px);
     }
     body .exampleFilesButton {
@@ -213,7 +214,7 @@ body .sliderMin, body .sliderMax {
         left: calc(71px + 8em * 3);
     }
     body #exampleFiles {
-        left: calc(30px + 8em * 3);
+        left: calc(4px + 8em * 3);
         top: calc(3vh + 80px);
     }
     body .helpButton {
@@ -226,25 +227,24 @@ body .sliderMin, body .sliderMax {
     body .waxButton {
         position: fixed;
         top: 3vh;
-        left: 16vw;
-        width: 8rem;
+        left: 18vw;
+        width: 6rem;
         height: 3rem;
-        z-index: 1001;
     }
     
     body .startAudioButton {
         position: fixed;
         top: 3vh;
-        left: 41vw;
-        width: 8rem;
+        left: 45vw;
+        width: 6rem;
         height: 3rem;
     }
     
     body #ui-container .mobileMenuToggleButton {
         position: fixed;
         top: 3vh;
-        left: 70vw;
-        width: 8rem;
+        left: 72vw;
+        width: 6rem;
         height: 3rem;
         display: block;
     }
@@ -273,7 +273,7 @@ body .sliderMin, body .sliderMax {
     }
     .deviceListModalContent {
         border-radius: 10px;
-        margin-top: 40px;
+        margin-top: 48px;
     }
     .deviceListItem {
         padding-left: 10px;
@@ -307,17 +307,13 @@ body .sliderMin, body .sliderMax {
         border-radius: 0px 0px 10px 10px;
     }
     body #exampleFiles a:first-of-type {
-        margin-top: 40px;
+        margin-top: 48px;
     }
 }
 @media screen and (min-width: 601px) {
     #mobileMenu {
         display: none !important;
     }
-}
-.mobileButtonTriangle {
-    font-size: 0.5em;
-    vertical-align: middle;
 }
 .waxButton {
     position: fixed;
@@ -366,7 +362,8 @@ body .sliderMin, body .sliderMax {
 #exampleFiles {
     position: fixed;
     top: calc(3vh + 40px);
-    left: calc(2em + 8em * 6);
+    left: calc(0.1em + 8em * 6);
+    z-index: 1004;;
     background: white;
     padding: 2em;
     border-radius: 10px;
@@ -378,7 +375,7 @@ body .sliderMin, body .sliderMax {
 }
 .deviceListModal {
     position: fixed;
-    left: calc(65px + 8em * 5);
+    left: calc(38px + 8em * 5);
     top: calc(3vh + 40px);
     border: 1px solid black;
     z-index: 1005;

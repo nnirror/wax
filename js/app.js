@@ -69,7 +69,7 @@ async function handleExamplesButtonClick(event) {
     header.textContent = ' Examples';
     var triangle = document.createElement('span');
     triangle.className = 'mobileButtonTriangle';
-    triangle.textContent = '◀';
+    triangle.textContent = '◂';
     header.prepend(triangle);
 
     // add onclick event listener to the header
@@ -2052,6 +2052,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                     let codeMirrorInstance = codeMirrorElement.CodeMirror;
                     if (codeMirrorInstance) {
                         codeMirrorInstance.setValue(textarea.value);
+                        executedTextPatterns[deviceElement.id] = textarea.value;
                     }
                 }
             }
@@ -2153,12 +2154,12 @@ function displayAllDevices() {
     header.textContent = ' Devices';
     var triangle = document.createElement('span');
     triangle.className = 'mobileButtonTriangle';
-    triangle.textContent = '◀';
+    triangle.textContent = '◂';
     header.prepend(triangle);
     // add onclick event listener to the header
     header.onclick = function() {
         document.getElementById('deviceListModal').style.display = 'none';
-        showMobileMenu();
+        setTimeout(()=>{showMobileMenu()},5);
     };
 
     content.insertBefore(header, ul);
@@ -2225,8 +2226,8 @@ function showVisualConfirmationOfConnectionButtonClick(event) {
     const originalBackground = clickedElement.style.background;
     const originalColor = clickedElement.style.color;
     // change the background and text color
-    clickedElement.style.background = 'white';
-    clickedElement.style.color = 'rgb(8,56,78)';
+    clickedElement.style.background = 'rgb(8,56,78)';
+    clickedElement.style.color = 'white';
     setTimeout(() => {
         clickedElement.style.background = originalBackground;
         clickedElement.style.color = originalColor;
