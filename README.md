@@ -237,7 +237,7 @@ Applies a time-domain frequency shift effect of `shift amount` to `signal in`. A
 
 ## play
 Plays an audio file at `rate` every time `trigger` goes above 0.5.
-- The `sync` outlet signal is the current playback position normalized between 0 and 1. A signal above 0.5 for the `loop` signal will loop file playback.
+- The `sync` outlet signal is the current playback position normalized between 0 and 1. A nonzero `loop` input will loop file playback.
 - The `start pos` and `end pos` values control the relative start and end point of audio file playback and expect values between 0 and 1.
 
 ## pluck
@@ -259,7 +259,7 @@ Returns a random number between 0 and `maximum`, every time `trigger` goes above
 Smooths `signal in` by linearly ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`.
 
 ## record
-Records `signal in L` and `signal in R` to a stereo audio buffer for `length (seconds)` seconds.
+Records `signal in L` and `signal in R` to a stereo audio buffer for `length (ms)` milliseconds.
 - A signal that rises above 0.5 in `start/stop` will start the recording, and a signal that falls below 0.5 will stop it. You can use a `toggle` UI element to control `start/stop`.
 - To export the last recording, send a signal that rises above 0.5 to `save`. You can use a `button` UI element to control `save`.
 

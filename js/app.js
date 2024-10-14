@@ -137,7 +137,7 @@ function showMobileMenu(event) {
 }
 
 createButtonForNavBar('WAX', 'waxButton navbarButton', ()=>{});
-createButtonForNavBar('ON', 'startAudioButton navbarButton', handleOnButtonClick);
+createButtonForNavBar('OFF', 'startAudioButton navbarButton', handleOnButtonClick);
 createButtonForNavBar('Save', 'saveStateButton navbarButton', handleSaveButtonClick);
 createButtonForNavBar('Share', 'shareStateButton navbarButton', handleShareButtonClick);
 createButtonForNavBar('Load', 'reloadStateButton navbarButton', handleLoadButtonClick);
@@ -220,11 +220,17 @@ window.onload = async function() {
 };
 
 document.addEventListener('input', function(event) {
-    // force comment textearas to resize vertically
+    // force comment textareas to resize vertically
     if (event.target.tagName.toLowerCase() === 'textarea') {
         const textarea = event.target;
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
+        // find the parent node and update its size too
+        let parentNode = textarea.closest('.node');
+        if (parentNode) {
+            parentNode.style.height = 'auto';
+            parentNode.style.height = parentNode.scrollHeight + 10 + 'px';
+        }
     }
 });
 
@@ -286,7 +292,7 @@ jsPlumb.bind("connectionDetached", function(info) {
 jsPlumb.bind("click", function(connection, originalEvent) {
     deselectAllNodes();
     selectedConnection = connection;
-    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 2 });
+    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
     connection.endpoints.forEach(endpoint => {
         endpoint.setPaintStyle({ fill: 'rgb(255,0,94)', outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" });
     });
@@ -772,10 +778,16 @@ function addInputsForDevice(device, deviceType, deviceId) {
     inportForm.autocomplete = 'off';
     const inportContainer = document.createElement('div');
     inportContainer.className = 'labelAndInputContainer';
-    if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock', 'counter'].includes(deviceType) == false) {
+    if ( ['mix','sah','record'].includes(deviceType) ) {
+        // devices with inports that start 2 buttons down
+        inportContainer.style.paddingTop = '52px';
+    }
+    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock'].includes(deviceType) == false) {
+        // devices with inports that start 1 button down
         inportContainer.style.paddingTop = '25px';
     }
     else {
+        // devices with inports that start at top
         inportContainer.style.marginTop = '-2px';
     }
     let inports = [];
@@ -970,7 +982,9 @@ function finishConnection(deviceId, inputIndex) {
             source: sourceDeviceId,
             target: deviceId,
             anchors: [sourcePosition, targetPosition],
-            paintStyle: { stroke: "white", strokeWidth: 2, fill: "transparent" },
+            paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
+            endpointStyle: { fill: "white", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
+            endpoint: ["Dot", { radius: 8 }],
             connector: ["Straight"]
         });
 
@@ -1132,6 +1146,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
 
             // create a div to hold the labels and inputs
             const div = document.createElement('div');
+            div.className = 'labelAndInputContainer';
+            div.style.left = '16px';
+            div.style.top = '86px';
 
             // create min input and its label
             const minInput = document.createElement('input');
@@ -1139,11 +1156,14 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             minInput.value = slider.min;
             minInput.id = 'min';
             minInput.className = 'deviceInport sliderMin';
+            minInput.style.float = 'none';
 
             const minInputLabel = document.createElement('label');
             minInputLabel.for = 'min';
             minInputLabel.textContent = 'min';
             minInputLabel.className = 'deviceInportLabel';
+            minInputLabel.style.display = 'inline-block';
+            minInputLabel.style.width = '22px';
 
             // create max input and its label
             const maxInput = document.createElement('input');
@@ -1151,11 +1171,14 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             maxInput.value = slider.max;
             maxInput.id = 'max';
             maxInput.className = 'deviceInport sliderMax';
+            maxInput.style.float = 'none';
 
             const maxInputLabel = document.createElement('label');
             maxInputLabel.for = 'max';
             maxInputLabel.textContent = 'max';
             maxInputLabel.className = 'deviceInportLabel';
+            maxInputLabel.style.display = 'inline-block';
+            maxInputLabel.style.width = '22px';
 
             // append labels and inputs to the div
             div.appendChild(minInputLabel);
@@ -1296,11 +1319,31 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'pattern') {
             deviceDiv.style.width = '32em';
         }
-        if (filename == 'comment') {
+        if ( filename == 'play' ) {
+            deviceDiv.style.height = '216px';
+        }
+        if ( filename == 'wave' ) {
             deviceDiv.style.width = '12em';
+        }
+        if (filename == 'comment') {
+            deviceDiv.style.width = '10em';
+            deviceDiv.style.height = '80px';
         }
         if (filename == 'buffer') {
             deviceDiv.style.width = '12em';
+        }
+        if (filename == 'swanramp') {
+            deviceDiv.style.width = '9em';
+        }
+        if (filename == 'rampsmooth') {
+            deviceDiv.style.width = '11em';
+        }
+        if (filename == 'print') {
+            deviceDiv.style.width = '8em';
+        }
+        if (filename == 'record') {
+            deviceDiv.style.width = '104px';
+            deviceDiv.style.minWidth = '104px';
         }
         return deviceDiv;
     }
@@ -1398,11 +1441,7 @@ function createAudioLoader(device, context, deviceDiv) {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = 'load file';
-    button.style.marginTop = '10px';
-    button.style.position = 'relative';
-    button.style.display = 'inline';
-    button.style.left = '-5px';
-    button.style.color = 'rgb(8,56,78)';
+    button.className = 'audioFileLoaderButton';
 
     // when the button is clicked, simulate a click on the file input
     button.addEventListener('click', () => fileInput.click());
@@ -1837,7 +1876,9 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
         
         // copy to clipboard
         navigator.clipboard.writeText(fullUrl).then(function() {
-            alert('successfully copied to clipboard!');
+            alert(`Wax state successfully copied to clipboard!
+
+Note: audio files are not included in the URL and need to be shared separately. To share the entire patch including audio files, use the "Save" button to download a .zip file.`);
         }, function(err) {});
     }
 
@@ -2184,20 +2225,20 @@ async function stopAudio() {
     const button = document.querySelector('.startAudioButton');
     await new Promise(resolve => setTimeout(resolve, 10));
     await context.suspend();
-    button.textContent = 'ON';
-    button.style.border = '3px solid rgb(101,255,229)';
-    button.style.background = 'rgb(101,255,229)';
-    button.style.color = 'rgb(8,56,78)';
+    button.textContent = 'OFF';
+    button.style.border = '3px solid rgb(255,0,94)';
+    button.style.background = 'rgb(255,0,94)';
+    button.style.color = 'rgb(255,255,255)';
     isAudioPlaying = false;
 }
 
 async function startAudio() {
     const button = document.querySelector('.startAudioButton');
     await context.resume();
-    button.textContent = 'OFF';
-    button.style.border = '3px solid rgb(255,0,94)';
-    button.style.background = 'rgb(255,0,94)';
-    button.style.color = 'rgb(255,255,255)';
+    button.textContent = 'ON';
+    button.style.border = '3px solid rgb(101,255,229)';
+    button.style.background = 'rgb(101,255,229)';
+    button.style.color = 'rgb(8,56,78)';
     isAudioPlaying = true;
 }
 
@@ -2245,7 +2286,7 @@ async function getDefaultValues() {
 }
 
 function resetConnectionStyle(connection) {
-    connection.setPaintStyle({ stroke: "white", strokeWidth: 2, fill: "transparent" });
+    connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
     connection.endpoints.forEach(endpoint => {
         endpoint.setPaintStyle({ fill: "white", outlineStroke: "transparent", outlineWidth: 12 });
     });

@@ -60,7 +60,8 @@
     "play": {
         "rate": 1,
         "start pos": 0,
-        "end pos": 1
+        "end pos": 1,
+        "loop": 0
     },
     "pluck": {
         "damping": 0.25

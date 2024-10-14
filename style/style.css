@@ -153,7 +153,7 @@ body {
     display: none;
 }
 body .sliderMin, body .sliderMax {
-    width: 60%;
+    width: 45%;
 }
 #mobileMenu {
     color: rgb(8,56,78);
@@ -328,9 +328,9 @@ body .sliderMin, body .sliderMax {
 }
 .startAudioButton {
     left: calc(71px + 8em * 1);
-    color: rgb(8,56,78);
-    border: 3px solid rgb(101,255,229);
-    background: rgb(101,255,229);
+    color: white;
+    border: 3px solid rgb(255,0,94);
+    background: rgb(255,0,94);
 }
 .shareStateButton {
     left: calc(71px + 8em * 4);
@@ -492,7 +492,12 @@ mark {
     margin-top: 4px;
     margin-left: 11px;
     margin-bottom: 0;
-    display: inline;
+    display: inline-block;
+    position: absolute;
+    bottom: 4px;
+    left: 60px;
+    max-width: 110px;
+    overflow: hidden;
 }
 #infoDiv {
     position: fixed;
@@ -548,24 +553,39 @@ mark {
     cursor: pointer;  
 }
 .toggle-button {
-    height: 50px;
-    width: 96px;
-    min-height: 50px;
-    max-height: 50px;
+    background-color: grey;
+    height: 10px;
+    width: 75px;
+    padding: 0px 0;
+    margin-bottom: 28px;
+    position: relative;
+    left: 13px;
+    top: 22px;
+    min-height: 75px;
+    max-height: 75px;
+    border-radius: 10px !important;
+    text-align: center;
 }
 .toggle-off {
     background-color: grey;
 }
-.toggle-on {
+body .toggle-on {
     background-color: white;
+    color: rgb(8,56,78);
 }
 .button-ui {
     background-color: grey;
-    height: 50px;
-    width: 96px;
-    min-height: 50px;
-    max-height: 50px;
-    border-radius: 25px;
+    height: 10px;
+    width: 75px;
+    padding: 0px 0;
+    margin-bottom: 28px;
+    position: relative;
+    left: 13px;
+    top: 22px;
+    min-height: 75px;
+    max-height: 75px;
+    border-radius: 43px !important;
+    text-align: center;
 }
 #logo {
     position: fixed;
@@ -575,12 +595,31 @@ mark {
     left: 10px;
     z-index: 1001;
 }
-.jtk-hover svg circle {
-    fill: rgb(101,255,229);
-}
 .jtk-hover path {
     cursor: pointer;
 }
 body .CodeMirror {
     height: 6em;
+}
+#comment {
+    position: absolute;
+    left: -36px;
+    top: 0px;
+}
+#slider {
+    width: 100%;
+    margin: 20px 0px 55px 0px;
+}
+.printvalue {
+    position: relative;
+    top: 2px;
+    left: 47px;
+}
+.audioFileLoaderButton {
+    margin-top: 10px;
+    position: absolute;
+    display: inline;
+    color: white;
+    bottom: 4px;
+    background-color: rgb(8, 56, 78);
 }
