@@ -153,7 +153,8 @@ body {
     display: none;
 }
 body .sliderMin, body .sliderMax {
-    width: 45%;
+    width: 3.5em;
+    margin-right: 10px;
 }
 #mobileMenu {
     color: rgb(8,56,78);
@@ -485,7 +486,7 @@ mark {
     top:-2px;
 }
 .audioInputDeviceSelect {
-    max-width: 10em;
+    width: 170px;
 }
 .audioFileName {
     font-size: 0.8em;
@@ -557,10 +558,9 @@ mark {
     height: 10px;
     width: 75px;
     padding: 0px 0;
-    margin-bottom: 28px;
     position: relative;
     left: 13px;
-    top: 22px;
+    top: 54px;
     min-height: 75px;
     max-height: 75px;
     border-radius: 10px !important;
@@ -578,10 +578,9 @@ body .toggle-on {
     height: 10px;
     width: 75px;
     padding: 0px 0;
-    margin-bottom: 28px;
     position: relative;
     left: 13px;
-    top: 22px;
+    top: 54px;
     min-height: 75px;
     max-height: 75px;
     border-radius: 43px !important;
@@ -607,8 +606,10 @@ body .CodeMirror {
     top: 0px;
 }
 #slider {
-    width: 100%;
-    margin: 20px 0px 55px 0px;
+    width: 146px;
+    margin-right: 63px;
+    position: relative;
+    top: -6px;
 }
 .printvalue {
     position: relative;

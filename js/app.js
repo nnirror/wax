@@ -220,17 +220,8 @@ window.onload = async function() {
 };
 
 document.addEventListener('input', function(event) {
-    // force comment textareas to resize vertically
     if (event.target.tagName.toLowerCase() === 'textarea') {
-        const textarea = event.target;
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-        // find the parent node and update its size too
-        let parentNode = textarea.closest('.node');
-        if (parentNode) {
-            parentNode.style.height = 'auto';
-            parentNode.style.height = parentNode.scrollHeight + 10 + 'px';
-        }
+        resizeTextarea(event.target);
     }
 });
 
@@ -1032,7 +1023,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const device = await createMotionDevice(context);
             deviceDiv = addDeviceToWorkspace(device, "motion", false);
         }
-        else if (filename === "mic") {
+        else if (filename === "mic" || filename === "microphone") {
+            filename = "mic";
             if ( !isAudioPlaying ) {
                 await startAudio();
             }
@@ -1080,21 +1072,31 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             // create a toggle button
             const toggleButton = document.createElement('button');
-            toggleButton.textContent = 'Toggle';
-            const inputContainer = deviceDiv.querySelector('.input-container');
-            inputContainer.insertAdjacentElement('afterend', toggleButton);
-
-             // create a hidden input
+            toggleButton.textContent = 'off';
+            toggleButton.className = 'toggle-button toggle-off';
+        
+            // create a hidden input
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.value = '0'; 
             hiddenInput.id = 'toggleHiddenInput';
-            deviceDiv.appendChild(hiddenInput);
         
-            // add initial class and text
-            toggleButton.className = 'toggle-button toggle-off';
-            toggleButton.textContent = 'off';
-
+            // find the existing form in the device
+            const form = deviceDiv.querySelector('form');
+        
+            // create a div to hold the labels and inputs
+            const div = document.createElement('div');
+            div.className = 'labelAndInputContainer';
+            div.style.left = '9px';
+            div.style.top = '0px';
+        
+            // append the toggle button and hidden input to the div
+            div.appendChild(toggleButton);
+            div.appendChild(hiddenInput);
+        
+            // append the div to the form
+            form.appendChild(div);
+        
             // add event listener to the toggle button
             toggleButton.addEventListener('click', () => {
                 // toggle the value between 1 and 0
@@ -1102,7 +1104,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 
                 // update the hidden input value
                 hiddenInput.value = silenceGenerator.offset.value;
-
+        
                 // toggle the class and text
                 if (toggleButton.className === 'toggle-button toggle-off') {
                     toggleButton.className = 'toggle-button toggle-on';
@@ -1148,7 +1150,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const div = document.createElement('div');
             div.className = 'labelAndInputContainer';
             div.style.left = '16px';
-            div.style.top = '86px';
+            div.style.top = '34px';
+
+            div.appendChild(slider);
 
             // create min input and its label
             const minInput = document.createElement('input');
@@ -1183,7 +1187,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             // append labels and inputs to the div
             div.appendChild(minInputLabel);
             div.appendChild(minInput);
-            div.appendChild(document.createElement('br'));
             div.appendChild(maxInputLabel);
             div.appendChild(maxInput);
             div.appendChild(document.createElement('br'));
@@ -1199,9 +1202,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             maxInput.addEventListener('change', () => {
                 slider.max = maxInput.value;
             });
-
-            // insert the slider before the form in the deviceDiv
-            deviceDiv.insertBefore(slider, form);
 
             // add event listeners to the slider
             slider.addEventListener('input', () => {
@@ -1235,27 +1235,40 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             // create a button
             const button = document.createElement('button');
             button.textContent = '⬤';
-            const inputContainer = deviceDiv.querySelector('.input-container');
-            inputContainer.insertAdjacentElement('afterend', button);
             button.className = 'button-ui';
-
+        
+            // find the existing form in the device
+            const form = deviceDiv.querySelector('form');
+        
+            // create a div to hold the labels and inputs
+            const div = document.createElement('div');
+            div.className = 'labelAndInputContainer';
+            div.style.left = '9px';
+            div.style.top = '0px';
+        
+            // append the button to the div
+            div.appendChild(button);
+        
+            // append the div to the form
+            form.appendChild(div);
+        
             // define the event handler functions
-            function handleButtonDown() {
+            function handleButtonDown(event) {
                 event.preventDefault();
                 silenceGenerator.offset.value = 1;
                 button.style.color = 'white';
             }
-
-            function handleButtonUp() {
+        
+            function handleButtonUp(event) {
                 event.preventDefault();
                 silenceGenerator.offset.value = 0;
                 button.style.color = 'black';
-            }            
+            }
         
             // add event listeners to the button
             button.addEventListener('mousedown', handleButtonDown);
             button.addEventListener('touchstart', handleButtonDown);
-
+        
             window.addEventListener('mouseup', handleButtonUp);
             window.addEventListener('touchend', handleButtonUp);
         }
@@ -1345,6 +1358,16 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.width = '104px';
             deviceDiv.style.minWidth = '104px';
         }
+        if (filename == 'slider') {
+            deviceDiv.style.width = '200px';
+            deviceDiv.style.height = '90px';
+        }
+        if (filename == 'mic') {
+            deviceDiv.style.width = '220px';
+        }
+        if (filename == 'button' || filename == 'toggle') {
+            deviceDiv.style.height = '138px';
+        }
         return deviceDiv;
     }
     catch (error) {
@@ -1355,7 +1378,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
 async function createInputDeviceSelector(device, context, deviceDiv) {
     // create a new select element
     const select = document.createElement('select');
-    select.className = 'audioInputDeviceSelect'
+    select.className = 'audioInputDeviceSelect';
 
     // get the list of available input devices
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -1386,10 +1409,19 @@ async function createInputDeviceSelector(device, context, deviceDiv) {
         deviceDiv.dispatchEvent(streamChangedEvent);
     });
 
+    // create a div to hold the select element
+    const div = document.createElement('div');
+    div.className = 'labelAndInputContainer';
+    div.style.left = '9px';
+    div.style.top = '58px';
+
+    // append the select element to the div
+    div.appendChild(select);
+
     // select the form inside the deviceDiv
     const form = deviceDiv.querySelector('form');
-    // add the select to the form
-    form.appendChild(select);
+    // add the div to the form
+    form.appendChild(div);
 }
 
 function showGrowlNotification(message) {
@@ -1460,7 +1492,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.innerHTML = isSpeakerChannelDevice ? `<b class="deviceLabel">output</b>` : deviceType == 'toggle' || deviceType == 'button'  ? '' : `<b class="deviceLabel">${deviceType.replace(/[_-]/g, ' ')}</b>`;
+    deviceDiv.innerHTML = isSpeakerChannelDevice ? `<b class="deviceLabel">output</b>` : `<b class="deviceLabel">${deviceType.replace(/[_-]/g, ' ')}</b>`;
     
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';
@@ -2127,6 +2159,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
     // repaint everything after all devices have been added
     jsPlumb.repaintEverything();    
     loadAllTextareaPatterns();
+    resizeAllTextareas();
 }
 
 function displayAllDevices() {
@@ -2292,5 +2325,22 @@ function resetConnectionStyle(connection) {
     });
 }
 
+function resizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+    // find the parent node and update its size too
+    let parentNode = textarea.closest('.node');
+    if (parentNode) {
+        parentNode.style.height = 'auto';
+        parentNode.style.height = parentNode.scrollHeight + 10 + 'px';
+    }
+}
+
+function resizeAllTextareas() {
+    const textareas = document.querySelectorAll('textarea:not([hidden])');
+    textareas.forEach(textarea => {
+        resizeTextarea(textarea);
+    });
+}
 
 /* END functions */
