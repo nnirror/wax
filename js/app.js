@@ -1401,6 +1401,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         return deviceDiv;
     }
     catch (error) {
+        console.log(error);
         showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
     }
 }
@@ -1551,15 +1552,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     deleteIcon.src = 'img/delete.png';
     deleteIcon.alt = 'Delete';
     deleteButton.appendChild(deleteIcon);
-    deleteButton.addEventListener('click', function() {
-        let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
-        let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
-        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        removeDeviceFromWorkspace(deviceDiv.id);
-        deviceDiv.remove();
-    });
-
+    deleteButton.addEventListener('click', handleDeleteEvent(deviceDiv));
+    deleteButton.addEventListener('touchstart', handleDeleteEvent(deviceDiv));
 
     const infoButton = document.createElement('button');
 
@@ -1612,9 +1606,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoIcon.src = 'img/info.png';
         infoIcon.alt = 'additional info';
         infoButton.appendChild(infoIcon);
-        infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/wax/blob/main/README.md#output`, '_blank');
-        });
+        infoButton.addEventListener('click', handleInfoButtonClick);
+        infoButton.addEventListener('touchstart', handleInfoButtonClick);
         deviceDiv.appendChild(infoButton);
         deviceDiv.append(inputContainer);
         deviceDiv.appendChild(speakerChannelSelectorLabel);
@@ -1714,9 +1707,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoButton.appendChild(infoIcon);
         
         infoButton.className = 'info-button';
-        infoButton.addEventListener('click', function() {
-            window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
-        });
+        infoButton.addEventListener('click', handleInfoButtonClick);
+        infoButton.addEventListener('touchstart', handleInfoButtonClick);
         deviceDiv.appendChild(infoButton);
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '142px';
@@ -2488,4 +2480,18 @@ function getDisplayNameByFileName(fileName) {
     }
 }
 
+function handleDeleteEvent(deviceDiv) {
+    return function() {
+        let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+        let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
+        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+        removeDeviceFromWorkspace(deviceDiv.id);
+        deviceDiv.remove();
+    };
+}
+
+function handleInfoButtonClick() {
+    window.open(`https://github.com/nnirror/wax/blob/main/README.md#output`, '_blank');
+}
 /* END functions */
