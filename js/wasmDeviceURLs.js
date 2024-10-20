@@ -196,10 +196,6 @@ var wasmDeviceURLs = [
         "displayName": "random"
     },
     {
-        "fileName": "rampsmooth",
-        "displayName": "smooth"
-    },
-    {
         "fileName": "record",
         "displayName": "record"
     },
@@ -244,7 +240,7 @@ var wasmDeviceURLs = [
         "displayName": "skipper"
     },
     {
-        "fileName": "slide",
+        "fileName": "smooth",
         "displayName": "smooth"
     },
     {
@@ -286,5 +282,9 @@ var wasmDeviceURLs = [
     {
         "fileName": "wrap",
         "displayName": "wrap"
+    },
+    {
+        "fileName": "microphone-input",
+        "displayName": "input"
     }
 ];

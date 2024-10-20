@@ -254,9 +254,6 @@ Displays the current value of `input` every 100ms. Helpful for debugging.
 ## random
 Returns a random number between 0 and `maximum`, every time `trigger` goes above 0.5.
 
-## rampsmooth
-Smooths `input` by linearly ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`.
-
 ## record
 Records `input 1` and `input 2` to a stereo audio buffer for `length (ms)` milliseconds.
 - A signal that rises above 0.5 in `start/stop` will start the recording, and a signal that falls below 0.5 will stop it. You can use a `toggle` UI element to control `start/stop`.
@@ -301,11 +298,11 @@ Translates `input` into a different number range.
 ## skipper
 Decides whether to pass or mute `input` every time `input` goes above 0.1, based on `prob`.
 
-## slide
-Smooths `input` by logarithmically ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`.
-
 ## slider
 Outputs a float between 0 and 1. Move the slider to change the offset.
+
+## smooth
+Smooths `input` by ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`. `exponent` controls the contour of the ramp: at 0, the ramp moves linearly to the new value, and at 1, the ramp moves logarithmically.
 
 ## speedlim
 Slows `input` down so it only changes once for every `interval (ms)` that passes.

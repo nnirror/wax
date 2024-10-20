@@ -1858,7 +1858,6 @@ function getFirstLineOfBlock(initial_line,cm) {
 function createDropdownofAllDevices () {
     const deviceDropdown = document.createElement('select');
     deviceDropdown.className = 'deviceDropdown';
-
     // load each WASM device into dropdown
     wasmDeviceURLs.sort().forEach((wasmDevice) => {
         const displayName = wasmDevice.displayName;
