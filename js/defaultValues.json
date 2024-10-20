@@ -73,6 +73,9 @@
         "up slope (ms)": 30,
         "down slope (ms)": 30
     },
+    "record": {
+        "length (ms)": 10000
+    },
     "rect": {
         "pulsewidth": 0.5
     },

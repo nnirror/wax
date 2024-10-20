@@ -297,20 +297,23 @@ jsPlumb.bind("connectionDetached", function(info) {
 });
 
 
-// event listener to detect when a connection is clicked
+// Event listener to detect when a connection is clicked
 jsPlumb.bind("click", function(connection, originalEvent) {
+    jsPlumb.getAllConnections().forEach(conn => {
+        resetConnectionStyle(conn);
+    });
     deselectAllNodes();
     selectedConnection = connection;
     connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
     connection.endpoints.forEach(endpoint => {
-        endpoint.setPaintStyle({ fill: 'rgb(255,0,94)', outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" });
+        endpoint.setPaintStyle({ fill: 'transparent', outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" });
     });
-})
+});
 
 connectionManagementClickHandler();
 
 document.body.addEventListener('click', function(event) {
-    if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *')) {
+    if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *, .inport-button')) {
         showVisualConfirmationOfConnectionButtonClick(event);
     }
     if (selectedConnection && !event.target.closest('.jtk-connector')) {
@@ -1543,8 +1546,11 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     inputContainer.className = 'input-container';
 
     const deleteButton = document.createElement('button');
-    deleteButton.innerText = 'x';
     deleteButton.className = 'delete-button';
+    const deleteIcon = document.createElement('img');
+    deleteIcon.src = 'img/delete.png';
+    deleteIcon.alt = 'Delete';
+    deleteButton.appendChild(deleteIcon);
     deleteButton.addEventListener('click', function() {
         let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
         let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
@@ -1553,6 +1559,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         removeDeviceFromWorkspace(deviceDiv.id);
         deviceDiv.remove();
     });
+
+
     const infoButton = document.createElement('button');
 
     if(isSpeakerChannelDevice){
@@ -1597,8 +1605,13 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         button.onclick = () => handleButtonClick(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1, true);
         inputContainer.appendChild(button);
         deviceDiv.appendChild(deleteButton);
-        infoButton.innerText = '?';
         infoButton.className = 'info-button';
+
+        // Create an img element and set its src attribute
+        const infoIcon = document.createElement('img');
+        infoIcon.src = 'img/info.png';
+        infoIcon.alt = 'additional info';
+        infoButton.appendChild(infoIcon);
         infoButton.addEventListener('click', function() {
             window.open(`https://github.com/nnirror/wax/blob/main/README.md#output`, '_blank');
         });
@@ -1627,18 +1640,61 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         });
         if (deviceType !== 'microphone input') {
             device.it.T.inlets.forEach((input, index) => {
-                const inputButton = document.createElement('button');
-                inputButton.innerText = `${input.comment}`;
-                inputButton.id = `${deviceDiv.id}-inlet-${index}`;
-                inputButton.className = 'input-button';
-                inputButton.onclick = () => {
-                    if (input.comment == 'regen') {
+                if (input.comment == 'regen') {
+                    let deviceForm = deviceDiv.querySelector('.labelAndInputContainer');
+                    const regenButton = document.createElement('button');
+                    regenButton.textContent = '⬤';
+                    regenButton.className = 'inport-button';
+                    deviceForm.appendChild(regenButton);
+                    regenButton.addEventListener('click', () => {
                         const inputElements = deviceDiv.querySelectorAll('input, textarea');
                         inputElements.forEach((inputElement) => {
                             const event = new Event('change');
                             inputElement.dispatchEvent(event);
                         });
+                    });
+                }
+                if ( deviceType == 'record' ) {
+                    if (input.comment == 'start/stop') {
+                        let deviceForm = deviceDiv.querySelector('.labelAndInputContainer');
+                        const startStopCheckbox = document.createElement('input');
+                        startStopCheckbox.type = 'checkbox';
+                        startStopCheckbox.className = 'inport-checkbox';
+                        deviceForm.appendChild(startStopCheckbox);
+                        const offsetNode = context.createConstantSource();
+                        offsetNode.start();
+                        offsetNode.connect(device.node, 0, 3);
+                        startStopCheckbox.addEventListener('change', () => {
+                            if (startStopCheckbox.checked) {
+                                offsetNode.offset.value = 1;
+                            } else {
+                                offsetNode.offset.value = 0;
+                            }
+                        });
                     }
+                    if (input.comment == 'save') {
+                        let deviceForm = deviceDiv.querySelector('.labelAndInputContainer');
+                        const saveButton = document.createElement('button');
+                        saveButton.textContent = '⬤';
+                        saveButton.className = 'inport-button';
+                        deviceForm.appendChild(saveButton);
+                        const offsetNode = context.createConstantSource();
+                        offsetNode.offset.value = 0;
+                        offsetNode.start();
+                        offsetNode.connect(device.node, 0, 4);
+                        saveButton.addEventListener('click', () => {
+                            offsetNode.offset.value = 1;
+                            setTimeout(() => {
+                                offsetNode.offset.value = 0;
+                            }, 100);
+                        });
+                    }
+                }
+                const inputButton = document.createElement('button');
+                inputButton.innerText = `${input.comment}`;
+                inputButton.id = `${deviceDiv.id}-inlet-${index}`;
+                inputButton.className = 'input-button';
+                inputButton.onclick = () => {
                     handleButtonClick(deviceDiv.id, index, true);
                 };
                 inputContainer.appendChild(inputButton);
@@ -1651,7 +1707,12 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 
         deviceDiv.style.height = `${Math.max(device.it.T.inlets.length+1,device.it.T.outlets.length+1) * 28}px`;
         deviceDiv.appendChild(deleteButton);
-        infoButton.innerText = '?';
+        // Create an img element and set its src attribute
+        const infoIcon = document.createElement('img');
+        infoIcon.src = 'img/info.png';
+        infoIcon.alt = 'additional info';
+        infoButton.appendChild(infoIcon);
+        
         infoButton.className = 'info-button';
         infoButton.addEventListener('click', function() {
             window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
@@ -2332,9 +2393,17 @@ function showVisualConfirmationOfConnectionButtonClick(event) {
     const clickedElement = event.target;
     const originalBackground = clickedElement.style.background;
     const originalColor = clickedElement.style.color;
-    // change the background and text color
-    clickedElement.style.background = 'rgb(8,56,78)';
-    clickedElement.style.color = 'white';
+
+    if (clickedElement.classList.contains('inport-button')) {
+        // swap the text and background colors
+        clickedElement.style.background = 'white';
+        clickedElement.style.color = 'rgb(8,56,78)';
+    } else {
+        // change the background and text color
+        clickedElement.style.background = 'rgb(8,56,78)';
+        clickedElement.style.color = 'white';
+    }
+
     setTimeout(() => {
         clickedElement.style.background = originalBackground;
         clickedElement.style.color = originalColor;
@@ -2354,7 +2423,7 @@ async function getDefaultValues() {
 function resetConnectionStyle(connection) {
     connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
     connection.endpoints.forEach(endpoint => {
-        endpoint.setPaintStyle({ fill: "white", outlineStroke: "transparent", outlineWidth: 12 });
+        endpoint.setPaintStyle({ fill: "transparent", outlineStroke: "transparent", outlineWidth: 12 });
     });
 }
 

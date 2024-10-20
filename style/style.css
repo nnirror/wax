@@ -55,14 +55,33 @@
     position: absolute;
     left: 48px;
 }
+.labelAndInputContainer .inport-checkbox {
+    position: relative;
+    left: 5px;
+    top: 1px;
+    width: 21px;
+    height: 21px;
+}
 .node .input-button, .node  .output-button {
     display: block;
     background: rgb(255,255,255);
     color: rgb(8,56,78);
     height: 24px;
     width: 58px;
-    font-size: 10px;
+    font-size: 9px;
     margin-bottom: 4px;
+}
+body .node .inport-button {
+    display: block;
+    background: rgb(8, 56, 78);
+    color: rgb(255, 255, 255);
+    height: 21px;
+    width: 21px;
+    margin-left: 10px;
+    font-size: 8px;
+    margin-bottom: 4px;
+    position: relative;
+    top: 2px;
 }
 .node button, #infoDiv button {
     font-size: 0.75em;
@@ -78,20 +97,27 @@
     width: 100%;
 }
 .info-button {
-    background: rgb(8,56,78);
+    background: transparent;
     position: absolute;
-    width: 15px;
+    width: 17px;
+    height: 17px;
     top: 0;
     left: 5px;
 }
 .delete-button {
-    width: 15px;
+    width: 17px;
+    height: 17px;
     position: absolute;
+    background-color: transparent;
     top: 0;
     right: 5px;
 }
-.delete-button, #closeInfoButton {
-    background: rgb(255,0,94);
+.delete-button img, .info-button img {
+    width: 20px;
+    position: relative;
+    left: -7px;
+    height: 20px;
+    top: -2px;
 }
 #closeInfoButton {
     border-radius: 10px;
