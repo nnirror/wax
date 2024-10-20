@@ -133,16 +133,16 @@ body .node .inport-button {
 html {
     overscroll-behavior: none;
 }
-body {
+html, body {
+    height: 100%;
     margin: 0;
     font-family: Arial, sans-serif;
 }
 #workspace {
     background-color: rgb(8,56,78);
-    width: 5000px;
-    height: 10000px;
     position: relative;
     overflow: auto;
+    height: 100%;
     touch-action: manipulation;
 }
 .delete-button {

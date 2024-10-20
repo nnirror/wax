@@ -1365,7 +1365,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if ( filename == 'play' ) {
             deviceDiv.style.height = '216px';
         }
-        if ( filename == 'wave' ) {
+        if ( filename == 'wavetable' ) {
             deviceDiv.style.width = '12em';
         }
         if (filename == 'comment') {
@@ -1375,11 +1375,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'buffer') {
             deviceDiv.style.width = '12em';
         }
-        if (filename == 'swanramp') {
+        if (filename == 'declick') {
             deviceDiv.style.width = '9em';
-        }
-        if (filename == 'rampsmooth') {
-            deviceDiv.style.width = '11em';
         }
         if (filename == 'print') {
             deviceDiv.style.width = '8em';
@@ -1397,6 +1394,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if (filename == 'button' || filename == 'toggle') {
             deviceDiv.style.height = '138px';
+        }
+        if (filename == 'output' ) {
+            deviceDiv.style.width = '140px';
         }
         return deviceDiv;
     }
