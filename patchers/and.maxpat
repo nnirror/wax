@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 6,
-			"revision" : 0,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -47,13 +47,13 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "signal in 1"
+								"comment" : "input 1"
 							}
 , 							{
 								"type" : "signal",
 								"index" : 2,
 								"tag" : "in2",
-								"comment" : "signal in 2"
+								"comment" : "input 2"
 							}
  ]
 					}
@@ -66,7 +66,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -77,13 +77,13 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 6,
-							"revision" : 0,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "rnbo",
-						"rect" : [ 84.0, 106.0, 640.0, 480.0 ],
+						"rect" : [ 243.0, 359.0, 640.0, 480.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -118,13 +118,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 165.0, 283.0, 168.0, 23.0 ],
+									"patching_rect" : [ 165.0, 283.0, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -189,7 +189,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -203,7 +203,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -229,13 +229,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 346.0, 177.0, 162.0, 23.0 ],
+									"patching_rect" : [ 346.0, 177.0, 147.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 6,
 									"rnbo_uniqueid" : "in~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -301,7 +301,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 2",
-												"displayName" : "signal in 2",
+												"displayName" : "input 2",
 												"docked" : 0
 											}
  ],
@@ -313,7 +313,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 2 @comment \"signal in 2\""
+									"text" : "in~ 2 @comment \"input 2\""
 								}
 
 							}
@@ -324,13 +324,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 165.0, 177.0, 162.0, 23.0 ],
+									"patching_rect" : [ 165.0, 177.0, 147.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 5,
 									"rnbo_uniqueid" : "in~_obj-1",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -396,7 +396,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 1",
-												"displayName" : "signal in 1",
+												"displayName" : "input 1",
 												"docked" : 0
 											}
  ],
@@ -408,7 +408,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 1 @comment \"signal in 1\""
+									"text" : "in~ 1 @comment \"input 1\""
 								}
 
 							}
@@ -465,11 +465,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.4",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}

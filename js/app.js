@@ -225,6 +225,24 @@ document.addEventListener('input', function(event) {
     }
 });
 
+// event listener for paste event
+document.addEventListener('paste', (event) => {
+    if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input') {
+        return;
+    }
+    pasteNodesFromClipboard();
+});
+
+// event listeners for copy / paste shortcuts
+document.addEventListener('keydown', (event) => {
+    if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input') {
+        return;
+    }
+    if (event.metaKey && event.key === 'c') {
+        copySelectedNodesToClipboard();
+    }
+});
+
 /* END UI initialization */
 
 /* BEGIN globally acessible objects */
@@ -352,7 +370,6 @@ workspaceElement.addEventListener('click', (event) => {
             if (rect.right > selRect.left && rect.left < selRect.right &&
                 rect.bottom > selRect.top && rect.top < selRect.bottom) {
                 jsPlumb.addToDragSelection(node);
-
                 // add a special CSS class to the selected node
                 node.classList.add('selectedNode');
             } else {
@@ -380,6 +397,9 @@ workspaceElement.addEventListener('mouseup', (event) => {
 document.addEventListener('keydown', (event) => {
     // check if Delete or Backspace key was pressed
     if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input') {
+            return;
+        }
         // get all selected nodes
         let nodes = document.querySelectorAll('.node');
         nodes.forEach((node) => {
@@ -410,7 +430,7 @@ document.addEventListener('keydown', (event) => {
         createDeviceByName('number');
     }
     // 'c' creates a comment
-    else if (event.key === 'c' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
+    else if (event.key === 'c' && !event.metaKey && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
         createDeviceByName('comment');
     }
@@ -431,7 +451,7 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-// copy-paste functionality
+// duplicate functionality
 document.addEventListener('keydown', async function(event) {
     // command-d for duplicate
     if (event.metaKey && event.key === 'd') {
@@ -439,6 +459,8 @@ document.addEventListener('keydown', async function(event) {
         await copySelectedNodes();
     }
 });
+
+
 
 initializeAwesomplete();
 /* END event handlers */
@@ -501,6 +523,7 @@ function openAwesompleteUI() {
     awesomplete.input.addEventListener('awesomplete-selectcomplete', async function() {
         selectCompleteTriggered = true;
         var selectedOption = awesomplete.input.value;
+        selectedOption = getFileNameByDisplayName(selectedOption);
         if (selectedOption == 'microphone input') {
             await createDeviceByName('mic');
         }
@@ -541,7 +564,11 @@ function openAwesompleteUI() {
                 await createDeviceByName('output');
             }
             else {
-                await createDeviceByName(awesomplete.ul.childNodes[0].textContent);
+                const displayName = awesomplete.ul.childNodes[0].textContent;
+                const fileName = getFileNameByDisplayName(displayName);
+                if (fileName) {
+                    await createDeviceByName(fileName);
+                }
             }
         } else {
             // use exactly what the user typed
@@ -631,8 +658,8 @@ async function createMicrophoneDevice() {
         source: source,
         it: {
             T: {
-                outlets: [{ comment: 'signal out 1' },{ comment: 'signal out 2' }], // these need to exist so they work like the other WASM modules built with RNBO
-                inlets: [{ comment: 'microphone input' }]
+                outlets: [{ comment: 'output 1' },{ comment: 'output 2' }], // these need to exist so they work like the other WASM modules built with RNBO
+                inlets: []
             }
         }
     };
@@ -974,8 +1001,8 @@ function finishConnection(deviceId, inputIndex) {
             target: deviceId,
             anchors: [sourcePosition, targetPosition],
             paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
-            endpointStyle: { fill: "white", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
-            endpoint: ["Dot", { radius: 8 }],
+            endpointStyle: { fill: "transparent", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
+            endpoint: ["Dot", { radius: 0 }],
             connector: ["Straight"]
         });
 
@@ -1062,7 +1089,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 source: silenceGenerator,
                 it: {
                     T: {
-                        outlets: [{ comment: 'signal out' }],
+                        outlets: [{ comment: 'output' }],
                         inlets: []
                     }
                 }
@@ -1126,7 +1153,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 source: silenceGenerator,
                 it: {
                     T: {
-                        outlets: [{ comment: 'signal out' }],
+                        outlets: [{ comment: 'output' }],
                         inlets: []
                     }
                 }
@@ -1224,7 +1251,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 source: silenceGenerator,
                 it: {
                     T: {
-                        outlets: [{ comment: 'signal out' }],
+                        outlets: [{ comment: 'output' }],
                         inlets: []
                     }
                 }
@@ -1324,7 +1351,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 }
             }
         }
-        deviceDiv.onmousedown = removeSelectedNodeClass;
+        deviceDiv.onmousedown = handleDeviceMouseDown;
         if ( devicePosition ) {
             deviceDiv.style.left = devicePosition.left + 'px';
             deviceDiv.style.top = devicePosition.top + 'px';
@@ -1492,7 +1519,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
     deviceDiv.id = `${deviceType}-${count}`;
     deviceDiv.className = 'node';
-    deviceDiv.innerHTML = isSpeakerChannelDevice ? `<b class="deviceLabel">output</b>` : `<b class="deviceLabel">${deviceType.replace(/[_-]/g, ' ')}</b>`;
+    deviceDiv.innerHTML = isSpeakerChannelDevice ? `<b class="deviceLabel">output</b>` : `<b class="deviceLabel">${getDisplayNameByFileName(deviceType)}</b>`;
     
     // place the object at the mouse's last position
     deviceDiv.style.left = mousePosition.x + 'px';
@@ -1530,7 +1557,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 
     if(isSpeakerChannelDevice){
         const button = document.createElement('button');
-        button.innerText = 'signal in';
+        button.innerText = 'input';
         button.className = 'input-button'
         const speakerChannelSelectorLabel = document.createElement('label');
         speakerChannelSelectorLabel.innerText = 'channel';
@@ -1772,10 +1799,11 @@ function createDropdownofAllDevices () {
     deviceDropdown.className = 'deviceDropdown';
 
     // load each WASM device into dropdown
-    wasmDeviceURLs.sort().forEach((filename) => {
+    wasmDeviceURLs.sort().forEach((wasmDevice) => {
+        const displayName = wasmDevice.displayName;
         const option = document.createElement('option');
-        option.value = filename;
-        option.innerText = filename;
+        option.value = displayName;
+        option.innerText = displayName;
         deviceDropdown.appendChild(option);
     });
 
@@ -1811,6 +1839,14 @@ function removeSelectedNodeClass(event) {
             node.classList.remove('selectedNode');
         }
     });
+}
+
+function handleDeviceMouseDown (event) {
+    removeSelectedNodeClass(event);
+    let nodeElement = event.target.closest('.node');
+    if (nodeElement) {
+        nodeElement.classList.add('selectedNode');
+    }
 }
 
 function deselectAllNodes () {
@@ -2045,44 +2081,41 @@ function loadAllTextareaPatterns() {
     });
 }
 
-async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false) {
+async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false, newIds = false) {
     let connectionsToMake = [];
     let idMap = {};
 
     for (let deviceState of deviceStates) {
+        // generate a unique ID for the new device
+        let originalId = deviceState.id;
+        deviceState.id = newIds ? `${deviceState.id}${Date.now()}` : deviceState.id;
         let deviceName = deviceState.id.split('-')[0];            
         let deviceElement;
         let devicePosition = {};
         let l = parseInt(deviceState.left.split('px')[0]);
         let t = parseInt(deviceState.top.split('px')[0]);
-        if ( reconstructFromDuplicateCommand ) {
-            devicePosition = {left: l+100, top: t+100};
-        }
-        else {
-            devicePosition = {left: l, top: t};
-        }
+        
+        // offset the position to avoid overlap
+        devicePosition = {left: l + 20, top: t + 20};
+
         // load any stored audio files
-        if (deviceState.audioFileName && zip ) {
+        if (deviceState.audioFileName && zip) {
             let wavFileData = await zip.file(deviceState.audioFileName).async('arraybuffer');
             let audioBuffer = await context.decodeAudioData(wavFileData);
             audioBuffers[deviceState.audioFileName] = audioBuffer;
-            deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
-        }
-        else if (deviceState.audioFileName && !zip ) {
-            if ( audioBuffers[deviceState.audioFileName] ) {
+            deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition);
+        } else if (deviceState.audioFileName && !zip) {
+            if (audioBuffers[deviceState.audioFileName]) {
                 let audioBuffer = audioBuffers[deviceState.audioFileName];
-                deviceElement = await createDeviceByName(deviceName,{name: deviceState.audioFileName,buffer: audioBuffer},devicePosition);
-            }
-            else {
+                deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition);
+            } else {
                 deviceElement = await createDeviceByName(deviceName, null, devicePosition);
                 showGrowlNotification(`Make sure to load the missing audio file: "${deviceState.audioFileName}", since audio files are not stored with shared state URLs`);
             }
-        }
-        else {
-            if ( deviceName == 'microphone input') {
+        } else {
+            if (deviceName == 'microphone input') {
                 deviceElement = await createDeviceByName('mic', null, devicePosition);
-            }
-            else {
+            } else {
                 deviceElement = await createDeviceByName(deviceName, null, devicePosition);
             }
         }
@@ -2099,7 +2132,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             }
 
             // set any toggles "on" that were saved that way
-            if ( deviceElement.id.includes('toggle') && deviceState.inputs[input.id] == 1 ) {
+            if (deviceElement.id.includes('toggle') && deviceState.inputs[input.id] == 1) {
                 const button = deviceElement.querySelector('button.toggle-button');
                 if (button) {
                     button.click();
@@ -2110,16 +2143,16 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         // if the device is a slider, re-trigger a change on the range slider element after the state has been recalled,
         // because the min and max need to be set before the correct range is recalled
         if (deviceName === 'slider') {
-            inputs[0].value = deviceState.inputs['slider']
+            inputs[0].value = deviceState.inputs['slider'];
             inputs[0].dispatchEvent(new Event('change'));
         }
 
-        // // set the values of its textarea elements
+        // set the values of its textarea elements
         let textareas = deviceElement.getElementsByTagName('textarea');
         for (let textarea of textareas) {
             if (deviceState.inputs[textarea.id]) {
                 textarea.value = deviceState.inputs[textarea.id];
-                // Find the associated CodeMirror instance and set its value
+                // find the associated CodeMirror instance and set its value
                 let codeMirrorElement = textarea.nextElementSibling;
                 if (codeMirrorElement && codeMirrorElement.classList.contains('CodeMirror')) {
                     let codeMirrorInstance = codeMirrorElement.CodeMirror;
@@ -2132,13 +2165,13 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         }
 
         // map the old id to the new id
-        idMap[deviceState.id] = deviceElement.id;
+        idMap[originalId] = deviceElement.id;
 
         // if deviceState has connection data, store it for later
         if (deviceState.connections) {
             for (let connection of deviceState.connections) {
                 connectionsToMake.push({
-                    source: deviceState.id,
+                    source: originalId,
                     target: connection.target,
                     output: connection.output,
                     input: connection.input
@@ -2149,7 +2182,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
 
     // make the connections
     for (let connection of connectionsToMake) {
-        // Check if the target node exists
+        // check if the target node exists
         if (idMap[connection.target]) {
             startConnection(idMap[connection.source], connection.output);
             finishConnection(idMap[connection.target], connection.input);
@@ -2341,6 +2374,50 @@ function resizeAllTextareas() {
     textareas.forEach(textarea => {
         resizeTextarea(textarea);
     });
+}
+
+
+async function copySelectedNodesToClipboard() {
+    // get all the ids of elements with class "selectedNode"
+    let deviceIds = Array.from(document.getElementsByClassName('selectedNode')).map(node => node.id);
+    // Get the state for the selected devices
+    const state = await getStateForDeviceIds(deviceIds);
+    
+    // Copy the state to the clipboard
+    navigator.clipboard.writeText(JSON.stringify(state)).then(() => {
+    }).catch(err => {});
+}
+
+async function pasteNodesFromClipboard() {
+    deselectAllNodes();
+    try {
+        // read the clipboard content
+        const clipboardText = await navigator.clipboard.readText();
+        const state = JSON.parse(clipboardText);
+        reconstructDevicesAndConnections(state, null, true, true);
+    } catch (err) {
+        console.error('Failed to read from clipboard', err);
+    }
+}
+
+function getFileNameByDisplayName(displayName) {
+    const device = wasmDeviceURLs.find(device => device.displayName === displayName);
+    if (device) {
+        return device.fileName;
+    } else {
+        console.error('Device not found for display name:', displayName);
+        return null;
+    }
+}
+
+function getDisplayNameByFileName(fileName) {
+    const device = wasmDeviceURLs.find(device => device.fileName === fileName);
+    if (device) {
+        return device.displayName;
+    } else {
+        console.error('Device not found for file name:', fileName);
+        return null;
+    }
 }
 
 /* END functions */

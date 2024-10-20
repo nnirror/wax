@@ -121,12 +121,12 @@
 									"patching_rect" : [ 549.0, 302.983198583126068, 77.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"args" : [  ],
 										"polyphony" : -1.0,
+										"args" : [  ],
 										"receivemode" : "local",
-										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple"
+										"voicecontrol" : "simple",
+										"exposevoiceparams" : 0
 									}
 ,
 									"rnbo_serial" : 1,
@@ -345,12 +345,12 @@
 									"patching_rect" : [ 171.0, 308.403342962265015, 108.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"args" : [  ],
 										"polyphony" : -1.0,
+										"args" : [  ],
 										"receivemode" : "local",
-										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple"
+										"voicecontrol" : "simple",
+										"exposevoiceparams" : 0
 									}
 ,
 									"rnbo_serial" : 2,
@@ -801,13 +801,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 171.0, 399.865548372268677, 168.0, 23.0 ],
+									"patching_rect" : [ 171.0, 399.865548372268677, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -872,7 +872,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -886,7 +886,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}

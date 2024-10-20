@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 7,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -43,7 +43,13 @@
 					"autosave" : 1,
 					"id" : "obj-1",
 					"inletInfo" : 					{
-						"IOInfo" : [  ]
+						"IOInfo" : [ 							{
+								"type" : "signal",
+								"index" : 1,
+								"tag" : "in1",
+								"comment" : "regen"
+							}
+ ]
 					}
 ,
 					"maxclass" : "newobj",
@@ -54,7 +60,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -64,8 +70,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 7,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -109,7 +115,7 @@
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 435.0, 182.0, 41.0, 23.0 ],
 									"rnbo_classname" : "edge~",
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "edge~_obj-21",
 									"text" : "edge~"
 								}
@@ -249,13 +255,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 209.0, 215.0, 168.0, 23.0 ],
+									"patching_rect" : [ 209.0, 215.0, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-3",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -320,7 +326,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -334,7 +340,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -428,7 +434,7 @@
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
-									"file_name" : "number~.json"
+									"file_name" : "number.json"
 								}
 
 							}
@@ -442,11 +448,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}
@@ -469,7 +476,7 @@
 						"subtype" : "Undefined",
 						"embed" : 1,
 						"snapshot" : 						{
-
+							"__presetid" : "def57c7d-b6ef-11ee-bc7d-acde48001122"
 						}
 ,
 						"snapshotlist" : 						{
@@ -484,7 +491,7 @@
 									"subtype" : "",
 									"embed" : 0,
 									"snapshot" : 									{
-
+										"__presetid" : "def57c7d-b6ef-11ee-bc7d-acde48001122"
 									}
 ,
 									"fileref" : 									{

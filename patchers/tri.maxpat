@@ -72,7 +72,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -120,20 +120,35 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-6",
+									"maxclass" : "newobj",
+									"numinlets" : 3,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 597.0, 249.0, 73.0, 23.0 ],
+									"rnbo_classname" : "clip~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "clip~_obj-6",
+									"text" : "clip~ 0. 0.99"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-8",
 									"maxclass" : "newobj",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 597.0, 237.403342962265015, 108.0, 23.0 ],
+									"patching_rect" : [ 597.0, 194.0, 108.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"args" : [  ],
 										"polyphony" : -1.0,
+										"args" : [  ],
 										"receivemode" : "local",
-										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple"
+										"voicecontrol" : "simple",
+										"exposevoiceparams" : 0
 									}
 ,
 									"rnbo_serial" : 1,
@@ -376,7 +391,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 786.504180192947388, 180.000002801418304, 101.0, 23.0 ],
+									"patching_rect" : [ 787.0, 137.0, 101.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -395,7 +410,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 597.0, 180.000002801418304, 158.0, 23.0 ],
+									"patching_rect" : [ 597.0, 137.0, 158.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -489,15 +504,15 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 931.0, 231.983198583126068, 77.0, 23.0 ],
+									"patching_rect" : [ 930.0, 189.0, 77.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"args" : [  ],
 										"polyphony" : -1.0,
+										"args" : [  ],
 										"receivemode" : "local",
-										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple"
+										"voicecontrol" : "simple",
+										"exposevoiceparams" : 0
 									}
 ,
 									"rnbo_serial" : 2,
@@ -713,15 +728,15 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 237.403342962265015, 108.0, 23.0 ],
+									"patching_rect" : [ 171.0, 194.0, 108.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
-										"args" : [  ],
 										"polyphony" : -1.0,
+										"args" : [  ],
 										"receivemode" : "local",
-										"exposevoiceparams" : 0,
 										"notecontroller" : 0,
-										"voicecontrol" : "simple"
+										"voicecontrol" : "simple",
+										"exposevoiceparams" : 0
 									}
 ,
 									"rnbo_serial" : 3,
@@ -964,7 +979,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 360.504180192947388, 180.000002801418304, 127.0, 23.0 ],
+									"patching_rect" : [ 361.0, 137.0, 127.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -983,7 +998,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 931.0, 180.000002801418304, 130.0, 23.0 ],
+									"patching_rect" : [ 930.0, 137.0, 130.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -1078,7 +1093,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 180.000002801418304, 175.0, 23.0 ],
+									"patching_rect" : [ 171.0, 137.0, 175.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -1172,13 +1187,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 171.0, 331.0, 168.0, 23.0 ],
+									"patching_rect" : [ 171.0, 331.0, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1243,7 +1258,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -1257,7 +1272,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -1308,8 +1323,15 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-13", 1 ],
-									"midpoints" : [ 370.004180192947388, 218.915949106216431, 269.5, 218.915949106216431 ],
+									"midpoints" : [ 370.5, 175.915946304798126, 269.5, 175.915946304798126 ],
 									"source" : [ "obj-3", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 1 ],
+									"source" : [ "obj-6", 0 ]
 								}
 
 							}
@@ -1322,7 +1344,7 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-1", 1 ],
+									"destination" : [ "obj-6", 0 ],
 									"source" : [ "obj-8", 0 ]
 								}
 
@@ -1330,7 +1352,7 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-8", 1 ],
-									"midpoints" : [ 796.004180192947388, 218.915949106216431, 695.5, 218.915949106216431 ],
+									"midpoints" : [ 796.5, 175.512606143951416, 695.5, 175.512606143951416 ],
 									"source" : [ "obj-9", 0 ]
 								}
 

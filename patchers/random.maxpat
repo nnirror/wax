@@ -72,7 +72,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -131,7 +131,7 @@
 										"hot" : 0
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "+_obj-9",
 									"text" : "+ 1"
 								}
@@ -169,7 +169,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "inport_obj-13",
 									"text" : "inport maximum"
 								}
@@ -186,10 +186,10 @@
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
 										"polyphony" : -1.0,
-										"receivemode" : "local",
 										"args" : [  ],
-										"voicecontrol" : "simple",
+										"receivemode" : "local",
 										"notecontroller" : 0,
+										"voicecontrol" : "simple",
 										"exposevoiceparams" : 0
 									}
 ,
@@ -439,7 +439,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "in~_obj-15",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -582,7 +582,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "in~_obj-12",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -704,13 +704,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 235.0, 447.0, 168.0, 23.0 ],
+									"patching_rect" : [ 235.0, 447.0, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-7",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -775,7 +775,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -789,7 +789,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -836,7 +836,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "in~_obj-3",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,

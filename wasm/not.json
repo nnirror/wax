@@ -18,7 +18,7 @@
         "index": 1,
         "tag": "in1",
         "meta": "",
-        "comment": "signal in"
+        "comment": "input"
       }
     ],
     "outlets": [
@@ -27,7 +27,7 @@
         "index": 1,
         "tag": "out1",
         "meta": "",
-        "comment": "signal out"
+        "comment": "output"
       }
     ],
     "paramConversion": {

@@ -23,6 +23,9 @@
         "delay time (ms)": 25,
         "feedback": 0.84
     },
+    "counter": {
+        "maximum": 15
+    },
     "delay": {
         "delay time (ms)": 250,
         "feedback": 0.5,

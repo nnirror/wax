@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 8,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -72,7 +72,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
 , 							{
 								"type" : "signal",
@@ -88,8 +88,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -359,11 +359,11 @@
 									"patching_rect" : [ 462.0, 399.367129445075989, 85.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
+										"channelmode" : "wrap",
 										"channels" : 1.0,
-										"boundmode" : "wrap",
 										"interp" : "linear",
 										"indexmode" : "wave",
-										"channelmode" : "wrap"
+										"boundmode" : "wrap"
 									}
 ,
 									"rnbo_serial" : 1,
@@ -855,6 +855,144 @@
 ,
 									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "line~_obj-11",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"segments" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Target value or target value/ramp time pairs",
+												"isalias" : 0,
+												"aliases" : [ "dest" ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "list",
+												"defaultValue" : ""
+											}
+,
+											"dest" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Target value or target value/ramp time pairs",
+												"isalias" : 1,
+												"aliasOf" : "segments",
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "list",
+												"defaultValue" : ""
+											}
+,
+											"time" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Ramp time",
+												"defaultarg" : 2,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+,
+											"keepramp" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Keep last ramp",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "bool",
+												"defaultValue" : "false"
+											}
+,
+											"out" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Ramp out",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "signal"
+											}
+,
+											"target" : 											{
+												"attrOrProp" : 1,
+												"digest" : "Bang when ramp has finished",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "bang"
+											}
+,
+											"value" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Initial value.",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+
+										}
+,
+										"inputs" : [ 											{
+												"name" : "segments",
+												"type" : "list",
+												"digest" : "Target value or target value/ramp time pairs",
+												"hot" : 1,
+												"docked" : 0
+											}
+, 											{
+												"name" : "time",
+												"type" : "number",
+												"digest" : "Ramp time",
+												"defaultarg" : 2,
+												"docked" : 0
+											}
+ ],
+										"outputs" : [ 											{
+												"name" : "out",
+												"type" : "signal",
+												"digest" : "Ramp out",
+												"docked" : 0
+											}
+, 											{
+												"name" : "target",
+												"type" : "bang",
+												"digest" : "Bang when ramp has finished",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "line~",
+										"aliasOf" : "line~",
+										"classname" : "line~",
+										"operator" : 0,
+										"versionId" : -1254666813,
+										"changesPatcherIO" : 0
+									}
+,
 									"text" : "line~"
 								}
 
@@ -1097,11 +1235,11 @@
 									"patching_rect" : [ 552.0, 399.367129445075989, 85.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
+										"channelmode" : "wrap",
 										"channels" : 1.0,
-										"boundmode" : "wrap",
 										"interp" : "linear",
 										"indexmode" : "wave",
-										"channelmode" : "wrap"
+										"boundmode" : "wrap"
 									}
 ,
 									"rnbo_serial" : 2,
@@ -1356,9 +1494,9 @@
 									"rnbo_classname" : "buffer~",
 									"rnbo_extra_attributes" : 									{
 										"samplerate" : 0.0,
-										"fill" : "",
 										"file" : "",
-										"type" : ""
+										"type" : "",
+										"fill" : ""
 									}
 ,
 									"rnbo_serial" : 1,
@@ -1795,13 +1933,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 552.0, 495.763443231582642, 168.0, 23.0 ],
+									"patching_rect" : [ 552.0, 495.763443231582642, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "out~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1866,7 +2004,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -1880,7 +2018,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -2160,11 +2298,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.3",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}

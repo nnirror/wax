@@ -72,7 +72,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -120,12 +120,312 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-11",
+									"maxclass" : "newobj",
+									"numinlets" : 3,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 526.890762269496918, 335.294121444225311, 68.0, 23.0 ],
+									"rnbo_classname" : "wrap~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "wrap~_obj-11",
+									"text" : "wrap~ 0. 1."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-10",
+									"maxclass" : "newobj",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 526.890762269496918, 289.915969669818878, 49.0, 23.0 ],
+									"rnbo_classname" : "+~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "+~_obj-10",
+									"text" : "+~ 0.25"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-6",
+									"maxclass" : "newobj",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 527.0, 245.0, 108.0, 23.0 ],
+									"rnbo_classname" : "p",
+									"rnbo_extra_attributes" : 									{
+										"polyphony" : -1.0,
+										"args" : [  ],
+										"receivemode" : "local",
+										"notecontroller" : 0,
+										"voicecontrol" : "simple",
+										"exposevoiceparams" : 0
+									}
+,
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "p_obj-6",
+									"rnboinfo" : 									{
+										"needsInstanceInfo" : 1,
+										"argnames" : 										{
+											"target" : 											{
+												"attrOrProp" : 1,
+												"digest" : "target",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number",
+												"defaultValue" : "0"
+											}
+,
+											"mute" : 											{
+												"attrOrProp" : 1,
+												"digest" : "mute",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number"
+											}
+,
+											"in1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "in1",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"inlet" : 1,
+												"type" : "signal"
+											}
+,
+											"__probingout1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "__probingout1",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "signal"
+											}
+,
+											"out1" : 											{
+												"attrOrProp" : 1,
+												"digest" : "out1",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"outlet" : 1,
+												"type" : "signal"
+											}
+,
+											"voicestatus" : 											{
+												"attrOrProp" : 1,
+												"digest" : "voicestatus",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "list"
+											}
+,
+											"activevoices" : 											{
+												"attrOrProp" : 1,
+												"digest" : "activevoices",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 0,
+												"attachable" : 1,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number"
+											}
+,
+											"polyphony" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Polyphony of the subpatcher.",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "number",
+												"defaultValue" : "-1"
+											}
+,
+											"exposevoiceparams" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Expose per voice versions of the contained parameters (only valid in polyphonic subpatchers).",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "bool",
+												"defaultValue" : "false"
+											}
+,
+											"title" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Title of the subpatcher",
+												"defaultarg" : 1,
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"doNotShowInMaxInspector" : 1
+											}
+,
+											"file" : 											{
+												"attrOrProp" : 2,
+												"digest" : "rnbo file to load",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"doNotShowInMaxInspector" : 1
+											}
+,
+											"voicecontrol" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Chooses the way that polyphonic voices are controlled. 'simple' (or 'midi') will automatically allocate voices for \tincoming MIDI notes. Setting it to 'user' (or 'none') will switch off MIDI \tvoice allocation and start with all voices unmuted.",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"enum" : [ "simple", "user" ],
+												"type" : "enum",
+												"defaultValue" : "simple"
+											}
+,
+											"notecontroller" : 											{
+												"attrOrProp" : 2,
+												"digest" : "DEPRECATED. Use voicecontrol instead.",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"doNotShowInMaxInspector" : 1
+											}
+,
+											"receivemode" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Do receive~ objects get the signal from a send~ inside the patcher directly (without latency), or compensated (with latency, aligned with all other voices).",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"enum" : [ "local", "compensated" ],
+												"type" : "enum",
+												"defaultValue" : "local"
+											}
+,
+											"args" : 											{
+												"attrOrProp" : 2,
+												"digest" : "Replacement args for the subpatcher, everything named #1, #2 etc. will be replaced with the according argument.",
+												"isalias" : 0,
+												"aliases" : [  ],
+												"settable" : 1,
+												"attachable" : 0,
+												"isparam" : 0,
+												"deprecated" : 0,
+												"type" : "symbol",
+												"doNotShowInMaxInspector" : 1
+											}
+
+										}
+,
+										"inputs" : [ 											{
+												"name" : "in1",
+												"type" : "signal",
+												"digest" : "in1",
+												"displayName" : "",
+												"hot" : 1,
+												"docked" : 0
+											}
+, 											{
+												"name" : "in2",
+												"type" : [ "bang", "number", "list" ],
+												"digest" : "in2",
+												"displayName" : "",
+												"hot" : 1,
+												"docked" : 0
+											}
+ ],
+										"outputs" : [ 											{
+												"name" : "out1",
+												"type" : "signal",
+												"digest" : "out1",
+												"displayName" : "",
+												"docked" : 0
+											}
+ ],
+										"helpname" : "patcher",
+										"aliasOf" : "rnbo",
+										"classname" : "p",
+										"operator" : 0,
+										"versionId" : 2039458657,
+										"changesPatcherIO" : 0
+									}
+,
+									"text" : "p @file inport_gate"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-8",
+									"maxclass" : "newobj",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 676.0, 178.0, 74.0, 23.0 ],
+									"rnbo_classname" : "inport",
+									"rnbo_extra_attributes" : 									{
+										"meta" : ""
+									}
+,
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "inport_obj-8",
+									"text" : "inport phase"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-7",
 									"maxclass" : "newobj",
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 327.0, 245.0, 132.0, 23.0 ],
+									"patching_rect" : [ 527.0, 178.0, 132.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -219,18 +519,18 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 510.0, 245.0, 77.0, 23.0 ],
+									"patching_rect" : [ 870.0, 245.0, 77.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
+										"polyphony" : -1.0,
 										"args" : [  ],
 										"receivemode" : "local",
-										"polyphony" : -1.0,
+										"notecontroller" : 0,
 										"voicecontrol" : "simple",
-										"exposevoiceparams" : 0,
-										"notecontroller" : 0
+										"exposevoiceparams" : 0
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "p_obj-5",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -446,15 +746,15 @@
 									"patching_rect" : [ 172.0, 245.0, 108.0, 23.0 ],
 									"rnbo_classname" : "p",
 									"rnbo_extra_attributes" : 									{
+										"polyphony" : -1.0,
 										"args" : [  ],
 										"receivemode" : "local",
-										"polyphony" : -1.0,
+										"notecontroller" : 0,
 										"voicecontrol" : "simple",
-										"exposevoiceparams" : 0,
-										"notecontroller" : 0
+										"exposevoiceparams" : 0
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "p_obj-13",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -700,7 +1000,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "inport_obj-3",
 									"text" : "inport \"frequency (hz)\""
 								}
@@ -713,7 +1013,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 510.0, 178.0, 130.0, 23.0 ],
+									"patching_rect" : [ 870.0, 178.0, 130.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -902,7 +1202,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 171.0, 352.0, 168.0, 23.0 ],
+									"patching_rect" : [ 170.588237226009369, 427.731097280979156, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -973,7 +1273,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -987,7 +1287,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -998,12 +1298,12 @@
 									"numinlets" : 2,
 									"numoutlets" : 2,
 									"outlettype" : [ "signal", "signal" ],
-									"patching_rect" : [ 171.0, 309.0, 175.0, 23.0 ],
+									"patching_rect" : [ 170.588237226009369, 384.873953938484192, 375.0, 23.0 ],
 									"rnbo_classname" : "cycle~",
 									"rnbo_extra_attributes" : 									{
-										"buffername" : "RNBODefaultSinus",
 										"index" : "freq",
-										"interp" : "linear"
+										"interp" : "linear",
+										"buffername" : "RNBODefaultSinus"
 									}
 ,
 									"rnbo_serial" : 1,
@@ -1017,6 +1317,20 @@
 								"patchline" : 								{
 									"destination" : [ "obj-4", 0 ],
 									"source" : [ "obj-1", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-11", 0 ],
+									"source" : [ "obj-10", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 1 ],
+									"source" : [ "obj-11", 0 ]
 								}
 
 							}
@@ -1044,8 +1358,23 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-1", 1 ],
+									"destination" : [ "obj-10", 0 ],
+									"source" : [ "obj-6", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-6", 0 ],
 									"source" : [ "obj-7", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-6", 1 ],
+									"midpoints" : [ 685.5, 223.915946304798126, 625.5, 223.915946304798126 ],
+									"source" : [ "obj-8", 0 ]
 								}
 
 							}
@@ -1119,6 +1448,10 @@
 
 								}
 ,
+								"p_obj-6" : 								{
+
+								}
+,
 								"p_obj-13" : 								{
 
 								}
@@ -1142,6 +1475,10 @@
 									"snapshot" : 									{
 										"__sps" : 										{
 											"p_obj-5" : 											{
+
+											}
+,
+											"p_obj-6" : 											{
 
 											}
 ,
