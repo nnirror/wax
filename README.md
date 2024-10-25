@@ -109,7 +109,7 @@ Loads an audio buffer into the workpace so it can be accessed by the `pattern` o
 Outputs a 1 while the button is pressed and otherwise outputs 0.
 
 ## change
-Compares the current sample with the previous sample value in `input` and returns 1 if the current sample value increased, -1 if it decreased, and 0 if it stayed the same.
+Compares the current sample with the previous sample value in `input` and returns 1 if the current sample value increased, -1 if it decreased, and 0 if it stayed the same. `difference` outputs the difference between the current `input` and the `input` 1 sample ago.
 
 ## clip
 Clips any values in `input 1` below `minimum` or above `maximum` to be equal to `minimum` and `maximum`, respectively. 

@@ -1484,11 +1484,14 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'pattern') {
             deviceDiv.style.width = '32em';
         }
+        if (filename == 'number') {
+            deviceDiv.style.height = '80px';
+        }
         if ( filename == 'play' ) {
             deviceDiv.style.height = '216px';
         }
-        if ( filename == 'wavetable' ) {
-            deviceDiv.style.width = '12em';
+        if ( filename == 'wave' ) {
+            deviceDiv.style.width = '14em';
         }
         if (filename == 'comment') {
             deviceDiv.style.width = '10em';
