@@ -1398,13 +1398,11 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             // define the event handler functions
             function handleButtonDown(event) {
-                event.preventDefault();
                 silenceGenerator.offset.value = 1;
                 button.style.color = 'white';
             }
         
             function handleButtonUp(event) {
-                event.preventDefault();
                 silenceGenerator.offset.value = 0;
                 button.style.color = 'black';
             }
@@ -1413,8 +1411,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             button.addEventListener('mousedown', handleButtonDown);
             button.addEventListener('touchstart', handleButtonDown);
         
-            window.addEventListener('mouseup', handleButtonUp);
-            window.addEventListener('touchend', handleButtonUp);
+            button.addEventListener('mouseup', handleButtonUp);
+            button.addEventListener('touchend', handleButtonUp);
         }
         else if ( filename.startsWith('output') ) {
             deviceDiv  = addDeviceToWorkspace(null, 'output', true);
