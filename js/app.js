@@ -225,6 +225,81 @@ document.addEventListener('input', function(event) {
     }
 });
 
+// event listener for window resize when element exceeds edge
+document.addEventListener('DOMContentLoaded', function() {
+    const workspace = document.getElementById('workspace');
+    const edgeThreshold = 20; // distance from edge to trigger expansion
+    const expansionRate = 10; // pixels to expand per interval
+    const scrollRate = 10; // pixels to scroll per interval
+    let expandInterval;
+
+    function getEventCoordinates(event) {
+        if (event.touches && event.touches.length > 0) {
+            return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        } else {
+            return { x: event.clientX, y: event.clientY };
+        }
+    }
+
+    function checkEdgeAndExpand(event) {
+        if (!isDraggingDevice) {
+            return;
+        }
+        const rect = workspace.getBoundingClientRect();
+        const { x: mouseX, y: mouseY } = getEventCoordinates(event);
+
+        let expandX = false;
+        let expandY = false;
+
+        if (mouseX >= rect.right - edgeThreshold) {
+            expandX = true;
+        } else if (mouseX <= rect.left + edgeThreshold) {
+            expandX = true;
+        }
+
+        if (mouseY >= rect.bottom - edgeThreshold) {
+            expandY = true;
+        } else if (mouseY <= rect.top + edgeThreshold) {
+            expandY = true;
+        }
+
+        if (expandX || expandY) {
+            if (!expandInterval) {
+                expandInterval = setInterval(() => {
+                    if (expandX) {
+                        workspace.style.width = workspace.offsetWidth + expansionRate + 'px';
+                        window.scrollBy(scrollRate, 0);
+                    }
+                    if (expandY) {
+                        workspace.style.height = workspace.offsetHeight + expansionRate + 'px';
+                        window.scrollBy(0, scrollRate);
+                    }
+                }, 100);
+            }
+        } else {
+            clearInterval(expandInterval);
+            expandInterval = null;
+        }
+    }
+
+    function stopExpand() {
+        clearInterval(expandInterval);
+        expandInterval = null;
+    }
+
+    document.addEventListener('mousemove', checkEdgeAndExpand);
+    document.addEventListener('mouseup', stopExpand);
+    document.addEventListener('touchmove', checkEdgeAndExpand);
+    document.addEventListener('touchend', stopExpand);
+
+    // prevent automatic scrolling back to the original position
+    window.addEventListener('scroll', (event) => {
+        if (expandInterval) {
+            event.preventDefault();
+        }
+    }, { passive: false });
+});
+
 // event listener for paste event
 document.addEventListener('paste', (event) => {
     if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input') {
@@ -252,6 +327,7 @@ let lastClicked = null;
 let deviceCounts = {};
 let isAudioPlaying = false;
 let devices = {};
+let isDraggingDevice = false;
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
@@ -394,6 +470,39 @@ workspaceElement.addEventListener('mouseup', (event) => {
     if (event.target !== workspaceElement) {
         jsPlumb.clearDragSelection();
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const workspace = document.getElementById('workspace');
+    let lastTap = 0;
+
+    function handleDoubleClick(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector')) {
+            const connection = jsPlumb.getConnections().find(conn => conn.connector.canvas === target);
+            if (connection) {
+                jsPlumb.deleteConnection(connection);
+            }
+        }
+    }
+
+    function handleDoubleTap(event) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 500 && tapLength > 0) {
+            handleDoubleClick(event);
+        }
+        lastTap = currentTime;
+    }
+
+    workspace.addEventListener('dblclick', handleDoubleClick);
+    workspace.addEventListener('touchend', handleDoubleTap);
 });
 
 // listen for keydown events on the document
@@ -958,65 +1067,70 @@ function startConnection(deviceId, outputIndex) {
 }
 
 function finishConnection(deviceId, inputIndex) {
-    if (sourceDeviceId) {
-        const sourceDevice = devices[sourceDeviceId].device;
-        const targetDevice = devices[deviceId] ? devices[deviceId].device : null;
-        const targetButtonId = document.querySelector(`#${deviceId} .input-container button:nth-child(${deviceId.includes('output') ? 1 : inputIndex + 1})`).id;
-        const sourceButton = document.getElementById(sourceButtonId);
-        const targetButton = document.getElementById(targetButtonId);
-        const verticalOffset = 40;
-        const sourcePosition = [
-            1,
-            (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
-        ];
-
-        const targetPosition = [
-            0,
-            (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
-        ];
-        // create channel splitter
-        let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
-
-        // connect source device's output to the splitter
-        sourceDevice.node.connect(splitter);
-
-        if (targetDevice) {
-            // If the target device is a regular device, connect it as usual
-            splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
-        } else {
-            // If the target device is one of the special divs, connect it to the channelMerger
-            splitter.connect(channelMerger, sourceOutputIndex, inputIndex);
-        }
-
-        devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
-        devices[sourceDeviceId].splitter = splitter;
-
-        let targetDeviceInputName;
-        if (deviceId.startsWith('output')) {
-            targetDeviceInputName = `speaker channel`;
-        }
-        else {
-            targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
-        }
-        // visualize the connection
-        const jsPlumbConnection = jsPlumb.connect({
-            source: sourceDeviceId,
-            target: deviceId,
-            anchors: [sourcePosition, targetPosition],
-            paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
-            endpointStyle: { fill: "transparent", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
-            endpoint: ["Dot", { radius: 0 }],
-            connector: ["Straight"]
-        });
-
-        let jsPlumbConnectionId = jsPlumbConnection.getId();
-        let connection = { id: jsPlumbConnectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex };
-        devices[sourceDeviceId].connections.push(connection);
+    try {
+        if (sourceDeviceId) {
+            const sourceDevice = devices[sourceDeviceId].device;
+            const targetDevice = devices[deviceId] ? devices[deviceId].device : null;
+            const targetButtonId = document.querySelector(`#${deviceId} .input-container button:nth-child(${deviceId.includes('output') ? 1 : inputIndex + 1})`).id;
+            const sourceButton = document.getElementById(sourceButtonId);
+            const targetButton = document.getElementById(targetButtonId);
+            const verticalOffset = 40;
+            const sourcePosition = [
+                1,
+                (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
+            ];
     
-        sourceDeviceId = null;
-        sourceOutputIndex = null;
+            const targetPosition = [
+                0,
+                (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
+            ];
+            // create channel splitter
+            let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
+    
+            // connect source device's output to the splitter
+            sourceDevice.node.connect(splitter);
+    
+            if (targetDevice) {
+                // If the target device is a regular device, connect it as usual
+                splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
+            } else {
+                // If the target device is one of the special divs, connect it to the channelMerger
+                splitter.connect(channelMerger, sourceOutputIndex, inputIndex);
+            }
+    
+            devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
+            devices[sourceDeviceId].splitter = splitter;
+    
+            let targetDeviceInputName;
+            if (deviceId.startsWith('output')) {
+                targetDeviceInputName = `speaker channel`;
+            }
+            else {
+                targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
+            }
+            // visualize the connection
+            const jsPlumbConnection = jsPlumb.connect({
+                source: sourceDeviceId,
+                target: deviceId,
+                anchors: [sourcePosition, targetPosition],
+                paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
+                endpointStyle: { fill: "transparent", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
+                endpoint: ["Dot", { radius: 0 }],
+                connector: ["Straight"]
+            });
+    
+            let jsPlumbConnectionId = jsPlumbConnection.getId();
+            let connection = { id: jsPlumbConnectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex };
+            devices[sourceDeviceId].connections.push(connection);
+        
+            sourceDeviceId = null;
+            sourceOutputIndex = null;
+        }
+        jsPlumb.repaintEverything();
     }
-    jsPlumb.repaintEverything();
+    catch (error) {
+        console.log('error making connection:' + error);
+    }
 }
 
 function reconnectNodeConnections(nodeId) {
@@ -1401,7 +1515,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         return deviceDiv;
     }
     catch (error) {
-        console.log(error);
         showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
     }
 }
@@ -1721,9 +1834,13 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     // Add a drag event listener to the deviceDiv
     jsPlumb.draggable(deviceDiv, {
         start: function(event) {
+            isDraggingDevice = true;
             // add the selectedNode class
             deviceDiv.classList.add('selectedNode');
         },
+        stop: function(event) {
+            isDraggingDevice = false;
+        }
     });
 
     if (deviceType === 'pattern') {

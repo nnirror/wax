@@ -22,7 +22,10 @@ Double-click or press 'n' to open the interface for adding a device to the works
 For device documentation, click the `i` button at the top of the device.
 
 ## Creating connections
-Creating connections between two devices will create a data flow between them at audio rate, from the output of the `source device` to the input of the `target device`. Device outputs are listed as buttons on the bottom of the device, and device inputs are listed as button on the top.
+Creating connections between two devices will create a data flow between them at audio rate, from the output of the `source device` to the input of the `target device`. Device outputs are listed as buttons on the right of the device, and device inputs are listed as buttons on the left.
+
+## Deleting connections
+There are two ways to delete a connection. Double-click on a connection deletes it. Single-clicking on a connection will highlights it. Once a connection is highlighted, press `delete` to delete the connection.
 
 ## Manipulating devices
 Click-drag on the workspace to select multiple devices at once. Selected devices have a bold, white border. Selected devices are draggable to anywhere the workspace.
