@@ -286,5 +286,9 @@ var wasmDeviceURLs = [
     {
         "fileName": "microphone-input",
         "displayName": "input"
+    },
+    {
+        "fileName": "motion",
+        "displayName": "motion"
     }
 ];
