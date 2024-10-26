@@ -108,6 +108,7 @@ function handleAboutButtonClick(event) {
 }
 
 function handleMenuButtonClick(event) {
+    document.getElementById('infoDiv').style.display = 'none';
     var mobileMenu = document.getElementById('mobileMenu');
     var deviceListModal = document.getElementById('deviceListModal');
     var exampleFiles = document.getElementById('exampleFiles');
@@ -199,8 +200,16 @@ window.onload = async function() {
 
     // create the button to close the info div
     let closeButton = document.createElement('button');
-    closeButton.textContent = 'x';
     closeButton.id = 'closeInfoButton';
+    closeButton.className = 'delete-button';
+
+    // create the image element for the close icon
+    const closeIcon = document.createElement('img');
+    closeIcon.src = 'img/delete.png';
+    closeIcon.alt = 'Delete';
+
+    // append the image to the button
+    closeButton.appendChild(closeIcon);
 
     closeButton.onclick = function(event) {
         infoDiv.style.display = 'none';
@@ -2130,23 +2139,15 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
         workspaceState.push(deviceState);
     }
 
-    if ( createShareLink == true ) {
+    if (createShareLink == true) {
         let encodedState = LZString.compressToEncodedURIComponent(JSON.stringify(workspaceState));
         // format as a query string
         let queryString = `state=${encodedState}`;
-        
         // get the current URL without query parameters
         let currentUrl = window.location.origin + window.location.pathname;
-        
         // combine the current URL with the query string
         let fullUrl = `${currentUrl}?${queryString}`;
-        
-        // copy to clipboard
-        navigator.clipboard.writeText(fullUrl).then(function() {
-            alert(`Wax state successfully copied to clipboard!
-
-Note: audio files are not included in the URL and need to be shared separately. To share the entire patch including audio files, use the "Save" button to download a .zip file.`);
-        }, function(err) {});
+        copyToClipboard(fullUrl);
     }
 
     if (saveToFile) {
@@ -2177,6 +2178,31 @@ Note: audio files are not included in the URL and need to be shared separately. 
     }
 
     return workspaceState;
+}
+
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(function() {
+            alert(`Wax state successfully copied to clipboard!
+
+Note: audio files are not included in the URL and need to be shared separately. To share the entire patch including audio files, use the "Save" button to download a .zip file.`);
+        }, function(err) {});
+    } else {
+        // fallback method for older browsers or unsupported mobile devices
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            alert(`Wax state successfully copied to clipboard!
+
+Note: audio files are not included in the URL and need to be shared separately. To share the entire patch including audio files, use the "Save" button to download a .zip file.`);
+        } catch (err) {}
+        document.body.removeChild(textarea);
+    }
 }
 
 async function getStateForDeviceIds(deviceIds) {

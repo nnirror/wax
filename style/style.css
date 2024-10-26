@@ -500,6 +500,7 @@ mark {
 }
 .selectedNode {
     border: 3px solid white;
+    z-index: 1009;
 }
 #audioInputDevicesDropdown {
     position: absolute;
