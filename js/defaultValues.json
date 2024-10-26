@@ -69,10 +69,9 @@
     "pluck": {
         "damping": 0.25
     },
-    "smooth": {
-        "up slope (ms)": 30,
-        "down slope (ms)": 30,
-        "exponent": 0
+    "random": {
+        "minimum": 0,
+        "maximum": 127
     },
     "record": {
         "length (ms)": 10000
@@ -93,6 +92,11 @@
     },
     "skipper": {
         "prob": 0.5
+    },
+    "smooth": {
+        "up slope (ms)": 30,
+        "down slope (ms)": 30,
+        "exponent": 0
     },
     "tri": {
         "pulsewidth": 0.5

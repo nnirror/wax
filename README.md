@@ -255,7 +255,7 @@ Applies a time-domain pitch shift effect of `shift amount` to `input`. A `shift 
 Displays the current value of `input` every 100ms. Helpful for debugging.
 
 ## random
-Returns a random number between 0 and `maximum`, every time `trigger` goes above 0.5.
+Returns a random number between `minimum` and `maximum`, every time `trigger` goes above 0.5.
 
 ## record
 Records `input 1` and `input 2` to a stereo audio buffer for `length (ms)` milliseconds.

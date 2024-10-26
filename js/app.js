@@ -1382,6 +1382,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const button = document.createElement('button');
             button.textContent = '⬤';
             button.className = 'button-ui';
+            button.style.color = 'black';
         
             // find the existing form in the device
             const form = deviceDiv.querySelector('form');

@@ -70,7 +70,7 @@ class FacetPattern {
     return this;
   }
 
-  cosine(frequencies, length = SAMPLE_RATE, sampleRate = SAMPLE_RATE, fade_in_and_out = true) {
+  cosine(frequencies, length = SAMPLE_RATE, fade_in_and_out = true) {
     let output = [];
     if (typeof frequencies == 'number' || Array.isArray(frequencies) === true) {
         frequencies = new FacetPattern().from(frequencies);
@@ -79,23 +79,23 @@ class FacetPattern {
     frequencies.size(length);
     let phase = 0;
     for (let i = 0; i < length; i++) {
-        let t = i / sampleRate;
+        let t = i / SAMPLE_RATE;
         let currentFrequency = frequencies.data[i];
         output[i] = Math.cos(phase);
-        phase += 2 * Math.PI * currentFrequency / sampleRate;
+        phase += 2 * Math.PI * currentFrequency / SAMPLE_RATE;
         if (phase >= 2 * Math.PI) {
             phase -= 2 * Math.PI;
         }
     }
     this.data = output;
-    if ( fade_in_and_out == true ) {
+    if ( fade_in_and_out == true && this.data.length > ((SAMPLE_RATE/1000)*30)) {
       this.fadeoutSamples(Math.round((SAMPLE_RATE/1000)*30));
       this.fadeinSamples(Math.round((SAMPLE_RATE/1000)*30));
     }
     return this;
   }
 
-  from (list) {
+  from (list, size) {
     if ( typeof list == 'number' ) {
       list = [list];
     }
@@ -103,14 +103,20 @@ class FacetPattern {
       list = [];
     }
     this.data = list;
+    if ( size ) {
+      this.size(size);
+    }
     return this;
   }
 
-  drunk (length, intensity = 0.1, d = Math.random() ) {
+  drunk (length, intensity, d = Math.random() ) {
     let drunk_sequence = [];
     length = Math.abs(Number(length));
     if (length < 1 ) {
       length = 1;
+    }
+    if ( !intensity ) {
+      intensity = 1/length;
     }
     for (var i = 0; i < length; i++) {
       let amount_to_add = Math.random() * Number(intensity);
@@ -200,7 +206,6 @@ class FacetPattern {
     return this;
   }
 
-
   noise (length) {
     let noise_sequence = [];
     length = Math.abs(Math.round(Number(length)));
@@ -226,7 +231,7 @@ class FacetPattern {
     return this;
   }
 
-  phasor(frequencies, duration = SAMPLE_RATE, sampleRate = SAMPLE_RATE, fade_in_and_out = true) {
+  phasor(frequencies, duration = SAMPLE_RATE, fade_in_and_out = true) {
     if (typeof frequencies == 'number' || Array.isArray(frequencies) === true) {
         frequencies = new FacetPattern().from(frequencies);
     }
@@ -235,12 +240,12 @@ class FacetPattern {
     let wave = [];
     for (let i = 0; i < duration; i++) {
         let frequency = frequencies.data[i];
-        let samplesPerCycle = sampleRate / frequency;
+        let samplesPerCycle = SAMPLE_RATE / frequency;
         let t = i / samplesPerCycle;
         wave[i] = t - Math.floor(t);
     }
     this.data = wave;
-    if ( fade_in_and_out == true ) {
+    if ( fade_in_and_out == true && this.data.length > ((SAMPLE_RATE/1000)*30)) {
       this.fadeoutSamples(Math.round((SAMPLE_RATE/1000)*30));
       this.fadeinSamples(Math.round((SAMPLE_RATE/1000)*30));
     }
@@ -267,7 +272,7 @@ class FacetPattern {
     return this;
   }
 
-  rect (frequencies, duration = SAMPLE_RATE, pulseWidth = 0.5, sampleRate = SAMPLE_RATE, fade_in_and_out = true) {
+  rect (frequencies, duration = SAMPLE_RATE, pulseWidth = 0.5, fade_in_and_out = true) {
     if (typeof frequencies == 'number' || Array.isArray(frequencies) === true) {
         frequencies = new FacetPattern().from(frequencies);
     }
@@ -277,12 +282,12 @@ class FacetPattern {
     let amplitude = 1;
     for (let i = 0; i < duration; i++) {
         let frequency = frequencies.data[i];
-        let samplesPerCycle = sampleRate / frequency;
+        let samplesPerCycle = SAMPLE_RATE / frequency;
         let t = i / samplesPerCycle;
         wave[i] = (t - Math.floor(t) < pulseWidth) ? amplitude : -amplitude;
     }
     this.data = wave;
-    if ( fade_in_and_out == true ) {
+    if ( fade_in_and_out == true && this.data.length > ((SAMPLE_RATE/1000)*30)) {
       this.fadeoutSamples(Math.round((SAMPLE_RATE/1000)*30));
       this.fadeinSamples(Math.round((SAMPLE_RATE/1000)*30));
     }
@@ -296,7 +301,7 @@ class FacetPattern {
   }
 
 
-  sine (frequencies, length = SAMPLE_RATE, fade_in_and_out = false ) {
+  sine (frequencies, length = SAMPLE_RATE, fade_in_and_out = true ) {
     let output = [];
     if ( typeof frequencies == 'number' || Array.isArray(frequencies) === true ) {
       frequencies = new FacetPattern().from(frequencies);
@@ -314,14 +319,14 @@ class FacetPattern {
         }
     }
     this.data = output;
-    if ( fade_in_and_out == true ) {
+    if ( fade_in_and_out == true && this.data.length > ((SAMPLE_RATE/1000)*30)) {
       this.fadeoutSamples(Math.round((SAMPLE_RATE/1000)*30));
       this.fadeinSamples(Math.round((SAMPLE_RATE/1000)*30));
     }
     return this;
   }
 
-  circle(frequencies, length = SAMPLE_RATE, sampleRate = SAMPLE_RATE) {
+  circle(frequencies, length = SAMPLE_RATE) {
     let output = [];
     if (typeof frequencies == 'number' || Array.isArray(frequencies) === true) {
         frequencies = new FacetPattern().from(frequencies);
@@ -330,7 +335,7 @@ class FacetPattern {
     frequencies.size(length);
     let phase = 0;
     for (let i = 0; i < length; i++) {
-        let t = i / sampleRate;
+        let t = i / SAMPLE_RATE;
         let currentFrequency = frequencies.data[i];
         let x = phase / (2 * Math.PI);
         let y;
@@ -340,7 +345,7 @@ class FacetPattern {
             y = Math.sqrt(1 - (2 * (x - 0.5)) * (2 * (x - 0.5)));
         }
         output[i] = y;
-        phase += 2 * Math.PI * currentFrequency / sampleRate;
+        phase += 2 * Math.PI * currentFrequency / SAMPLE_RATE;
         if (phase >= 2 * Math.PI) {
             phase -= 2 * Math.PI;
         }
@@ -370,7 +375,7 @@ class FacetPattern {
     return this;
   }
 
-  square (frequencies, duration = SAMPLE_RATE, sampleRate = SAMPLE_RATE) {
+  square (frequencies, duration = SAMPLE_RATE) {
     if (typeof frequencies == 'number' || Array.isArray(frequencies) === true) {
         frequencies = new FacetPattern().from(frequencies);
     }
@@ -382,7 +387,7 @@ class FacetPattern {
     for (let i = 0; i < duration; i++) {
         let frequency = frequencies.data[i];
         wave[i] = (phase < 0.5) ? amplitude : -amplitude;
-        phase += frequency / sampleRate;
+        phase += frequency / SAMPLE_RATE;
         phase -= Math.floor(phase);
     }
     this.data = wave;
@@ -736,59 +741,59 @@ waveformSample(waveform, phase) {
     return this;
 }
 
-  comb (delaySamples = SAMPLE_RATE / 100, feedforward = 0.5, feedback = 0.5) {
-    feedback = Math.min(Math.max(feedback, 0), 0.98);
-    feedforward = Math.min(Math.max(feedforward, 0), 0.98);
-    if (typeof delaySamples == 'number' || Array.isArray(delaySamples) === true) {
-        delaySamples = new FacetPattern().from(delaySamples);
-    }
-    let maxDelaySamples = Math.round(Math.max(...delaySamples.data));
-    delaySamples.size(this.data.length).round();
-    let maxFeedbackIterations = Math.ceil(Math.log(0.001) / Math.log(feedback));
-    let outputLength = this.data.length + maxDelaySamples * maxFeedbackIterations;
-    let output = new Array(outputLength).fill(0);
-    for (let i = 0; i < outputLength; i++) {
-        let delaySamplesIndex = Math.floor((i / this.data.length) * delaySamples.data.length);
-        let currentDelaySamples = Math.round(Math.abs(Number(delaySamples.data[delaySamplesIndex])));
-        let delayedIndex = i - currentDelaySamples;
-        let delayedInputSample = delayedIndex < 0 ? 0 : this.data[delayedIndex];
-        let delayedOutputSample = delayedIndex < 0 ? 0 : output[delayedIndex];
-        if (i < this.data.length) {
-            output[i] = feedforward * this.data[i] + 1 * delayedInputSample + feedback * delayedOutputSample;
-        } else {
-            output[i] = feedback * delayedOutputSample;
-        }
-    }
-    this.data = output;
-    this.fixnan();
-    this.trim();
-    return this;
+comb (delaySamples = SAMPLE_RATE / 100, feedforward = 0.5, feedback = 0.5) {
+  feedback = Math.min(Math.max(feedback, 0), 0.98);
+  feedforward = Math.min(Math.max(feedforward, 0), 0.98);
+  if (typeof delaySamples == 'number' || Array.isArray(delaySamples) === true) {
+      delaySamples = new FacetPattern().from(delaySamples);
   }
+  let maxDelaySamples = Math.round(Math.max(...delaySamples.data));
+  delaySamples.size(this.data.length).round();
+  let maxFeedbackIterations = Math.ceil(Math.log(0.001) / Math.log(feedback));
+  let outputLength = this.data.length + maxDelaySamples * maxFeedbackIterations;
+  let output = new Array(outputLength).fill(0);
+  for (let i = 0; i < outputLength; i++) {
+      let delaySamplesIndex = Math.floor((i / this.data.length) * delaySamples.data.length);
+      let currentDelaySamples = Math.round(Math.abs(Number(delaySamples.data[delaySamplesIndex])));
+      let delayedIndex = i - currentDelaySamples;
+      let delayedInputSample = delayedIndex < 0 ? 0 : this.data[delayedIndex];
+      let delayedOutputSample = delayedIndex < 0 ? 0 : output[delayedIndex];
+      if (i < this.data.length) {
+          output[i] = feedforward * this.data[i] + 1 * delayedInputSample + feedback * delayedOutputSample;
+      } else {
+          output[i] = feedback * delayedOutputSample;
+      }
+  }
+  this.data = output;
+  this.fixnan();
+  this.trim();
+  return this;
+}
 
-  delay (delayAmount, feedback = 0.5) {
-    feedback = Math.min(Math.max(feedback, 0), 0.999);
-    if (typeof delayAmount == 'number' || Array.isArray(delayAmount) === true) {
-        delayAmount = new FacetPattern().from(delayAmount);
-    }
-    let maxDelayAmount = Math.round(Math.max(...delayAmount.data));
-    feedback *= (1-(maxDelayAmount / SAMPLE_RATE))*0.975;
-    delayAmount.size(this.data.length).round();
-    if ( maxDelayAmount > (SAMPLE_RATE/2) ) {
-      feedback *= 0.75;
-    }
-    let maxFeedbackIterations = Math.ceil(Math.log(0.001) / Math.log(feedback));
-    let delayedArray = new Array(Math.max(0, this.data.length + maxDelayAmount * maxFeedbackIterations)).fill(0);
-    for (let i = 0; i < maxFeedbackIterations; i++) {
-        let gain = Math.pow(feedback, i);
-        for (let j = 0; j < this.data.length; j++) {
-            let delayAmountIndex = Math.floor((j / this.data.length) * delayAmount.data.length);
-            let currentDelayAmount = Math.round(Math.abs(Number(delayAmount.data[delayAmountIndex])));
-            delayedArray[j + i * currentDelayAmount] += this.data[j] * gain;
-        }
-    }
-    this.data = delayedArray;
-    return this;
+delay (delayAmount, feedback = 0.5) {
+  feedback = Math.min(Math.max(feedback, 0), 0.999);
+  if (typeof delayAmount == 'number' || Array.isArray(delayAmount) === true) {
+      delayAmount = new FacetPattern().from(delayAmount);
   }
+  let maxDelayAmount = Math.round(Math.max(...delayAmount.data));
+  feedback *= (1-(maxDelayAmount / SAMPLE_RATE))*0.975;
+  delayAmount.size(this.data.length).round();
+  if ( maxDelayAmount > (SAMPLE_RATE/2) ) {
+    feedback *= 0.75;
+  }
+  let maxFeedbackIterations = Math.ceil(Math.log(0.001) / Math.log(feedback));
+  let delayedArray = new Array(Math.max(0, this.data.length + maxDelayAmount * maxFeedbackIterations)).fill(0);
+  for (let i = 0; i < maxFeedbackIterations; i++) {
+      let gain = Math.pow(feedback, i);
+      for (let j = 0; j < this.data.length; j++) {
+          let delayAmountIndex = Math.floor((j / this.data.length) * delayAmount.data.length);
+          let currentDelayAmount = Math.round(Math.abs(Number(delayAmount.data[delayAmountIndex])));
+          delayedArray[j + i * currentDelayAmount] += this.data[j] * gain;
+      }
+  }
+  this.data = delayedArray;
+  return this;
+}
 
   // ratio is a float between 0 and 1 corresponding to n:1 so 0.5 would be 2:1, 0.2 would be 5:1 tc
   // threshold is the sample amplitude at which compression kicks in
@@ -944,39 +949,24 @@ waveformSample(waveform, phase) {
     return this;
   }
 
-
-
-  flipabove (maximum) {
-    maximum = Number(maximum);
-    let flipped_sequence = [];
-    for (const [key, step] of Object.entries(this.data)) {
-      if ( step > maximum ) {
-        let amount_above = Math.abs(Number(step) - Number(maximum));
-        flipped_sequence[key] = maximum - amount_above;
-      }
-      else {
-        flipped_sequence[key] = step;
-      }
-    }
-    this.data = flipped_sequence;
-    return this;
-  }
-
-  flipbelow (min) {
+  fold(min, max) {
     min = Number(min);
-    let flipped_sequence = [];
+    max = Number(max);
+    let folded_sequence = [];
     for (const [key, step] of Object.entries(this.data)) {
-      if ( step < min ) {
-        let amount_below = Math.abs(Number(min) - Number(step));
-        flipped_sequence[key] = min + amount_below;
-      }
-      else {
-        flipped_sequence[key] = step;
-      }
+        if (step < min) {
+            let amount_below = Math.abs(min - step);
+            folded_sequence[key] = min + amount_below;
+        } else if (step > max) {
+            let amount_above = Math.abs(step - max);
+            folded_sequence[key] = max - amount_above;
+        } else {
+            folded_sequence[key] = step;
+        }
     }
-    this.data = flipped_sequence;
+    this.data = folded_sequence;
     return this;
-  }
+}
 
   follow (attackTime = SAMPLE_RATE / 0.1, releaseTime = SAMPLE_RATE / 4) {
     let envelope = [];
@@ -1046,95 +1036,89 @@ waveformSample(waveform, phase) {
   }
 
   interlace (sequence2) {
-      if ( !this.isFacetPattern(sequence2) ) {
-        throw `input must be a FacetPattern object; type found: ${typeof sequence2}`;
-      }
-      let interlaced_sequence = [];
-      let interlace_every;
-      let big_sequence = this, small_sequence = sequence2;
-      if ( this.data.length > sequence2.data.length ) {
-        interlace_every = parseInt(this.data.length / sequence2.data.length);
-        big_sequence.reduce(sequence2.data.length);
-      }
-      else if ( sequence2.data.length > this.data.length ) {
-        interlace_every = parseInt(sequence2.data.length / this.data.length);
-        big_sequence = sequence2;
-        big_sequence.reduce(this.data.length);
-        small_sequence = this;
-      }
-      else if ( sequence2.data.length == this.data.length ) {
-          interlace_every = 1;
-      }
-      for (const [key, step] of Object.entries(this.data)) {
-        interlaced_sequence.push(big_sequence.data[key]);
-        if ( Number(key) % interlace_every == 0 ) {
-          if ( isNaN(small_sequence.data[key]) ) {
-            interlaced_sequence.push(0)
-          }
-          else {
-            interlaced_sequence.push(small_sequence.data[key]);
-          }
-        }
-      }
-      this.data = interlaced_sequence;
-      return this;
-  }
-
-  interp (prob = 0.5, sequence2) {
-    if ( !this.isFacetPattern(sequence2) ) {
-      throw `input must be a FacetPattern object; type found: ${typeof sequence2}`;
+    if (typeof sequence2 == 'number' || Array.isArray(sequence2) === true) {
+        sequence2 = new FacetPattern().from(sequence2);
     }
-    let amt = Math.abs(Number(prob));
-    let same_size_arrays = this.makePatternsTheSameSize(this, sequence2);
-    this.data = same_size_arrays[0].data.map((value, index) => {
-      return value + amt * (same_size_arrays[1].data[index] - value);
-    });
-   return this;
-  }
-
-  invert () {
-    let inverted_sequence = [];
-    let min = Infinity;
-    let max = -Infinity;
-    for (const step of this.data) {
-        if (step < min) min = step;
-        if (step > max) max = step;
+    let interlaced_sequence = [];
+    let interlace_every;
+    let big_sequence = this, small_sequence = sequence2;
+    if ( this.data.length > sequence2.data.length ) {
+      interlace_every = parseInt(this.data.length / sequence2.data.length);
+      big_sequence.reduce(sequence2.data.length);
+    }
+    else if ( sequence2.data.length > this.data.length ) {
+      interlace_every = parseInt(sequence2.data.length / this.data.length);
+      big_sequence = sequence2;
+      big_sequence.reduce(this.data.length);
+      small_sequence = this;
+    }
+    else if ( sequence2.data.length == this.data.length ) {
+        interlace_every = 1;
     }
     for (const [key, step] of Object.entries(this.data)) {
-        inverted_sequence[key] = min + (max - step);
-    }
-    this.data = inverted_sequence;
-    return this;
-  }
-
-  jam (prob, amt) {
-    amt = Number(amt);
-    prob = Number(prob);
-    let jammed_sequence = [];
-    for (const [key, step] of Object.entries(this.data)) {
-      if ( step != 0 ) {
-        if ( Math.random() < prob) {
-          // changed
-          let step_distance = Math.random() * amt;
-          // half the time make it smaller
-          if ( Math.random() < 0.5 ) {
-            step_distance *= -1;
-          }
-          jammed_sequence[key] = Number((Number(step) + Number(step_distance)));
+      interlaced_sequence.push(big_sequence.data[key]);
+      if ( Number(key) % interlace_every == 0 ) {
+        if ( isNaN(small_sequence.data[key]) ) {
+          interlaced_sequence.push(0)
         }
         else {
-          // unchanged
-          jammed_sequence[key] = step;
+          interlaced_sequence.push(small_sequence.data[key]);
         }
       }
-      else {
-        // unchanged
-        jammed_sequence[key] = step;
-      }
     }
-    this.data = jammed_sequence;
+    this.data = interlaced_sequence;
     return this;
+}
+
+interp (prob = 0.5, sequence2) {
+  if ( !this.isFacetPattern(sequence2) ) {
+    throw `input must be a FacetPattern object; type found: ${typeof sequence2}`;
   }
+  let amt = Math.abs(Number(prob));
+  let same_size_arrays = this.makePatternsTheSameSize(this, sequence2);
+  this.data = same_size_arrays[0].data.map((value, index) => {
+    return value + amt * (same_size_arrays[1].data[index] - value);
+  });
+ return this;
+}
+
+invert () {
+  let inverted_sequence = [];
+  let min = Infinity;
+  let max = -Infinity;
+  for (const step of this.data) {
+      if (step < min) min = step;
+      if (step > max) max = step;
+  }
+  for (const [key, step] of Object.entries(this.data)) {
+      inverted_sequence[key] = min + (max - step);
+  }
+  this.data = inverted_sequence;
+  return this;
+}
+
+jam (prob, amt) {
+  amt = Number(amt);
+  prob = Number(prob);
+  let jammed_sequence = [];
+  for (const [key, step] of Object.entries(this.data)) {
+    if ( Math.random() < prob) {
+      // changed
+      let step_distance = Math.random() * amt;
+      // half the time make it smaller
+      if ( Math.random() < 0.5 ) {
+        step_distance *= -1;
+      }
+      jammed_sequence[key] = Number((Number(step) + Number(step_distance)));
+    }
+    else {
+      // unchanged
+      jammed_sequence[key] = step;
+    }
+  }
+  this.data = jammed_sequence;
+  return this;
+}
 
   log (base, rotation = 1) {
       this.warp(base, rotation);
@@ -1419,29 +1403,29 @@ waveformSample(waveform, phase) {
     return this;
   }
 f
-  map (fp) {
-    if ( !this.isFacetPattern(fp) && !Array.isArray(fp) ) {
-      throw `input must be a FacetPattern or array; type found: ${typeof fp}`;
-    }
-    if ( Array.isArray(fp) === true ) {
-      fp = new FacetPattern().from(fp);
-    }
-    // scale the data so it's in the range of the new_values
-    this.scale(Math.min.apply(Math, fp.data),Math.max.apply(Math, fp.data));
-    // safeguard against mapping more than 1 second's worth samples to another pattern.
-    this.reduce(SAMPLE_RATE);
-    let same_size_arrays = this.makePatternsTheSameSize(this, fp);
-    let sequence = same_size_arrays[0];
-    let new_values = same_size_arrays[1];
-    let mapped_sequence = [];
-    for (const [key, step] of Object.entries(sequence.data)) {
-      mapped_sequence[key] = new_values.data.reduce((a, b) => {
-        return Math.abs(b - step) < Math.abs(a - step) ? b : a;
-      });
-    }
-    this.data = mapped_sequence;
-    return this;
+map (fp) {
+  if ( !this.isFacetPattern(fp) && !Array.isArray(fp) ) {
+    throw `input must be a FacetPattern or array; type found: ${typeof fp}`;
   }
+  if ( Array.isArray(fp) === true ) {
+    fp = new FacetPattern().from(fp);
+  }
+  // scale the data so it's in the range of the new_values
+  this.scale(Math.min.apply(Math, fp.data),Math.max.apply(Math, fp.data));
+  // safeguard against mapping more than 1 second's worth samples to another pattern.
+  this.reduce(SAMPLE_RATE);
+  let same_size_arrays = this.makePatternsTheSameSize(this, fp);
+  let sequence = same_size_arrays[0];
+  let new_values = same_size_arrays[1];
+  let mapped_sequence = [];
+  for (const [key, step] of Object.entries(sequence.data)) {
+    mapped_sequence[key] = new_values.data.reduce((a, b) => {
+      return Math.abs(b - step) < Math.abs(a - step) ? b : a;
+    });
+  }
+  this.data = mapped_sequence;
+  return this;
+}
 
   mtof() {
     let mtof_sequence = [];
@@ -2211,21 +2195,18 @@ scaleLT1 (outMin, outMax, exponent = 1) {
     return this;
   }
 
-  stutter (repeats, start_pos = 0, end_pos = 1) {
+  stutter (repeats) {
     repeats = Math.abs(Math.round(Number(repeats)));
     if ( repeats < 1 ) {
       return this;
     }
-    start_pos = Math.abs(Number(start_pos));
-    if ( start_pos > 1 ) {
-      throw `stutter start_pos value must be between 0 and 1, value found: ${start_pos}`;
+    let start_pos = 0;
+    let end_pos = 1 / repeats;
+    let stutter_fp = new FacetPattern().silence(this.data.length);
+    let cut_fp = new FacetPattern().from(this.data).range(start_pos,end_pos);
+    for (var a = 0; a < repeats; a++) {
+      stutter_fp.sup(cut_fp,a/repeats,this.data.length);
     }
-    end_pos = Math.abs(Number(end_pos));
-    if ( end_pos > 1 ) {
-      throw `stutter end_pos value must be between 0 and 1, value found: ${end_pos}`;
-    }
-    let original_length = this.data.length;
-    let stutter_fp = new FacetPattern().from(this.range(start_pos,end_pos).data).speed(repeats).dup(repeats-1).size(original_length);
     this.data = stutter_fp.data;
     return this;
   }
@@ -2330,46 +2311,43 @@ scaleLT1 (outMin, outMax, exponent = 1) {
   }
 
   walk (prob, amt) {
-    // swap some of the locations
-    let jammed_sequence = [];
     let x_max = this.data.length - 1;
     amt = Number(amt);
     prob = Number(prob);
-    if ( prob < 0 ) {
-      prob = 0;
+    if (prob < 0) {
+        prob = 0;
+    } else if (prob > 1) {
+        prob = 1;
     }
-    else if ( prob > 1 ) {
-      prob = 1;
+
+    let jammed_sequence = [...this.data]; // copy the original array
+
+    for (let i = 0; i < jammed_sequence.length; i++) {
+        if (Math.random() < prob) {
+            let step_distance = Math.floor(Math.random() * amt);
+            if (step_distance < 1) {
+                step_distance = 1;
+            }
+            if (Math.random() < 0.5) {
+                step_distance = step_distance * -1;
+            }
+            let new_index = i + step_distance;
+            if (new_index < 0) {
+                new_index = x_max - (0 - new_index) % (x_max - 0);
+            } else {
+                new_index = 0 + (new_index - 0) % (x_max - 0);
+            }
+
+            // swap elements
+            let temp = jammed_sequence[i];
+            jammed_sequence[i] = jammed_sequence[new_index];
+            jammed_sequence[new_index] = temp;
+        }
     }
-    for (const [key, step] of Object.entries(this.data)) {
-      if ( Math.random() < prob) {
-        // changed
-        let step_distance = parseInt((Math.random() * amt));
-        if ( step_distance < 1 ) {
-          step_distance = 1;
-        }
-        // half the time make it smaller
-        if ( Math.random() < 0.5 ) {
-          step_distance = step_distance * -1;
-        }
-        let new_step_location = parseInt(key) + parseInt(step_distance);
-        if (new_step_location < 0) {
-          new_step_location = x_max - (0 - new_step_location) % (x_max - 0);
-        }
-        else {
-          new_step_location = 0 + (new_step_location - 0) % (x_max - 0);
-        }
-        jammed_sequence[key] = this.data[new_step_location];
-        jammed_sequence[new_step_location] = step;
-      }
-      else {
-        // unchanged
-        jammed_sequence[key] = step;
-      }
-    }
+
     this.data = jammed_sequence;
     return this;
-  }
+}
 
   warp (base, rotation = 1) {
     // forked from: https://github.com/naomiaro/fade-curves/blob/master/index.js
@@ -2454,33 +2432,6 @@ scaleLT1 (outMin, outMax, exponent = 1) {
     return this;
   }
 
-  channels (chans) {
-    this.dacs = '';
-    if ( typeof chans == 'number' ) {
-      chans = [chans];
-    }
-    else if ( this.isFacetPattern(chans) ) {
-      chans = chans.data;
-    }
-    for (var i = 0; i < Math.max(...chans); i++) {
-      if ( chans.includes(i+1) ) {
-        this.dacs += '1 ';
-      }
-      else {
-        this.dacs += '0 ';
-      }
-    }
-    // remove last space
-    this.dacs = this.dacs.slice(0, -1);
-    return this;
-  }
-
-  // semantically useful if you forget when running with one channel
-  channel (chans) {
-    this.channels(chans);
-    return this;
-  }
-
   ichunk (lookupPattern) {
     if ( typeof lookupPattern == 'number' || Array.isArray(lookupPattern) === true ) {
       lookupPattern = new FacetPattern().from(lookupPattern);
@@ -2501,7 +2452,7 @@ scaleLT1 (outMin, outMax, exponent = 1) {
     return this;
   }
 
-  mutechunks (numChunks = 16, probability = 0.75) {
+  mutechunks (numChunks = 16, probability = 0.75, yes_fade = true) {
     // Break the array into numChunks chunks
     let chunkSize = Math.ceil(this.data.length / numChunks);
     let chunks = [];
@@ -2522,8 +2473,10 @@ scaleLT1 (outMin, outMax, exponent = 1) {
         result.push(chunk);
     }
     this.data = result;
-    this.data = this.fadeArrays(this.data);
-    this.data = this.sliceEndFade(this.data);
+    if ( yes_fade === true ) {
+      this.data = this.fadeArrays(this.data);
+      this.data = this.sliceEndFade(this.data);
+    }
     this.flatten();
     return this;
 }
@@ -2609,35 +2562,6 @@ markov(states) {
   return this;
 }
 
-grow2d(iterations, prob, threshold = 0, mode = 0) {
-  // convert to a 2D array
-  let size = Math.sqrt(this.data.length);
-  let data2d = [];
-  for (let i = 0; i < size; i++) {
-    data2d[i] = this.data.slice(i * size, i * size + size);
-  }
-
-  // loop through every value in 2D array _iterations_ number of times
-  for (let iter = 0; iter < iterations; iter++) {
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        let condition = (mode == 1 && data2d[i][j] > threshold) || (mode == 0 && data2d[i][j] < threshold);
-        if (condition) {
-          // set _prob_ adjacent values also to the current cell's value
-          for (let di = -1; di <= 1; di++) {
-            for (let dj = -1; dj <= 1; dj++) {
-              if (Math.random() < prob && i + di >= 0 && i + di < size && j + dj >= 0 && j + dj < size) {
-                data2d[i + di][j + dj] = data2d[i][j];
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  this.data = data2d.flat();
-  return this;
-}
   // END special operations
 
   // BEGIN utility functions used in other methods
@@ -2877,7 +2801,7 @@ grow2d(iterations, prob, threshold = 0, mode = 0) {
     if (this.data.length == 0) {
       this.data = new FacetPattern().silence(maxFrameSize).data;
     }
-    startPositions = startPositions.data;
+    startPositions = startPositions.unique().data;
     maxFrameSize = Math.abs(Math.floor(maxFrameSize));
     let output = this.data.slice();
     for (let j = 0; j < startPositions.length; j++) {
@@ -2906,503 +2830,6 @@ grow2d(iterations, prob, threshold = 0, mode = 0) {
     this.data.splice(position, splicePattern.data.length, ...splicePattern.data);
     return this;
   }
-
-
-
-  rotate (angle) {
-    let width = Math.round(Math.sqrt(this.data.length));
-    let height = width;
-
-    // Wrap the angle to be between 0 and 360
-    angle = (angle + 360) % 360;
-    if ( angle < 0 ) {
-      throw `rotate() cannot be called without a positive angle value`;
-    }
-    
-    // Step 1: Scale up the image by a factor of 2
-    const scale = 2;
-    const scaledWidth = width * scale;
-    const scaledHeight = height * scale;
-    
-    const scaledFloatArray = new Float32Array(scaledWidth * scaledHeight);
-    
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const srcIdx = y * width + x;
-        for (let sy = y * scale; sy < (y + 1) * scale; sy++) {
-          for (let sx = x * scale; sx < (x + 1) * scale; sx++) {
-            const dstIdx = sy * scaledWidth + sx;
-            scaledFloatArray[dstIdx] = this.data[srcIdx];
-          }
-        }
-      }
-    }
-    
-    // Step 2: Rotate the scaled image using a standard rotation algorithm
-    const rotatedScaledFloatArray = new Float32Array(scaledWidth * scaledHeight);
-
-    const centerX = scaledWidth / 2;
-    const centerY = scaledHeight / 2;
-
-    const rad = (angle % 360) * Math.PI / 180;
-
-    for (let y = 0; y < scaledHeight; y++) {
-      for (let x = 0; x < scaledWidth; x++) {
-        const tx = x - centerX;
-        const ty = y - centerY;
-        const rx = tx * Math.cos(rad) - ty * Math.sin(rad);
-        const ry = tx * Math.sin(rad) + ty * Math.cos(rad);
-        const ux = Math.round(rx + centerX);
-        const uy = Math.round(ry + centerY);
-        
-        // Wrap the values around the image using modulo operation
-        const wrappedUx = ((ux % scaledWidth) + scaledWidth) % scaledWidth;
-        const wrappedUy = ((uy % scaledHeight) + scaledHeight) % scaledHeight;
-        
-        if (wrappedUx >= 0 && wrappedUx < scaledWidth && wrappedUy >= 0 && wrappedUy < scaledHeight) {
-          const srcIdx = wrappedUy * scaledWidth + wrappedUx;
-          const dstIdx = y * scaledWidth + x;
-          rotatedScaledFloatArray[dstIdx] = scaledFloatArray[srcIdx];
-        }
-      }
-    }
-    
-    // Step3: Scale down the rotated image to its original size
-     this.size(width*height);
-     const rotatedFloatArray = new Float32Array(this.data.length);
-     
-     for (let y = 0; y < height; y++) {
-       for (let x = 0; x < width; x++) {
-         let sum = 0;
-         let count = 0;
-         for (let sy = y * scale; sy < (y +1) * scale; sy++) {
-           for (let sx= x*scale; sx< (x+1)*scale;sx++){
-             sum += rotatedScaledFloatArray[sy*scaledWidth+sx];
-             count++;
-           }
-         }
-         rotatedFloatArray[y*width+x]=sum/count;
-       }
-     }
-     
-     this.data=rotatedFloatArray;
-     this.fixnan();
-     this.flatten();
-     return this;
-    }  
-
-  layer2d ( brightness_data, xCoords, yCoords) {
-    let width = Math.round(Math.sqrt(this.data.length));
-    let height = width;
-    if ( !brightness_data ) {
-      throw `layer2d() cannot be called without a brightness argument`;
-    }
-    if ( !xCoords ) {
-      throw `layer2d() cannot be called without a xCoords argument`;
-    }
-    if ( !yCoords ) {
-      throw `layer2d() cannot be called without a yCoords argument`;
-    }
-    if (!width || width <= 0 ) {
-      throw `layer2d() cannot be called without a width value < 0`;
-    }
-    width = Math.round(width);
-    if (!height || height <= 0 ) {
-      throw `layer2d() cannot be called without a height value < 0`;
-    }
-    height = Math.round(height);
-
-    // create a new array with the specified dimensions
-    let screen = new Array(height);
-    for (let i = 0; i < height; i++) {
-        screen[i] = new Array(width);
-    }
-
-    if (typeof brightness_data == 'number' || Array.isArray(brightness_data) === true) {
-      brightness_data = new FacetPattern().from(brightness_data);
-    }
-    if (typeof xCoords == 'number' || Array.isArray(xCoords) === true) {
-      xCoords = new FacetPattern().from(xCoords);
-    }
-    if (typeof yCoords == 'number' || Array.isArray(yCoords) === true) {
-      yCoords = new FacetPattern().from(yCoords);
-    }
-
-    xCoords.size(brightness_data.data.length);
-    yCoords.size(brightness_data.data.length);
-
-    // write the brightness data to the screen
-    for (let i = 0; i < brightness_data.data.length; i++) {
-        let x = Math.round(xCoords.data[i]);
-        let y = Math.round(yCoords.data[i]);
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-          screen[y][x] = brightness_data.data[i];
-        }
-    }
-    brightness_data.data = screen;
-    brightness_data.flatten().fixnan();
-    this.sup(brightness_data);
-    this.fixnan();
-    return this;
-  }
-
-  shift2d (x, y) {
-    let width = Math.round(Math.sqrt(this.data.length));
-    let height = width;
-    // create a new array to hold the moved values
-    let movedArr = new Array(this.data.length);
-    // loop through each value in the original array
-    for (let i = 0; i < height * width; i++) {
-        // calculate the current row and column in the 2D space
-        let row = Math.floor(i / width);
-        let col = i % width;
-        // calculate the new row and column after moving
-        let newRow = (row + y + height) % height;
-        let newCol = (col + x + width) % width;
-        // move the value to the new position in the moved array
-        let newIndex = newRow * width + newCol;
-        movedArr[newIndex] = this.data[i];
-    }
-    this.data = movedArr;
-    return this;
-}
-
-circle2d(centerX, centerY, radius, value, mode = 0) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  for (let i = 0; i < height * width; i++) {
-      let row = Math.floor(i / width);
-      let col = i % width;
-      // calculate distance from the current position to the center point
-      let distance = Math.sqrt(Math.pow(col - centerX, 2) + Math.pow(row - centerY, 2));
-
-      // if mode is 0, only draw the outline by checking if the distance is close to the radius
-      // if mode is 1, fill the circle by checking if the distance is less than or equal to the radius
-      if ((mode === 0 && Math.abs(distance - radius) < 1) || (mode === 1 && distance <= radius)) {
-          this.data[i] = value;
-      }
-  }
-  return this;
-}
-
-draw2d(coordinates, fillValue) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  if (fillValue === undefined) {
-    throw new Error("fillValue is required for draw2d.");
-  }
-  if (coordinates.length % 2 !== 0) {
-    throw new Error("Invalid number of coordinates for draw2d. The array length must be divisible by 2.");
-  }
-
-  // create a 2D array with the dimensions of the polygon
-  let polygon = new Array(height).fill(null).map(() => new Array(width).fill(0));
-  let points = [];
-  for (let i = 0; i < coordinates.length; i += 2) {
-    points.push({x: coordinates[i], y: coordinates[i + 1]});
-  }
-
-  // process each pair of points
-  for (let i = 0; i < points.length - 1; i++) {
-    let start = points[i];
-    let end = points[i + 1];
-
-    // check if the points are within the bounds of the polygon
-    if (start.x < 0 || start.x >= width || end.x < 0 || end.x >= width || start.y < 0 || start.y >= height || end.y < 0 || end.y >= height) {
-      throw new Error(`Coordinates (${start.x}, ${start.y}) or (${end.x}, ${end.y}) are out of bounds.`);
-    }
-
-    // fill the line between the points with the fill value
-    let dx = Math.abs(end.x - start.x);
-    let dy = Math.abs(end.y - start.y);
-    let sx = (start.x < end.x) ? 1 : -1;
-    let sy = (start.y < end.y) ? 1 : -1;
-    let err = dx - dy;
-
-    while(true){
-      polygon[start.y][start.x] = fillValue;
-
-      if ((start.x === end.x) && (start.y === end.y)) break;
-      let e2 = 2*err;
-      if (e2 > -dy) { err -= dy; start.x  += sx; }
-      if (e2 < dx) { err += dx; start.y += sy; }
-    }
-  }
-
-  // wpdate the data property with the new polygon
-  this.data = polygon.flat();
-  return this;
-}
-
-rect2d(topLeftX, topLeftY, rectWidth, rectHeight, value, mode = 0) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  for (let i = 0; i < height * width; i++) {
-      let row = Math.floor(i / width);
-      let col = i % width;
-
-      // if mode is 0, only draw the outline by checking if the point is on the edge of the rectangle
-      // if mode is 1, fill the rectangle by checking if the point is within the rectangle
-      if ((mode === 0 && ((col === topLeftX || col === topLeftX + rectWidth - 1) && row >= topLeftY && row < topLeftY + rectHeight) || 
-                          ((row === topLeftY || row === topLeftY + rectHeight - 1) && col >= topLeftX && col < topLeftX + rectWidth)) || 
-          (mode === 1 && col >= topLeftX && col < topLeftX + rectWidth && row >= topLeftY && row < topLeftY + rectHeight)) {
-          this.data[i] = value;
-      }
-  }
-  return this;
-}
-
-tri2d(x1, y1, x2, y2, x3, y3, value, mode = 0) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  for (let i = 0; i < height * width; i++) {
-      let row = Math.floor(i / width);
-      let col = i % width;
-
-      // calculate the barycentric coordinates for the current position
-      let w1 = ((y2 - y3) * (col - x3) + (x3 - x2) * (row - y3)) / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
-      let w2 = ((y3 - y1) * (col - x3) + (x1 - x3) * (row - y3)) / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
-      let w3 = 1 - w1 - w2;
-
-      // if mode is 0, only draw the outline by checking if the point is close to one of the edges
-      // if mode is 1, fill the triangle by checking if the point is within the triangle
-      if ((mode === 0 && (Math.abs(w1) < 0.05 || Math.abs(w2) < 0.05 || Math.abs(w3) < 0.05)) || (mode === 1 && w1 >= 0 && w2 >= 0 && w3 >= 0)) {
-          this.data[i] = value;
-      }
-  }
-  return this;
-}
-
-palindrome2d() {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  let newWidth = width * 2;
-  let newHeight = height * 2;
-  let mirroredData = new Array(newWidth * newHeight).fill(0);
-
-  for (let row = 0; row < newHeight; row++) {
-    for (let col = 0; col < newWidth; col++) {
-      let originalRow = row < height ? row : newHeight - row - 1;
-      let originalCol = col < width ? col : newWidth - col - 1;
-      mirroredData[row * newWidth + col] = this.data[originalRow * width + originalCol];
-    }
-  }
-
-  this.data = mirroredData;
-  return this;
-}
-
-walk2d (percentage, x, y, mode = 0) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  let movedArr = [...this.data]; // copy the original data
-  let numToMove = Math.floor(percentage * this.data.length);
-
-  // if x or y is not an array, convert it to an array with the same min and max value
-  if (!Array.isArray(x)) x = [x, x];
-  if (!Array.isArray(y)) y = [y, y];
-
-  for (let i = 0; i < numToMove; i++) {
-      let index = Math.floor(Math.random() * this.data.length);
-      let row = Math.floor(index / width);
-      let col = index % width;
-
-      // calculate new position
-      let newRow = row + (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * (y[1] - y[0] + 1) + y[0]);
-      let newCol = col + (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * (x[1] - x[0] + 1) + x[0]);
-
-      switch(mode) {
-          case 0: // wrap
-              if (newRow < 0) newRow += height;
-              if (newRow >= height) newRow -= height;
-              if (newCol < 0) newCol += width;
-              if (newCol >= width) newCol -= width;
-              break;
-          case 1: // fold
-              if (newRow < 0) newRow = -newRow;
-              if (newRow >= height) newRow = 2*height - newRow - 1;
-              if (newCol < 0) newCol = -newCol;
-              if (newCol >= width) newCol = 2*width - newCol - 1;
-              break;
-          case 2: // clip
-              if (newRow < 0) newRow = 0;
-              if (newRow >= height) newRow = height - 1;
-              if (newCol < 0) newCol = 0;
-              if (newCol >= width) newCol = width - 1;
-              break;
-      }
-
-      // move the value to the new position in the moved array
-      let newIndex = newRow * width + newCol;
-      movedArr[newIndex] = this.data[index];
-  }
-
-  this.data = movedArr;
-  return this;
-}
-
-warp2d(warpX, warpY, warpIntensity) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  let warpedData = new Array(this.data.length).fill(0);
-
-  for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
-          // calculate the distance from the current point to the warp point
-          let dx = warpX - col;
-          let dy = warpY - row;
-          let distance = Math.sqrt(dx * dx + dy * dy);
-
-          // calculate the warp factor based on the distance and the warp intensity
-          let warpFactor = warpIntensity * Math.exp(-distance / (width * warpIntensity)); // exponential decay
-
-          // calculate the new position after applying the warp effect
-          let warpedRow = row + dy * warpFactor;
-          let warpedCol = col + dx * warpFactor;
-
-          // clip the new position to the range [0, width) and [0, height)
-          warpedRow = Math.max(0, Math.min(height - 1, Math.round(warpedRow)));
-          warpedCol = Math.max(0, Math.min(width - 1, Math.round(warpedCol)));
-
-          // move the value to the new position in the warped array
-          let index = row * width + col;
-          let warpedIndex = warpedRow * width + warpedCol;
-          warpedData[warpedIndex] = this.data[index];
-      }
-  }
-
-  this.data = warpedData;
-  return this;
-}
-
-delay2d(delayX, delayY, intensityDecay = 0.5) {
-  let width = Math.round(Math.sqrt(this.data.length));
-  let height = width;
-  if (intensityDecay < 0 ) {
-    intensityDecay = 0;
-  }
-  if (intensityDecay > 1 ) {
-    intensityDecay = 1;
-  }
-  let delayedData = new Array(this.data.length).fill(0);
-  let totalDelays = Math.round(1 / (1 - intensityDecay));
-
-  for (let delay = 0; delay < totalDelays; delay++) {
-      let decayFactor = 1 - (intensityDecay * delay / totalDelays);
-      for (let row = 0; row < height; row++) {
-          for (let col = 0; col < width; col++) {
-              let delayedRow = delayY >= 0 ? ((row + delay * delayY) + height) % height : ((row - delay * Math.abs(delayY)) + height) % height;
-              let delayedCol = delayX >= 0 ? ((col + delay * delayX) + width) % width : ((col - delay * Math.abs(delayX)) + width) % width;
-              let index = delayedRow * width + delayedCol;
-              delayedData[index] += this.data[row * width + col] * decayFactor;
-              // clip the value at the current index to the range [0, 1]
-              delayedData[index] = Math.max(0, Math.min(1, delayedData[index]));
-          }
-      }
-  }
-
-  this.data = delayedData;
-  return this;
-}
-
-  rechunk2d( chunks) {
-    if (Math.sqrt(chunks) % 1 !== 0) {
-        throw new Error('The number of chunks must have an integer square root');
-    }
-    let nextLargerSquare = Math.ceil(Math.sqrt(this.data.length));
-    while (nextLargerSquare * nextLargerSquare % chunks !== 0) {
-      nextLargerSquare++;
-    }
-    this.size(nextLargerSquare * nextLargerSquare);
-    const chunkSize = this.data.length / chunks;
-    const chunkSide = Math.sqrt(chunkSize);
-    const side = Math.sqrt(this.data.length);
-    let result = new Array(this.data.length);
-    let chunkOrder = [...Array(chunks).keys()];
-    for (let i = chunkOrder.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [chunkOrder[i], chunkOrder[j]] = [chunkOrder[j], chunkOrder[i]];
-    }
-    for (let i = 0; i < chunks; i++) {
-        let chunkStartRow = Math.floor(chunkOrder[i] / Math.sqrt(chunks)) * chunkSide;
-        let chunkStartCol = (chunkOrder[i] % Math.sqrt(chunks)) * chunkSide;
-        let resultStartRow = Math.floor(i / Math.sqrt(chunks)) * chunkSide;
-        let resultStartCol = (i % Math.sqrt(chunks)) * chunkSide;
-        for (let j = 0; j < chunkSide; j++) {
-            for (let k = 0; k < chunkSide; k++) {
-                result[(resultStartRow + j) * side + resultStartCol + k] = this.data[(chunkStartRow + j) * side + chunkStartCol + k];
-            }
-        }
-    }
-    this.data = result;
-    return this;
-  }
-
-  mutechunks2d (chunks, probability) {
-    if (Math.sqrt(chunks) % 1 !== 0) {
-        throw new Error('The number of chunks must have an integer square root');
-    }
-    let nextLargerSquare = Math.ceil(Math.sqrt(this.data.length));
-    while (nextLargerSquare * nextLargerSquare % chunks !== 0) {
-      nextLargerSquare++;
-    }
-    this.size(nextLargerSquare * nextLargerSquare);
-    const chunkSize = this.data.length / chunks;
-    const chunkSide = Math.sqrt(chunkSize);
-    const side = Math.sqrt(this.data.length);
-    let result = new Array(this.data.length);
-    let chunkOrder = [...Array(chunks).keys()];
-    for (let i = chunkOrder.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [chunkOrder[i], chunkOrder[j]] = [chunkOrder[j], chunkOrder[i]];
-    }
-    for (let i = 0; i < chunks; i++) {
-        let chunkStartRow = Math.floor(chunkOrder[i] / Math.sqrt(chunks)) * chunkSide;
-        let chunkStartCol = (chunkOrder[i] % Math.sqrt(chunks)) * chunkSide;
-        let resultStartRow = Math.floor(i / Math.sqrt(chunks)) * chunkSide;
-        let resultStartCol = (i % Math.sqrt(chunks)) * chunkSide;
-        if (Math.random() < probability) {
-            for (let j = 0; j < chunkSide; j++) {
-                for (let k = 0; k < chunkSide; k++) {
-                    result[(resultStartRow + j) * side + resultStartCol + k] = 0;
-                }
-            }
-        } else {
-            for (let j = 0; j < chunkSide; j++) {
-                for (let k = 0; k < chunkSide; k++) {
-                    result[(resultStartRow + j) * side + resultStartCol + k] = this.data[(chunkStartRow + j) * side + chunkStartCol + k];
-                }
-            }
-        }
-    }
-    this.data = result;
-    return this;
-  }
-
-  size2d ( size ) {
-    if (size <= 0 || size > 1) {
-        throw new Error('size2d() requires a size between 0 and 1');
-    }
-
-    // Calculate the dimensions of the square
-    let squareSize = Math.ceil(Math.sqrt(this.data.length));
-    let newSize = Math.floor(squareSize * size);
-
-    // Create the 2D square array
-    let square = [];
-    for (let i = 0; i < newSize; i++) {
-        let row = [];
-        for (let j = 0; j < newSize; j++) {
-            // Use linear interpolation to find the corresponding index in the original data
-            let index = Math.floor((i / newSize) * squareSize) * squareSize + Math.floor((j / newSize) * squareSize);
-            row.push(this.data[index]);
-        }
-        square.push(row);
-    }
-    this.data = square;
-    this.flatten();
-    return this;
-}
 
   slices (num_slices, command, prob = 1, yes_fade = true) {
     let out_fp = new FacetPattern();
