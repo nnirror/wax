@@ -257,7 +257,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "subtract",
-        "displayName": "subtract"
+        "displayName": "- (subtract)"
     },
     {
         "fileName": "swanramp",

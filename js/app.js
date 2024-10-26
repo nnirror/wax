@@ -968,7 +968,9 @@ function addInputsForDevice(device, deviceType, deviceId) {
             // append the label and input to the inportContainer
             inportContainer.appendChild(inportLabel);
             inportContainer.appendChild(inportText);
-            inportContainer.appendChild(lineBreak);
+            if ( deviceType !== 'pattern' ) {
+                inportContainer.appendChild(lineBreak);
+            }
 
              // set the default value for this device's parameter
             if (defaultValues.hasOwnProperty(deviceType)) {
@@ -1483,6 +1485,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if (filename == 'pattern') {
             deviceDiv.style.width = '32em';
+            deviceDiv.style.height = '120px';
         }
         if (filename == 'number') {
             deviceDiv.style.height = '80px';
@@ -1522,6 +1525,18 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if (filename == 'output' ) {
             deviceDiv.style.width = '140px';
+        }
+        if (filename == 'abs') {
+            deviceDiv.style.width = '7em';
+        }
+        if (filename == 'and') {
+            deviceDiv.style.width = '7em';
+        }
+        if (filename == 'hztosamps' || filename == 'mstosamps' || filename == 'sampstohz' || filename == 'sampstoms' || filename == 'sqrt') {
+            deviceDiv.style.width = '9em';
+        }
+        if (filename == 'downsamp') {
+            deviceDiv.style.width = '10em';
         }
         return deviceDiv;
     }
@@ -1730,8 +1745,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoIcon.src = 'img/info.png';
         infoIcon.alt = 'additional info';
         infoButton.appendChild(infoIcon);
-        infoButton.addEventListener('click', handleInfoButtonClick);
-        infoButton.addEventListener('touchstart', handleInfoButtonClick);
+        infoButton.addEventListener('click', () => handleInfoButtonClick('output'));
+        infoButton.addEventListener('touchstart', () => handleInfoButtonClick('output'));
         deviceDiv.appendChild(infoButton);
         deviceDiv.append(inputContainer);
         deviceDiv.appendChild(speakerChannelSelectorLabel);
@@ -1762,6 +1777,9 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     const regenButton = document.createElement('button');
                     regenButton.textContent = '⬤';
                     regenButton.className = 'inport-button';
+                    if (deviceType == 'pattern') {
+                        regenButton.style.top = '6px';
+                    }
                     deviceForm.appendChild(regenButton);
                     regenButton.addEventListener('click', () => {
                         const inputElements = deviceDiv.querySelectorAll('input, textarea');
@@ -1831,8 +1849,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         infoButton.appendChild(infoIcon);
         
         infoButton.className = 'info-button';
-        infoButton.addEventListener('click', handleInfoButtonClick);
-        infoButton.addEventListener('touchstart', handleInfoButtonClick);
+        infoButton.addEventListener('click', () => handleInfoButtonClick(deviceType));
+        infoButton.addEventListener('touchstart', () => handleInfoButtonClick(deviceType));
         deviceDiv.appendChild(infoButton);
         if (inportForm.elements.length > 0) {
             deviceDiv.style.minWidth = '142px';
@@ -1915,7 +1933,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 function adjustCodeMirrorHeight(editor) {
     const lineHeight = 16;
     const lines = editor.lineCount();
-    const newHeight = Math.max(lines * lineHeight, 6 * lineHeight);
+    const newHeight = Math.max(lines * lineHeight, 3 * lineHeight);
     editor.getWrapperElement().style.height = `${newHeight}px`;
 
     // find the containining node
@@ -1927,7 +1945,7 @@ function adjustCodeMirrorHeight(editor) {
     if (nodeElement) {
         nodeElement.style.height = 'auto';
         const nodeHeight = nodeElement.scrollHeight;
-        nodeElement.style.height = `${nodeHeight}px`;
+        nodeElement.style.height = `${nodeHeight+10}px`;
     }
 }
 
@@ -2619,7 +2637,7 @@ function handleDeleteEvent(deviceDiv) {
     };
 }
 
-function handleInfoButtonClick() {
-    window.open(`https://github.com/nnirror/wax/blob/main/README.md#output`, '_blank');
+function handleInfoButtonClick(deviceType) {
+    window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
 }
 /* END functions */
