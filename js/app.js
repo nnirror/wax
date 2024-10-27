@@ -587,12 +587,6 @@ initializeAwesomplete();
 /* END event handlers */
 
 /* BEGIN functions */
-function addMicrophoneInputDeviceToDropdown (deviceDropdown) {
-    const micInputOption = document.createElement('option');
-    micInputOption.value = "mic";
-    micInputOption.innerText = "microphone input";
-    deviceDropdown.appendChild(micInputOption);
-}
 
 function addMotionDeviceToDropdown (deviceDropdown) {
     const motionInputOption = document.createElement('option');
@@ -1178,7 +1172,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const device = await createMotionDevice(context);
             deviceDiv = addDeviceToWorkspace(device, "motion", false);
         }
-        else if (filename === "mic" || filename === "microphone") {
+        else if (filename === "mic" || filename === "microphone" || filename === "microphone-input") {
             filename = "mic";
             if ( !isAudioPlaying ) {
                 await startAudio();
@@ -2017,8 +2011,6 @@ function createDropdownofAllDevices () {
 
     // add dropdown to navBar
     navBar.appendChild(deviceDropdown);
-    // create microphone input module
-    addMicrophoneInputDeviceToDropdown(deviceDropdown);
      // create motion input device, if available and working
      if (window.DeviceOrientationEvent) {
         let deviceOrientationWorks = false;
