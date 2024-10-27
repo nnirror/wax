@@ -2451,7 +2451,7 @@ function displayAllDevices() {
         a.textContent = options[i].text;
         a.addEventListener('click', async function(event) {
             event.preventDefault();
-            await createDeviceByName(options[i].text.toLowerCase());
+            await createDeviceByName(getFileNameByDisplayName(options[i].text.toLowerCase()));
             modal.style.display = 'none';
         });
         li.appendChild(a);
@@ -2487,6 +2487,11 @@ function displayAllDevices() {
     };
 
     content.insertBefore(header, ul);
+
+    // prevent scrolling in the background when scrolling inside the modal
+    modal.addEventListener('wheel', function(event) {
+        event.stopPropagation();
+    });
 
     return modal;
 }

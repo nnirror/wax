@@ -415,7 +415,7 @@ body .sliderMin, body .sliderMax {
 
 .deviceListModalContent {
     overflow: auto;
-    max-height: 80vh;
+    max-height: 60vh;
 }
 
 .deviceListModal::before {
