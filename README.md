@@ -180,7 +180,9 @@ Applies a low-pass filter to `input`.
 - `q` controls the resonance of the filter at the cutoff.
 
 ## microphone input
-Returns the selected microphone input device as a signal. Due to web audio API limitations, the first two input channels of the microphone are available via `output 1` and `output 2`. If the microphone has one input channel, that channel will be available on `output 1`.
+Returns the first two channels of the browser's default audio input device as a signal. If the microphone has one output channel, that channel will be available on `output 1`.
+
+This feature is experimental because each browser's implementation of the web audio API is different. Some combinations of browser and audio input device may not work. Before loading the page, set the default audio input device for the browser.
 
 **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
 

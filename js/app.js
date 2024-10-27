@@ -1182,26 +1182,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             }
             const device = await createMicrophoneDevice();
             deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
-            await createInputDeviceSelector(device, context, deviceDiv);
-            // listen for the streamChanged event
-            deviceDiv.addEventListener('streamChanged', async (event) => {
-                // stop the old stream
-                device.stream.getTracks().forEach(track => track.stop());
-            
-                // update the stream
-                device.stream = event.detail;
-            
-                // create a new source with the new stream
-                const newSource = context.createMediaStreamSource(device.stream);
-            
-                // update the source and node
-                device.source = newSource;
-                device.node = newSource;
-
-                if (devices[deviceDiv.id].connections && devices[deviceDiv.id].connections.length > 0) {
-                    reconnectNodeConnections(deviceDiv.id);
-                }
-            });
         }
         else if (filename === "toggle") {
             const silenceGenerator = context.createConstantSource();
@@ -1524,9 +1504,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.width = '200px';
             deviceDiv.style.height = '90px';
         }
-        if (filename == 'mic') {
-            deviceDiv.style.width = '220px';
-        }
         if (filename == 'button' || filename == 'toggle') {
             deviceDiv.style.height = '138px';
         }
@@ -1550,55 +1527,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
     catch (error) {
         showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
     }
-}
-
-async function createInputDeviceSelector(device, context, deviceDiv) {
-    // create a new select element
-    const select = document.createElement('select');
-    select.className = 'audioInputDeviceSelect';
-
-    // get the list of available input devices
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
-
-    // create an option for each device
-    audioInputDevices.forEach(device => {
-        const option = document.createElement('option');
-        option.value = device.deviceId;
-        option.textContent = device.label;
-        select.appendChild(option);
-    });
-
-    // listen for changes
-    select.addEventListener('change', async (event) => {
-        const deviceId = event.target.value;
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                autoGainControl: false,
-                noiseSuppression: false,
-                echoCancellation: false,
-                sampleRate: 44100,
-                deviceId: deviceId
-            }
-        });
-        // emit a custom event with the new stream
-        const streamChangedEvent = new CustomEvent('streamChanged', { detail: stream });
-        deviceDiv.dispatchEvent(streamChangedEvent);
-    });
-
-    // create a div to hold the select element
-    const div = document.createElement('div');
-    div.className = 'labelAndInputContainer';
-    div.style.left = '9px';
-    div.style.top = '58px';
-
-    // append the select element to the div
-    div.appendChild(select);
-
-    // select the form inside the deviceDiv
-    const form = deviceDiv.querySelector('form');
-    // add the div to the form
-    form.appendChild(div);
 }
 
 function showGrowlNotification(message) {
@@ -2585,10 +2513,13 @@ async function getDefaultValues() {
 }
 
 function resetConnectionStyle(connection) {
-    connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
-    connection.endpoints.forEach(endpoint => {
-        endpoint.setPaintStyle({ fill: "transparent", outlineStroke: "transparent", outlineWidth: 12 });
-    });
+    try {
+        connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
+        connection.endpoints.forEach(endpoint => {
+            endpoint.setPaintStyle({ fill: "transparent", outlineStroke: "transparent", outlineWidth: 12 });
+        });
+    }
+    catch (error) {}
 }
 
 function resizeTextarea(textarea) {
