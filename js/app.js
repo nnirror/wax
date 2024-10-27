@@ -646,13 +646,13 @@ function openAwesompleteUI() {
         var selectedOption = awesomplete.input.value;
         selectedOption = getFileNameByDisplayName(selectedOption);
         if (selectedOption == 'microphone input') {
-            await createDeviceByName('mic');
+            await createDeviceByName('mic',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
         }
         else if (selectedOption == 'speaker') {
-            await createDeviceByName('output');
+            await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
         }
         else {
-            await createDeviceByName(selectedOption);
+            await createDeviceByName(selectedOption,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
         }
         hideAwesomplete();
     });
@@ -679,25 +679,25 @@ function openAwesompleteUI() {
         // if there's only one result in the autocomplete list, use that result
         if (awesomplete.ul.childNodes.length === 1) {
             if ( awesomplete.ul.childNodes[0].textContent == 'microphone input' ) {
-                await createDeviceByName('mic');
+                await createDeviceByName('mic',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
             }
             else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
-                await createDeviceByName('output');
+                await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
             }
             else {
                 const displayName = awesomplete.ul.childNodes[0].textContent;
                 const fileName = getFileNameByDisplayName(displayName);
                 if (fileName) {
-                    await createDeviceByName(fileName);
+                    await createDeviceByName(fileName,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
                 }
             }
         } else {
             // use exactly what the user typed
             if ( input.value == 'speaker' ) {
-                await createDeviceByName('output');
+                await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
             }
             else {
-                await createDeviceByName(input.value);
+                await createDeviceByName(input.value,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
             }
         }
     }
