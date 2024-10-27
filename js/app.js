@@ -237,7 +237,7 @@ document.addEventListener('input', function(event) {
 // event listener for window resize when element exceeds edge
 document.addEventListener('DOMContentLoaded', function() {
     const workspace = document.getElementById('workspace');
-    const edgeThreshold = 20; // distance from edge to trigger expansion
+    const edgeThreshold = 50; // distance from edge to trigger expansion
     const expansionRate = 10; // pixels to expand per interval
     const scrollRate = 10; // pixels to scroll per interval
     let expandInterval;
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         workspace.style.height = workspace.offsetHeight + expansionRate + 'px';
                         window.scrollBy(0, scrollRate);
                     }
-                }, 100);
+                }, 20);
             }
         } else {
             clearInterval(expandInterval);
@@ -419,9 +419,12 @@ workspaceElement.addEventListener('mousedown', (event) => {
     // only start the selection if the target is the workspaceElement itself
     if (event.target === workspaceElement) {
         let rect = workspaceElement.getBoundingClientRect();
-        startPoint = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+        startPoint = { 
+            x: event.clientX - rect.left + workspaceElement.scrollLeft, 
+            y: event.clientY - rect.top + workspaceElement.scrollTop 
+        };
         // create the selection div and add it to the workspaceElement
-        if ( !selectionDiv) {
+        if (!selectionDiv) {
             selectionDiv = document.createElement('div');
         }
         selectionDiv.style.position = 'absolute';
@@ -436,8 +439,8 @@ workspaceElement.addEventListener('mousedown', (event) => {
 workspaceElement.addEventListener('mousemove', (event) => {
     if (startPoint) {
         let rect = workspaceElement.getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
+        let x = event.clientX - rect.left + workspaceElement.scrollLeft;
+        let y = event.clientY - rect.top + workspaceElement.scrollTop;
 
         // update the size and position of the selection div
         selectionDiv.style.left = Math.min(x, startPoint.x) + 'px';
