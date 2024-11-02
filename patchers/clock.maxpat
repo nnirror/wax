@@ -47,7 +47,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "root click time (ms)"
+								"comment" : "tempo (ms)"
 							}
 , 							{
 								"type" : "signal",
@@ -1048,7 +1048,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "inport_obj-65",
 									"text" : "inport \"tempo (ms)\""
 								}
@@ -1057,18 +1057,18 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-66",
-									"linecount" : 3,
+									"linecount" : 2,
 									"maxclass" : "newobj",
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 218.5, 48.914801239967346, 107.813953280448914, 52.0 ],
+									"patching_rect" : [ 218.5, 48.914801239967346, 101.5, 37.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "in~_obj-66",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1134,7 +1134,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 1",
-												"displayName" : "root click time (ms)",
+												"displayName" : "tempo (ms)",
 												"docked" : 0
 											}
  ],
@@ -1146,7 +1146,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 1 @comment \"root click time (ms)\""
+									"text" : "in~ 1 @comment \"tempo (ms)\""
 								}
 
 							}
