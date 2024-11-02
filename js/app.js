@@ -398,7 +398,7 @@ jsPlumb.bind("click", function(connection, originalEvent) {
 connectionManagementClickHandler();
 
 document.body.addEventListener('click', function(event) {
-    if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *, .inport-button')) {
+    if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *, .inport-button, .regenButtonImage')) {
         showVisualConfirmationOfConnectionButtonClick(event);
     }
     if (selectedConnection && !event.target.closest('.jtk-connector')) {
@@ -1466,6 +1466,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             }
         }
         deviceDiv.onmousedown = handleDeviceMouseDown;
+        deviceDiv.ontouchstart = handleDeviceMouseDown;
         if ( devicePosition ) {
             deviceDiv.style.left = devicePosition.left + 'px';
             deviceDiv.style.top = devicePosition.top + 'px';
@@ -1710,7 +1711,11 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                 if (input.comment == 'regen') {
                     let deviceForm = deviceDiv.querySelector('.labelAndInputContainer');
                     const regenButton = document.createElement('button');
-                    regenButton.textContent = '⬤';
+                    const regenImage = document.createElement('img');
+                    regenImage.src = 'img/regen.png';
+                    regenImage.alt = 'Regen';
+                    regenImage.className  = 'regenButtonImage';
+                    regenButton.appendChild(regenImage);
                     regenButton.className = 'inport-button';
                     if (deviceType == 'pattern') {
                         regenButton.style.top = '6px';
@@ -2181,6 +2186,57 @@ async function copySelectedNodes() {
 }
 
 async function reconstructWorkspaceState(deviceStates = null) {
+    document.getElementById('infoDiv').style.display = 'none';
+    // check if any device has a deviceName of 'motion'
+    let hasMotionDevice = false;
+    if (deviceStates) {
+        for (let deviceState of deviceStates) {
+            let deviceName = deviceState.id.split('-')[0];
+            if (deviceName === 'motion') {
+                hasMotionDevice = true;
+                break;
+            }
+        }
+    }
+
+    if (hasMotionDevice) {
+        // create and style the permission button
+        const permissionButton = document.createElement('button');
+        permissionButton.innerText = 'This Wax state requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
+        permissionButton.className = 'permissionButton';
+        document.body.appendChild(permissionButton);
+
+        // add event listener to the button
+        permissionButton.addEventListener('click', async () => {
+            if (window.DeviceOrientationEvent) {
+                try {
+                    const response = await DeviceMotionEvent.requestPermission();
+                    if (response !== 'granted') {
+                        showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
+                        return;
+                    }
+                } catch (error) {
+                    showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
+                    return;
+                }
+            } else {
+                showGrowlNotification(`Sorry, your device does not support DeviceOrientationEvent`);
+                return;
+            }
+
+            // remove the button after permission is granted
+            document.body.removeChild(permissionButton);
+
+            // proceed with reconstructing the workspace state
+            await loadWorkspaceState(deviceStates);
+        });
+    } else {
+        // proceed with reconstructing the workspace state directly
+        await loadWorkspaceState(deviceStates);
+    }
+}
+
+async function loadWorkspaceState(deviceStates) {
     if (deviceStates === null) {
         let fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -2229,7 +2285,7 @@ function loadAllTextareaPatterns() {
     });
 }
 
-async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false, newIds = false) {
+async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFromDuplicateCommand = false, newIds = false) {    
     let connectionsToMake = [];
     let idMap = {};
 
@@ -2485,21 +2541,20 @@ function showVisualConfirmationOfConnectionButtonClick(event) {
     const clickedElement = event.target;
     const originalBackground = clickedElement.style.background;
     const originalColor = clickedElement.style.color;
-
-    if (clickedElement.classList.contains('inport-button')) {
-        // swap the text and background colors
-        clickedElement.style.background = 'white';
-        clickedElement.style.color = 'rgb(8,56,78)';
+    if (clickedElement.classList.contains('regenButtonImage')) {
+        clickedElement.src = 'img/regen-onclick.png';
+        setTimeout(() => {
+            clickedElement.src = 'img/regen.png';
+        }, 100);
     } else {
         // change the background and text color
         clickedElement.style.background = 'rgb(8,56,78)';
         clickedElement.style.color = 'white';
+        setTimeout(() => {
+            clickedElement.style.background = originalBackground;
+            clickedElement.style.color = originalColor;
+        }, 100);
     }
-
-    setTimeout(() => {
-        clickedElement.style.background = originalBackground;
-        clickedElement.style.color = originalColor;
-    }, 100);
 }
 
 async function getDefaultValues() {

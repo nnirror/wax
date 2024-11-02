@@ -17,7 +17,7 @@
         "maximum": 1
     },
     "clock": {
-        "root click time (ms)": 1000
+        "tempo (ms)": 1000
     },
     "comb": {
         "delay time (ms)": 25,

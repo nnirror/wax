@@ -175,7 +175,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 853.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 12,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "change~_obj-93",
 									"text" : "change~"
 								}
@@ -190,7 +190,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 853.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 21,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "<~_obj-94",
 									"text" : "<~ 0."
 								}
@@ -205,7 +205,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 774.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 11,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "change~_obj-91",
 									"text" : "change~"
 								}
@@ -220,7 +220,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 774.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 20,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "<~_obj-92",
 									"text" : "<~ 0."
 								}
@@ -235,7 +235,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 699.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 10,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "change~_obj-89",
 									"text" : "change~"
 								}
@@ -250,7 +250,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 699.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 19,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "<~_obj-90",
 									"text" : "<~ 0."
 								}
@@ -265,7 +265,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 630.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 9,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "change~_obj-87",
 									"text" : "change~"
 								}
@@ -280,7 +280,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 630.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 18,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "<~_obj-88",
 									"text" : "<~ 0."
 								}
@@ -295,7 +295,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 561.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 8,
+									"rnbo_serial" : 5,
 									"rnbo_uniqueid" : "change~_obj-85",
 									"text" : "change~"
 								}
@@ -310,7 +310,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 561.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 17,
+									"rnbo_serial" : 5,
 									"rnbo_uniqueid" : "<~_obj-86",
 									"text" : "<~ 0."
 								}
@@ -325,7 +325,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 492.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 7,
+									"rnbo_serial" : 6,
 									"rnbo_uniqueid" : "change~_obj-83",
 									"text" : "change~"
 								}
@@ -340,7 +340,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 492.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 16,
+									"rnbo_serial" : 6,
 									"rnbo_uniqueid" : "<~_obj-84",
 									"text" : "<~ 0."
 								}
@@ -355,7 +355,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 423.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 6,
+									"rnbo_serial" : 7,
 									"rnbo_uniqueid" : "change~_obj-81",
 									"text" : "change~"
 								}
@@ -370,7 +370,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 423.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 15,
+									"rnbo_serial" : 7,
 									"rnbo_uniqueid" : "<~_obj-82",
 									"text" : "<~ 0."
 								}
@@ -385,7 +385,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 354.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 5,
+									"rnbo_serial" : 8,
 									"rnbo_uniqueid" : "change~_obj-79",
 									"text" : "change~"
 								}
@@ -400,7 +400,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 354.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 14,
+									"rnbo_serial" : 8,
 									"rnbo_uniqueid" : "<~_obj-80",
 									"text" : "<~ 0."
 								}
@@ -415,7 +415,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 285.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 9,
 									"rnbo_uniqueid" : "change~_obj-77",
 									"text" : "change~"
 								}
@@ -430,7 +430,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 285.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 13,
+									"rnbo_serial" : 9,
 									"rnbo_uniqueid" : "<~_obj-78",
 									"text" : "<~ 0."
 								}
@@ -445,7 +445,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 216.0, 320.0, 53.0, 23.0 ],
 									"rnbo_classname" : "change~",
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 10,
 									"rnbo_uniqueid" : "change~_obj-76",
 									"text" : "change~"
 								}
@@ -460,7 +460,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 216.0, 354.0, 35.0, 23.0 ],
 									"rnbo_classname" : "<~",
-									"rnbo_serial" : 12,
+									"rnbo_serial" : 10,
 									"rnbo_uniqueid" : "<~_obj-71",
 									"text" : "<~ 0."
 								}
@@ -1042,15 +1042,15 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 333.08139443397522, 48.914801239967346, 151.0, 23.0 ],
+									"patching_rect" : [ 333.08139443397522, 48.914801239967346, 111.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "inport_obj-65",
-									"text" : "inport \"root click time (ms)\""
+									"text" : "inport \"tempo (ms)\""
 								}
 
 							}

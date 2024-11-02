@@ -73,15 +73,19 @@
 }
 body .node .inport-button {
     display: block;
-    background: rgb(8, 56, 78);
+    background: #CBCBCB;
     color: rgb(255, 255, 255);
-    height: 21px;
-    width: 21px;
-    margin-left: 10px;
+    height: 0px;
+    width: 0px;
+    margin-left: 0px;
     font-size: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 0px;
     position: relative;
-    top: 2px;
+    top: -2px;
+}
+
+.inport-button img {
+    width: 30px;
 }
 .node button, #infoDiv button {
     font-size: 0.75em;
@@ -405,7 +409,7 @@ body .sliderMin, body .sliderMax {
     left: calc(38px + 8em * 5);
     top: calc(3vh + 40px);
     border: 1px solid black;
-    z-index: 1005;
+    z-index: 1999;
     display: none;
     background-color: #f8f9fa;
     padding: 20px;
@@ -650,4 +654,15 @@ body .CodeMirror {
     color: white;
     bottom: 4px;
     background-color: rgb(8, 56, 78);
+}
+.permissionButton {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 50%;
+    font-size: 24px;
+    z-index: 1010;
+    cursor: pointer;
 }
