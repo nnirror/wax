@@ -660,8 +660,8 @@ body .CodeMirror {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50%;
-    height: 50%;
+    width: 66%;
+    height: 66%;
     font-size: 24px;
     z-index: 1010;
     cursor: pointer;
