@@ -2652,9 +2652,13 @@ function handleDeleteEvent(deviceDiv) {
 }
 
 function handleInfoButtonClick(deviceType) {
-    const deviceTypesWithSpecialCharacterNames = ['add', 'and', 'divide', 'add', 'greater', 'less', 'modulo', 'not', 'or', 'subtract', 'multiply'];
+    console.log(deviceType);
+    const deviceTypesWithSpecialCharacterNames = ['add', 'and', 'divide', 'add', 'greater', 'less', 'modulo', 'not', 'or', 'subtract'];
     if (deviceTypesWithSpecialCharacterNames.includes(deviceType)) {
         window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
+    }
+    else if (deviceType == 'times') {
+        window.open(`https://github.com/nnirror/wax/blob/main/README.md#multiply`, '_blank');
     }
     else {
         window.open(`https://github.com/nnirror/wax/blob/main/README.md#${getDisplayNameByFileName(deviceType)}`, '_blank');
