@@ -80,7 +80,7 @@ With devices connected to an `output` objet, press the `start recording` button.
 ## absolute
 Computes the absolute value of the input signal.
 
-## + (add)
+## add
 Adds `input 1` to `input 2`.
 
 ## envelope
@@ -94,7 +94,7 @@ Generates an attack-decay-release envelope every time `trigger in` goes above 0.
 Applies an allpass filter to `input`.
 - `delay (ms)` controls the delay of the allpass filter.  
 
-## && (and)
+## and
 Computes the logical AND of `input 1` `input 2`.
 
 ## bandpass
@@ -136,7 +136,7 @@ Applies a declicking algorithm to `input` with user control over when to avoid c
 Applies a delay effect to `input`, lasting `delay time (ms)` and feeding back based on `feedback`.
 - `wet` controls dry/wet balance and expects a range of floats 0 - 1.
 
-## / (divide)
+## divide
 Divides `input 1` and `input 2`.
 
 ## downsample
@@ -145,7 +145,7 @@ Downsamples `input` by `amount`, which expects a range of floats 0 - 1. Higher `
 ## drunk
 Generates a new value in a random walk of values between 0 and `maximum`, with `step` being the maximum value between each step, every time `trigger` goes above 0.5.
 
-## == (equals)
+## equals
 Computes the logical EQUALS of `input 1` `input 2`.
 
 ## fftfilter
@@ -154,7 +154,7 @@ Applies a FFT-based bandpass filter to `input`, passing only frequencies between
 ## fold
 Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`. 
 
-## > (greater)
+## greater
 Computes the boolean representation of whether `input 1` is greater than `input 2`.
 
 ## highpass
@@ -175,7 +175,7 @@ This feature is experimental because each browser's implementation of the web au
 
 **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
 
-## < (less)
+## less
 Computes the boolean representation of whether `input 1` is greater than `input 2`.
 
 ## limiter
@@ -204,22 +204,22 @@ Converts an input value in `ms` to its equivalent number in `samples`.
 ## mtof
 Converts an input value of a MIDI note number to its corresponding frequency in `hz`.
 
-## % (modulo)
+## modulo
 Computes the modulo `operand` of `input`.
 
-## * (multiply)
+## multiply
 Multiplies `input 1` and `input 2`. 
 
 ## noise
 Generates white noise.
 
-## ! (not)
+## not
 Computes the logical NOT of `input 1`.
 
 ## number
 Returns `value` as a signal.
 
-## || (or)
+## or
 Computes the logical OR of `input 1` `input 2`.
 
 ## overdrive
@@ -318,7 +318,7 @@ Slows `input` down so it only changes once for every `interval (ms)` that passes
 ## squareroot
 Computes the square root of `input 1`.
 
-## - (subtract)
+## subtract
 Subtracts `input 2` from `input 1`.
 
 ## toggle
