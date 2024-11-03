@@ -67,7 +67,7 @@
     background: rgb(255,255,255);
     color: rgb(8,56,78);
     height: 24px;
-    width: 58px;
+    width: 63px;
     font-size: 9px;
     margin-bottom: 4px;
 }
@@ -462,7 +462,7 @@ body .sliderMin, body .sliderMax {
 .speakerChannelSelectorLabel {
     float: right;
     position: relative;
-    right: 60px;
+    right: 56px;
     top: 9px;
     font-size: 10px;
 }
@@ -474,7 +474,7 @@ body .sliderMin, body .sliderMax {
 .deviceInport {
     width: 4em;
     font-size: 10px;
-    margin-left: 10px;
+    margin-left: 9px;
     float: right;
     height: 22px;
 }

@@ -53,7 +53,7 @@
 								"type" : "signal",
 								"index" : 2,
 								"tag" : "in2",
-								"comment" : "delay time (ms)"
+								"comment" : "delay (ms)"
 							}
 , 							{
 								"type" : "signal",
@@ -1230,15 +1230,15 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 628.606613159179688, 66.903227210044861, 130.0, 23.0 ],
+									"patching_rect" : [ 628.606613159179688, 66.903227210044861, 104.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "inport_obj-15",
-									"text" : "inport \"delay time (ms)\""
+									"text" : "inport \"delay (ms)\""
 								}
 
 							}
@@ -1250,13 +1250,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 514.025218725204468, 66.903227210044861, 106.064518570899963, 37.0 ],
+									"patching_rect" : [ 514.025218725204468, 66.903227210044861, 109.0, 37.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 6,
 									"rnbo_uniqueid" : "in~_obj-16",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1322,7 +1322,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 2",
-												"displayName" : "delay time (ms)",
+												"displayName" : "delay (ms)",
 												"docked" : 0
 											}
  ],
@@ -1334,7 +1334,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 2 @comment \"delay time (ms)\""
+									"text" : "in~ 2 @comment \"delay (ms)\""
 								}
 
 							}
@@ -1752,7 +1752,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "out~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1848,7 +1848,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 6,
+									"rnbo_serial" : 5,
 									"rnbo_uniqueid" : "in~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1940,9 +1940,9 @@
 									"patching_rect" : [ 238.0, 202.0, 295.025218725204468, 23.0 ],
 									"rnbo_classname" : "delay~",
 									"rnbo_extra_attributes" : 									{
-										"ramp" : 50.0,
 										"interp" : "linear",
-										"maxdelayms" : 0.0
+										"maxdelayms" : 0.0,
+										"ramp" : 50.0
 									}
 ,
 									"rnbo_serial" : 1,

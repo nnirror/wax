@@ -47,7 +47,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "frequency (hz)"
+								"comment" : "frequency"
 							}
 , 							{
 								"type" : "signal",
@@ -72,7 +72,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -964,15 +964,15 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 360.504180192947388, 180.000002801418304, 127.0, 23.0 ],
+									"patching_rect" : [ 360.504180192947388, 180.000002801418304, 96.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "inport_obj-3",
-									"text" : "inport \"frequency (hz)\""
+									"text" : "inport frequency"
 								}
 
 							}
@@ -1078,13 +1078,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 171.0, 180.000002801418304, 175.0, 23.0 ],
+									"patching_rect" : [ 171.0, 180.000002801418304, 154.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "in~_obj-7",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1150,7 +1150,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 1",
-												"displayName" : "frequency (hz)",
+												"displayName" : "frequency",
 												"docked" : 0
 											}
  ],
@@ -1162,7 +1162,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 1 @comment frequency (hz)"
+									"text" : "in~ 1 @comment frequency"
 								}
 
 							}
@@ -1178,7 +1178,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "out~_obj-4",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,

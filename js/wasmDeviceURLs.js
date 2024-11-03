@@ -64,10 +64,6 @@ var wasmDeviceURLs = [
         "displayName": "sine"
     },
     {
-        "fileName": "cycle",
-        "displayName": "cycle"
-    },
-    {
         "fileName": "delay",
         "displayName": "delay"
     },
@@ -172,16 +168,16 @@ var wasmDeviceURLs = [
         "displayName": "pattern"
     },
     {
-        "fileName": "play",
-        "displayName": "play"
-    },
-    {
         "fileName": "phasor",
         "displayName": "phasor"
     },
     {
         "fileName": "pitchshift",
         "displayName": "pitchshift"
+    },
+    {
+        "fileName": "play",
+        "displayName": "play"
     },
     {
         "fileName": "pluck",

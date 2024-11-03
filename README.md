@@ -77,13 +77,13 @@ With devices connected to an `output` objet, press the `start recording` button.
 
 # Device reference
 
-## abs
+## absolute
 Computes the absolute value of the input signal.
 
-## add
+## + (add)
 Adds `input 1` to `input 2`.
 
-## adr
+## envelope
 Generates an attack-decay-release envelope every time `trigger in` goes above 0.5.
 - `attack (ms)`: the number of milliseconds to reach the envelope peak.
 - `decay (ms)`: the number of miliseconds to go from the envelope peak to the `level` value.
@@ -94,10 +94,10 @@ Generates an attack-decay-release envelope every time `trigger in` goes above 0.
 Applies an allpass filter to `input`.
 - `delay (ms)` controls the delay of the allpass filter.  
 
-## and
+## && (and)
 Computes the logical AND of `input 1` `input 2`.
 
-## bpf
+## bandpass
 Applies a band-pass filter to `input`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff. 
@@ -115,7 +115,7 @@ Compares the current sample with the previous sample value in `input` and return
 Clips any values in `input 1` below `minimum` or above `maximum` to be equal to `minimum` and `maximum`, respectively. 
 
 ## clock
-Returns metronomic subdivisions of `root click time (ms)`. Each outlet runs at a different, increasingly faster speed.
+Returns metronomic subdivisions of `tempo (ms)`. Each outlet runs at a different, increasingly faster speed.
 
 ## comb
 Applies a comb filter effect to `input`. `feedback` expect a range of floats 0 - 1.
@@ -129,35 +129,35 @@ Imparts the spectral envelope of `modulator` onto `carrier`.
 ## counter
 Counts upwards from 0 to `maximum`, incrementing every time `trigger` goes above 0.5. `hit maximum` will output a 1 while the counter is at its maximum and a 0 otherwise.
 
-## cycle
-Generates a sine wave between -1 and 1, oscillating at `frequency (hz)`. The phase of the sine wave can be modified at signal-rate with `phase`,which will be added to the `frequency (hz)` parameter.
+## declick
+Applies a declicking algorithm to `input` with user control over when to avoid clicks. From the [Cyling '74 RNBO Documentation of swanramp:](https://rnbo.cycling74.com/objects/ref/swanramp~): "Performs click compensation using Miller Puckette's switch-and-ramp technique. When the right inlet receives a positive value, swanramp~ triggers a ramp that starts from the value of the last sample in the left inlet and goes down to zero over the number of samples specified. This ramp is mixed with the input signal to prevent clicks."
 
 ## delay
 Applies a delay effect to `input`, lasting `delay time (ms)` and feeding back based on `feedback`.
 - `wet` controls dry/wet balance and expects a range of floats 0 - 1.
 
-## divide
+## / (divide)
 Divides `input 1` and `input 2`.
 
-## downsamp
+## downsample
 Downsamples `input` by `amount`, which expects a range of floats 0 - 1. Higher `amount` values produce more downsampling.
 
 ## drunk
 Generates a new value in a random walk of values between 0 and `maximum`, with `step` being the maximum value between each step, every time `trigger` goes above 0.5.
 
-## equals
+## == (equals)
 Computes the logical EQUALS of `input 1` `input 2`.
 
-## ffilter
+## fftfilter
 Applies a FFT-based bandpass filter to `input`, passing only frequencies between `low` and `high`.
 
 ## fold
 Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`. 
 
-## greater
+## > (greater)
 Computes the boolean representation of whether `input 1` is greater than `input 2`.
 
-## hpf
+## highpass
 Applies a high-pass filter to `input`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff.
@@ -166,25 +166,25 @@ Applies a high-pass filter to `input`.
 Converts an input value in `hz` to its equivalent number in `milliseconds`.
 
 ## hztosamps
-Converts an input value in `hz` to its equivalent number in `samples`.  
+Converts an input value in `hz` to its equivalent number in `samples`.
 
-## less
-Computes the boolean representation of whether `input 1` is greater than `input 2`.
-
-## limi
-Applies a peak-limiter to `input 1`. 
-
-## lpf
-Applies a low-pass filter to `input`.
-- `cutoff` controls the center frequency of the filter.
-- `q` controls the resonance of the filter at the cutoff.
-
-## microphone input
+## input
 Returns the first two channels of the browser's default audio input device as a signal. If the microphone has one output channel, that channel will be available on `output 1`.
 
 This feature is experimental because each browser's implementation of the web audio API is different. Some combinations of browser and audio input device may not work. Before loading the page, set the default audio input device for the browser.
 
 **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
+
+## < (less)
+Computes the boolean representation of whether `input 1` is greater than `input 2`.
+
+## limiter
+Applies a peak-limiter to `input 1`. 
+
+## lowpass
+Applies a low-pass filter to `input`.
+- `cutoff` controls the center frequency of the filter.
+- `q` controls the resonance of the filter at the cutoff.
 
 ## mix
 Mixes `input 1` and `input 2` together using a `crossfade` parameter between 0 and 1. A `crossfade` value of 0.5 will mix the signals together equally, and a `crossfade` value of 0 or 1 will return only the signal at that input.
@@ -204,19 +204,22 @@ Converts an input value in `ms` to its equivalent number in `samples`.
 ## mtof
 Converts an input value of a MIDI note number to its corresponding frequency in `hz`.
 
-## modulo
+## % (modulo)
 Computes the modulo `operand` of `input`.
+
+## * (multiply)
+Multiplies `input 1` and `input 2`. 
 
 ## noise
 Generates white noise.
 
-## not
+## ! (not)
 Computes the logical NOT of `input 1`.
 
 ## number
 Returns `value` as a signal.
 
-## or
+## || (or)
 Computes the logical OR of `input 1` `input 2`.
 
 ## overdrive
@@ -236,8 +239,11 @@ Generates a customizable wavetable using [Facet](https://github.com/nnirror/face
 	- `_.ramp(100,30,32).key('c','minor').mtof()`
 	- `_.from([20,40,40,80,80,80,80,160,160,160,160,160,160,160,160]).shuffle().palindrome()`
 
+## phasor
+Generates a phasor between 0 and 1, oscillating at `frequency`.
+
 ## pitchshift
-Applies a time-domain frequency shift effect of `shift amount` to `input`. A `shift amount` of 2 will be twice as high frequency.
+Applies a time-domain frequency shift effect of `shift amt` to `input`. A `shift amt` of 2 will be twice as high frequency.
 
 ## play
 Plays an audio file at `rate` every time `trigger` goes above 0.5.
@@ -245,13 +251,7 @@ Plays an audio file at `rate` every time `trigger` goes above 0.5.
 - The `start pos` and `end pos` values control the relative start and end point of audio file playback and expect values between 0 and 1.
 
 ## pluck
-Generates a synthetic string pluck at `frequency (hz)` Hz using Karplus-Strong synthesis. `damping` controls how long the string resonates and expects values between 0 and 1.
-
-## phasor
-Generates a phasor between 0 and 1, oscillating at `frequency (hz)`.
-
-## pitchshift
-Applies a time-domain pitch shift effect of `shift amount` to `input`. A `shift amount` of 2 will be twice as high frequency.
+Generates a synthetic string pluck at `frequency` Hz using Karplus-Strong synthesis. `damping` controls how long the string resonates and expects values between 0 and 1.
 
 ## print
 Displays the current value of `input` every 100ms. Helpful for debugging.
@@ -264,8 +264,8 @@ Records `input 1` and `input 2` to a stereo audio buffer for `length (ms)` milli
 - A signal that rises above 0.5 in `start/stop` will start the recording, and a signal that falls below 0.5 will stop it. You can use a `toggle` UI element to control `start/stop`.
 - To export the last recording, send a signal that rises above 0.5 to `save`. You can use a `button` UI element to control `save`.
 
-## rect
-Generates a rectangle wave between -1 and 1, oscillating at `frequency (hz)` and with configurable `pulsewidth`.
+## rectangle
+Generates a rectangle wave between -1 and 1, oscillating at `frequency` and with configurable `pulsewidth`.
 
 ## reverb
 Applies a reverb effect to `input`.
@@ -273,23 +273,23 @@ Applies a reverb effect to `input`.
 - `size` functions as a coefficient, multiplying all delay line times and expects a range of floats 0 - 1.
 - `wet` controls dry/wet balance and expects a range of floats 0 - 1.
 
-## round
-Rounds `input` to the nearest integer.
-
 ## rotator
 Rotates the 4 input signals rightwards every time `trigger` goes above 0.5. In other words, `input 1` will cyclically move from its initial output position at `output 1`, to `output 2`, then `output 3`, and finally `output 4` before wrapping back to `output 1` again.
 
-## sah
-Applies a sample-and-hold effect to `input`, holding its value every time `trigger` goes above 0.5.
+## round
+Rounds `input` to the nearest integer.
 
-## saw
-Generates a sawtooth wave between -1 and 1, oscillating at `frequency (hz)`. 
+## samp&hold
+Applies a sample-and-hold effect to `input`, holding its value every time `trigger` goes above 0.5.
 
 ## sampstohz
 Converts an input value in `samples` to its equivalent number in `hz`.
 
 ## sampstoms
 Converts an input value in `samples` to its equivalent number in `ms`.
+
+## sawtooth
+Generates a sawtooth wave between -1 and 1, oscillating at `frequency`. 
 
 ## scale
 Translates `input` into a different number range.
@@ -300,6 +300,9 @@ Translates `input` into a different number range.
 - `high out` is the minimum value desired in the output.
 - `exponent` scales the output range according to an exponential curve and should be greater than or equal to 1.
 
+## sine
+Generates a sine wave between -1 and 1, oscillating at `frequency`. The phase of the sine wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.
+
 ## skipper
 Decides whether to pass or mute `input` every time `input` goes above 0.1, based on `prob`.
 
@@ -307,30 +310,24 @@ Decides whether to pass or mute `input` every time `input` goes above 0.1, based
 Outputs a float between 0 and 1. Move the slider to change the offset.
 
 ## smooth
-Smooths `input` by ramping from its previous value to its new value, ramping up over `up slope (ms)` and down over `down slope (ms)`. `exponent` controls the contour of the ramp: at 0, the ramp moves linearly to the new value, and at 1, the ramp moves logarithmically.
+Smooths `input` by ramping from its previous value to its new value, ramping up over `up (ms)` and down over `down (ms)`. `exponent` controls the contour of the ramp: at 0, the ramp moves linearly to the new value, and at 1, the ramp moves logarithmically.
 
-## speedlim
+## snapshot
 Slows `input` down so it only changes once for every `interval (ms)` that passes.
 
-## sqrt
+## squareroot
 Computes the square root of `input 1`.
 
-## subtract
+## - (subtract)
 Subtracts `input 2` from `input 1`.
-
-## swanramp
-Applies a declicking algorithm to `input` with user control over when to avoid clicks. From the [Cyling '74 RNBO Documentation of swanramp:](https://rnbo.cycling74.com/objects/ref/swanramp~): "Performs click compensation using Miller Puckette's switch-and-ramp technique. When the right inlet receives a positive value, swanramp~ triggers a ramp that starts from the value of the last sample in the left inlet and goes down to zero over the number of samples specified. This ramp is mixed with the input signal to prevent clicks."
-  
-## times
-Multiplies `input 1` and `input 2`. 
-
-## tri
-Generates a triangle wave between -1 and 1, oscillating at `frequency (hz)` and with configurable `pulsewidth`. The phase of the triangle wave can be modified at signal-rate with `phase`,which will be added to the `frequency (hz)` parameter.
 
 ## toggle
 Outputs a 0 when the button is `off` and outputs a 1 when the button is `on`. Click the button to switch states.
 
-## wave
+## triangle
+Generates a triangle wave between -1 and 1, oscillating at `frequency` and with configurable `pulsewidth`. The phase of the triangle wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.
+
+## wavetable
 Reads through an audio file like a wavetable, with `phase` values between 0 and 1 selecting a corresponding relative position in the audio file.
 
 ## wrap

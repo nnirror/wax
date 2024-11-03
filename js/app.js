@@ -1718,7 +1718,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     regenButton.appendChild(regenImage);
                     regenButton.className = 'inport-button';
                     if (deviceType == 'pattern') {
-                        regenButton.style.top = '6px';
+                        regenButton.style.top = '2px';
+                        regenButton.style.left = '-9px';
                     }
                     deviceForm.appendChild(regenButton);
                     regenButton.addEventListener('click', () => {
@@ -2651,6 +2652,6 @@ function handleDeleteEvent(deviceDiv) {
 }
 
 function handleInfoButtonClick(deviceType) {
-    window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
+    window.open(`https://github.com/nnirror/wax/blob/main/README.md#${getDisplayNameByFileName(deviceType)}`, '_blank');
 }
 /* END functions */

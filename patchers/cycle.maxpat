@@ -47,7 +47,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "frequency (hz)"
+								"comment" : "frequency"
 							}
 , 							{
 								"type" : "signal",
@@ -994,15 +994,15 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 362.0, 178.0, 127.0, 23.0 ],
+									"patching_rect" : [ 362.0, 178.0, 96.0, 23.0 ],
 									"rnbo_classname" : "inport",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "inport_obj-3",
-									"text" : "inport \"frequency (hz)\""
+									"text" : "inport frequency"
 								}
 
 							}
@@ -1108,13 +1108,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 172.0, 178.0, 175.0, 23.0 ],
+									"patching_rect" : [ 172.0, 178.0, 154.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "in~_obj-9",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1180,7 +1180,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 1",
-												"displayName" : "frequency (hz)",
+												"displayName" : "frequency",
 												"docked" : 0
 											}
  ],
@@ -1192,7 +1192,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 1 @comment frequency (hz)"
+									"text" : "in~ 1 @comment frequency"
 								}
 
 							}
@@ -1301,9 +1301,9 @@
 									"patching_rect" : [ 170.588237226009369, 384.873953938484192, 375.0, 23.0 ],
 									"rnbo_classname" : "cycle~",
 									"rnbo_extra_attributes" : 									{
-										"index" : "freq",
 										"interp" : "linear",
-										"buffername" : "RNBODefaultSinus"
+										"buffername" : "RNBODefaultSinus",
+										"index" : "freq"
 									}
 ,
 									"rnbo_serial" : 1,
