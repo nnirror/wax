@@ -1503,7 +1503,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if (filename == 'slider') {
             deviceDiv.style.width = '200px';
-            deviceDiv.style.height = '90px';
+            deviceDiv.style.height = '110px';
         }
         if (filename == 'button' || filename == 'toggle') {
             deviceDiv.style.height = '138px';

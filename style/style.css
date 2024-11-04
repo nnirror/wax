@@ -641,7 +641,38 @@ body .CodeMirror {
     margin-right: 63px;
     position: relative;
     top: -6px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 30px;
+    background: #ddd;
 }
+
+#slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgb(8,56,78);
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+#slider::-moz-range-thumb {
+    width: 30px;
+    background: rgb(8,56,78);
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+#slider::-ms-thumb {
+    width: 30px;
+    background: rgb(8,56,78);
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
 .printvalue {
     position: relative;
     top: 2px;
