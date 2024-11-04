@@ -2200,10 +2200,10 @@ async function reconstructWorkspaceState(deviceStates = null) {
         }
     }
 
-    if (hasMotionDevice) {
+    if (hasMotionDevice || deviceStates === null) {
         // create and style the permission button
         const permissionButton = document.createElement('button');
-        permissionButton.innerText = 'This Wax state requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
+        permissionButton.innerText = 'Loading Wax states requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
         permissionButton.className = 'permissionButton';
         document.body.appendChild(permissionButton);
 
