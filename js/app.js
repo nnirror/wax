@@ -2186,6 +2186,21 @@ async function copySelectedNodes() {
     selectionDiv = null;
 }
 
+async function checkDeviceMotionPermission() {
+    if (window.DeviceOrientationEvent) {
+        try {
+            const response = await DeviceMotionEvent.requestPermission();
+            return response === 'granted';
+        } catch (error) {
+            showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
+            return false;
+        }
+    } else {
+        showGrowlNotification(`Sorry, your device does not support DeviceOrientationEvent`);
+        return false;
+    }
+}
+
 async function reconstructWorkspaceState(deviceStates = null) {
     document.getElementById('infoDiv').style.display = 'none';
     // check if any device has a deviceName of 'motion'
@@ -2200,8 +2215,15 @@ async function reconstructWorkspaceState(deviceStates = null) {
         }
     }
 
-    if (hasMotionDevice || deviceStates === null) {
-        // create and style the permission button
+    if (hasMotionDevice || deviceStates == null) {
+        const permissionGranted = await checkDeviceMotionPermission();
+        if (permissionGranted && deviceStates != null) {
+            // permission granted, proceed with reconstructing the workspace state
+            await loadWorkspaceState(deviceStates);
+            return;
+        }
+
+        // if permission is not granted, create and style the permission button
         const permissionButton = document.createElement('button');
         permissionButton.innerText = 'Loading Wax states requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
         permissionButton.className = 'permissionButton';
@@ -2209,19 +2231,9 @@ async function reconstructWorkspaceState(deviceStates = null) {
 
         // add event listener to the button
         permissionButton.addEventListener('click', async () => {
-            if (window.DeviceOrientationEvent) {
-                try {
-                    const response = await DeviceMotionEvent.requestPermission();
-                    if (response !== 'granted') {
-                        showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
-                        return;
-                    }
-                } catch (error) {
-                    showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
-                    return;
-                }
-            } else {
-                showGrowlNotification(`Sorry, your device does not support DeviceOrientationEvent`);
+            const permissionGranted = await checkDeviceMotionPermission();
+            if (!permissionGranted) {
+                showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
                 return;
             }
 
