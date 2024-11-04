@@ -2275,6 +2275,41 @@ async function loadWorkspaceState(deviceStates) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', async () => {
+    const isMobileOrTablet = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    if (window.DeviceOrientationEvent && isMobileOrTablet) {
+        const motionPermissionStatus = localStorage.getItem('motionPermissionStatus');
+        if (motionPermissionStatus !== 'granted') {
+            showPermissionButton();
+        }
+    }
+});
+
+function showPermissionButton() {
+    const permissionButton = document.createElement('button');
+    permissionButton.className = 'permissionButton';
+    permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once!';
+    permissionButton.addEventListener('click', async () => {
+        try {
+            const response = await DeviceMotionEvent.requestPermission();
+            if (response === 'granted') {
+                localStorage.setItem('motionPermissionStatus', 'granted');
+                // device motion event permission granted
+            } else {
+                showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
+            }
+        } catch (error) {
+            showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
+        }
+
+        // remove the button after handling interaction
+        document.body.removeChild(permissionButton);
+    });
+
+    // attach the permission request button to the body
+    document.body.appendChild(permissionButton);
+}
+
 async function loadExampleFile(filePath) {
     deleteAllNodes();
     let deviceStates;
