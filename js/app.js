@@ -2217,32 +2217,33 @@ async function reconstructWorkspaceState(deviceStates = null) {
 
     if (hasMotionDevice || deviceStates == null) {
         const permissionGranted = await checkDeviceMotionPermission();
-        if (permissionGranted && deviceStates != null) {
+        if (permissionGranted) {
             // permission granted, proceed with reconstructing the workspace state
             await loadWorkspaceState(deviceStates);
             return;
         }
+        if ( hasMotionDevice ) {
+            // if permission is not granted, create and style the permission button
+            const permissionButton = document.createElement('button');
+            permissionButton.innerText = 'Loading Wax states requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
+            permissionButton.className = 'permissionButton';
+            document.body.appendChild(permissionButton);
 
-        // if permission is not granted, create and style the permission button
-        const permissionButton = document.createElement('button');
-        permissionButton.innerText = 'Loading Wax states requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
-        permissionButton.className = 'permissionButton';
-        document.body.appendChild(permissionButton);
+            // add event listener to the button
+            permissionButton.addEventListener('click', async () => {
+                const permissionGranted = await checkDeviceMotionPermission();
+                if (!permissionGranted) {
+                    showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
+                    return;
+                }
 
-        // add event listener to the button
-        permissionButton.addEventListener('click', async () => {
-            const permissionGranted = await checkDeviceMotionPermission();
-            if (!permissionGranted) {
-                showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
-                return;
-            }
+                // remove the button after permission is granted
+                document.body.removeChild(permissionButton);
 
-            // remove the button after permission is granted
-            document.body.removeChild(permissionButton);
-
-            // proceed with reconstructing the workspace state
-            await loadWorkspaceState(deviceStates);
-        });
+                // proceed with reconstructing the workspace state
+                await loadWorkspaceState(deviceStates);
+            });
+        }
     } else {
         // proceed with reconstructing the workspace state directly
         await loadWorkspaceState(deviceStates);
