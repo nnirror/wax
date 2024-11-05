@@ -154,6 +154,9 @@ Computes the logical EQUALS of `input 1` `input 2`.
 ## fftfilter
 Applies a FFT-based bandpass filter to `input`, passing only frequencies between `low` and `high`.
 
+## fftgate
+Applies a FFT-based bin threshold gate to `input`, passing only FFT bin frequencies higher than `threshold`. Values for `threshold` are normalized and clipped between 0 and 1.
+
 ## fold
 Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`. 
 

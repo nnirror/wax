@@ -84,6 +84,10 @@ var wasmDeviceURLs = [
         "displayName": "== (equals)"
     },
     {
+        "fileName": "fgate",
+        "displayName": "fftgate"
+    },
+    {
         "fileName": "ffilter",
         "displayName": "fftfilter"
     },
