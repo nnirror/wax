@@ -72,6 +72,9 @@ Press the `save` button to save the system state as a zip file, including all au
 ## Loading state
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
+# Locking the workspace
+Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements, create and delete connections, and create and delete objects. This is especially helpful when interacting with UI elements on touchscreen devices.
+
 ## Recording a session
 With devices connected to an `output` objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer. **NOTE:** on mobile devices, recordings that include microphone input might sound garbled.
 
