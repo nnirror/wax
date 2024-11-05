@@ -44,7 +44,7 @@ async function handleLoadButtonClick() {
 
 function handleLockButtonClick() {
     toggleDragging();
-    if (isDraggingLocked) {
+    if (isLocked) {
         document.getElementsByClassName('lockButton')[0].textContent = 'Unlock';
         document.getElementById('mobileLockButton').textContent = 'Unlock';
     }
@@ -350,7 +350,7 @@ let deviceCounts = {};
 let isAudioPlaying = false;
 let devices = {};
 let isDraggingDevice = false;
-let isDraggingLocked = false;
+let isLocked = false;
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
@@ -430,6 +430,7 @@ document.body.addEventListener('click', function(event) {
 
 // listen for mousedown events on the workspaceElement
 workspaceElement.addEventListener('mousedown', (event) => {
+    if (isLocked) return;
     // only start the selection if the target is the workspaceElement itself
     if (event.target === workspaceElement) {
         let rect = workspaceElement.getBoundingClientRect();
@@ -513,7 +514,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (target && target.classList.contains('jtk-connector')) {
             const connection = jsPlumb.getConnections().find(conn => conn.connector.canvas === target);
             if (connection) {
-                jsPlumb.deleteConnection(connection);
+                if (!isLocked) {
+                    jsPlumb.deleteConnection(connection);
+                }
             }
         }
     }
@@ -543,19 +546,23 @@ document.addEventListener('keydown', (event) => {
         nodes.forEach((node) => {
             // check if the node is selected
             if (node.classList.contains('selectedNode')) {
-                // remove the node from the workspace
-                let sourceConnections = jsPlumb.getConnections({source: node.id});
-                let targetConnections = jsPlumb.getConnections({target: node.id});
-                sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-                targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-                removeDeviceFromWorkspace(node.id);
-                node.remove();
+                if ( !isLocked ) {
+                    // remove the node from the workspace
+                    let sourceConnections = jsPlumb.getConnections({source: node.id});
+                    let targetConnections = jsPlumb.getConnections({target: node.id});
+                    sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+                    targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+                    removeDeviceFromWorkspace(node.id);
+                    node.remove();
+                }
             }
         });
 
         if (selectedConnection) {
-            jsPlumb.deleteConnection(selectedConnection);
-            selectedConnection = null;
+            if ( !isLocked )  {
+                jsPlumb.deleteConnection(selectedConnection);
+                selectedConnection = null;
+            }
         }
 
         // clear the drag selection
@@ -613,6 +620,7 @@ function addMotionDeviceToDropdown (deviceDropdown) {
 }
 
 function openAwesompleteUI() {
+    if (isLocked) return;
     deselectAllNodes();
     // get the dropdown element
     var dropdown = document.querySelector('.deviceDropdown');
@@ -1064,6 +1072,7 @@ async function scheduleDeviceEvent(device, inport, value, deviceId) {
 }
 
 function handleButtonClick(deviceId, index, isInputButton) {
+    if (isLocked) return;
     if (lastClicked && ((lastClicked.isInputButton && !isInputButton) || (!lastClicked.isInputButton && isInputButton))) {
         if (lastClicked.isInputButton && !isInputButton) {
             startConnection(deviceId, index);
@@ -1154,33 +1163,6 @@ function finishConnection(deviceId, inputIndex) {
     }
 }
 
-function reconnectNodeConnections(nodeId) {
-    // get the device
-    let device = devices[nodeId];
-
-    // check if the device has connections
-    if (Array.isArray(device.connections)) {
-        // create a new array of connections without the splitter property which cannot be serialized
-        let connectionsData = device.connections.map(connection => {
-            let { splitter, ...connectionWithoutSplitter } = connection;
-            return connectionWithoutSplitter;
-        });
-
-        // delete the connections
-        let sourceConnections = jsPlumb.getConnections({source: nodeId});
-        let targetConnections = jsPlumb.getConnections({target: nodeId});
-        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-
-        // reconnect the connections
-        connectionsData.forEach(connectionData => {
-            startConnection(nodeId, connectionData.output);
-            finishConnection(connectionData.target, connectionData.input);
-        });
-
-        // update the device connections
-    }
-}
 async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
     try {
         let deviceDiv;
@@ -1804,8 +1786,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     deleteIcon.src = 'img/delete.png';
     deleteIcon.alt = 'Delete';
     deleteButton.appendChild(deleteIcon);
-    deleteButton.addEventListener('click', handleDeleteEvent(deviceDiv));
-    deleteButton.addEventListener('touchstart', handleDeleteEvent(deviceDiv));
+    deleteButton.addEventListener('click', () => handleDeleteEvent(deviceDiv, isLocked)());
+    deleteButton.addEventListener('touchstart', () => handleDeleteEvent(deviceDiv, isLocked)());
 
     const infoButton = document.createElement('button');
 
@@ -1835,17 +1817,19 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                 }
             }
             // delete the connections
-            let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
-            let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
-            sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-            targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-            // reconnect the connections
-            deviceConnectionData.forEach(connectedDevice => {
-                connectedDevice.connectionData.forEach(connection => {
-                    startConnection(connectedDevice.deviceId, connection.output);
-                    finishConnection(connection.target, speakerChannelSelectorInput.value-1);
+            if ( !isLocked ) {
+                let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+                let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
+                sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+                targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+                // reconnect the connections
+                deviceConnectionData.forEach(connectedDevice => {
+                    connectedDevice.connectionData.forEach(connection => {
+                        startConnection(connectedDevice.deviceId, connection.output);
+                        finishConnection(connection.target, speakerChannelSelectorInput.value-1);
+                    });
                 });
-            });
+            }
         };
         button.id = `${deviceDiv.id}-inlet-${0}`;
         button.onclick = () => handleButtonClick(deviceDiv.id, Number(speakerChannelSelectorInput.value)-1, true);
@@ -1981,12 +1965,12 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     // Add a drag event listener to the deviceDiv
     jsPlumb.draggable(deviceDiv, {
         start: function(event) {
-            if (isDraggingLocked) return false;
+            if (isLocked) return false;
             isDraggingDevice = true;
             deviceDiv.classList.add('selectedNode');
         },
         stop: function(event) {
-            if (isDraggingLocked) return false;
+            if (isLocked) return false;
             isDraggingDevice = false;
         }
     });
@@ -2157,6 +2141,7 @@ function removeSelectedNodeClass(event) {
 }
 
 function handleDeviceMouseDown (event) {
+    if (isLocked) return false;
     removeSelectedNodeClass(event);
     let nodeElement = event.target.closest('.node');
     if (nodeElement) {
@@ -2870,19 +2855,21 @@ function getDisplayNameByFileName(fileName) {
     }
 }
 
-function handleDeleteEvent(deviceDiv) {
+function handleDeleteEvent(deviceDiv, isLocked) {
     return function() {
-        let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
-        let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
-        sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
-        removeDeviceFromWorkspace(deviceDiv.id);
-        deviceDiv.remove();
+        if ( !isLocked ) {
+            let sourceConnections = jsPlumb.getConnections({source: deviceDiv.id});
+            let targetConnections = jsPlumb.getConnections({target: deviceDiv.id});
+            sourceConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+            targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
+            removeDeviceFromWorkspace(deviceDiv.id);
+            deviceDiv.remove();
+        }
     };
 }
 
 function handleInfoButtonClick(deviceType) {
-    console.log(deviceType);
+    if (isLocked) return;
     const deviceTypesWithSpecialCharacterNames = ['add', 'and', 'divide', 'add', 'greater', 'less', 'modulo', 'not', 'or', 'subtract'];
     if (deviceTypesWithSpecialCharacterNames.includes(deviceType)) {
         window.open(`https://github.com/nnirror/wax/blob/main/README.md#${deviceType}`, '_blank');
@@ -2896,7 +2883,7 @@ function handleInfoButtonClick(deviceType) {
 }
 
 function toggleDragging() {
-    isDraggingLocked = !isDraggingLocked;
-    const status = isDraggingLocked ? 'frozen' : 'unfrozen';
+    isLocked = !isLocked;
+    const status = isLocked ? 'frozen' : 'unfrozen';
 }
 /* END functions */

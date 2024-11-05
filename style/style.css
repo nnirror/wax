@@ -716,3 +716,6 @@ body .CodeMirror {
     pointer-events: none;
     transform: translate(-50%, -50%);
 }
+.jtk-connector {
+    cursor: pointer;
+}
