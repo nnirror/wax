@@ -1397,6 +1397,19 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             indicator.className = 'touchpadIndicator';
             touchpad.appendChild(indicator);
         
+            // create hidden inputs to store x and y values in state
+            const inputX = document.createElement('input');
+            inputX.type = 'hidden';
+            inputX.name = 'touchpadX';
+            inputX.id = 'touchpadX';
+            inputX.value = '0';
+        
+            const inputY = document.createElement('input');
+            inputY.type = 'hidden';
+            inputY.name = 'touchpadY';
+            inputY.id = 'touchpadY';
+            inputY.value = '0';
+        
             // find the existing form in the device
             const form = deviceDiv.querySelector('form');
         
@@ -1408,8 +1421,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             div.appendChild(touchpad);
         
-            // append the div to the form
+            // append the div and hidden inputs to the form
             form.appendChild(div);
+            div.appendChild(inputX);
+            div.appendChild(inputY);
         
             let isDragging = false;
         
@@ -1430,6 +1445,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                         silenceGeneratorY.offset.value = y;
                         indicator.style.left = `${event.clientX - rect.left}px`;
                         indicator.style.top = `${event.clientY - rect.top}px`;
+                        inputX.value = x;
+                        inputY.value = y;
                     }
                     event.stopPropagation();
                     event.preventDefault();
@@ -1446,6 +1463,24 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 event.preventDefault();
             });
         
+            touchpad.addEventListener('touchstart', (event) => {
+                isDragging = true;
+                const rect = touchpad.getBoundingClientRect();
+                const touch = event.touches[0];
+                if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    const x = (touch.clientX - rect.left) / rect.width;
+                    const y = 1 - (touch.clientY - rect.top) / rect.height;
+                    silenceGeneratorX.offset.value = x;
+                    silenceGeneratorY.offset.value = y;
+                    indicator.style.left = `${touch.clientX - rect.left}px`;
+                    indicator.style.top = `${touch.clientY - rect.top}px`;
+                    inputX.value = x;
+                    inputY.value = y;
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
+            
             touchpad.addEventListener('touchmove', (event) => {
                 if (isDragging) {
                     const rect = touchpad.getBoundingClientRect();
@@ -1457,6 +1492,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                         silenceGeneratorY.offset.value = y;
                         indicator.style.left = `${touch.clientX - rect.left}px`;
                         indicator.style.top = `${touch.clientY - rect.top}px`;
+                        inputX.value = x;
+                        inputY.value = y;
                     }
                     event.stopPropagation();
                     event.preventDefault();
@@ -1469,6 +1506,16 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             document.addEventListener('touchcancel', (event) => {
                 isDragging = false;
+            });
+        
+            document.addEventListener('touchpadStateRecall', (event) => {
+                const x = parseFloat(inputX.value);
+                const y = parseFloat(inputY.value);
+                const rect = touchpad.getBoundingClientRect();
+                indicator.style.left = `${x * rect.width}px`;
+                indicator.style.top = `${(1 - y) * rect.height}px`;
+                silenceGeneratorX.offset.value = x;
+                silenceGeneratorY.offset.value = y;
             });
         }
         else if (filename === "button") {
@@ -2522,6 +2569,10 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                     button.click();
                 }
             }
+        }
+        if ( deviceName === 'touchpad' ) {
+            const event = new Event('touchpadStateRecall');
+            document.dispatchEvent(event);
         }
 
         // if the device is a slider, re-trigger a change on the range slider element after the state has been recalled,
