@@ -1420,7 +1420,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 event.preventDefault();
             });
         
-            document.addEventListener('mousemove', (event) => {
+            touchpad.addEventListener('mousemove', (event) => {
                 if (isDragging) {
                     const rect = touchpad.getBoundingClientRect();
                     if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
@@ -1438,8 +1438,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             document.addEventListener('mouseup', (event) => {
                 isDragging = false;
-                event.stopPropagation();
-                event.preventDefault();
             });
         
             touchpad.addEventListener('touchstart', (event) => {
@@ -1448,7 +1446,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 event.preventDefault();
             });
         
-            document.addEventListener('touchmove', (event) => {
+            touchpad.addEventListener('touchmove', (event) => {
                 if (isDragging) {
                     const rect = touchpad.getBoundingClientRect();
                     const touch = event.touches[0];
@@ -1467,14 +1465,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             document.addEventListener('touchend', (event) => {
                 isDragging = false;
-                event.stopPropagation();
-                event.preventDefault();
             });
         
             document.addEventListener('touchcancel', (event) => {
                 isDragging = false;
-                event.stopPropagation();
-                event.preventDefault();
             });
         }
         else if (filename === "button") {
