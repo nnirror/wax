@@ -42,6 +42,18 @@ async function handleLoadButtonClick() {
     await startAudio();
 }
 
+function handleLockButtonClick() {
+    toggleDragging();
+    if (isDraggingLocked) {
+        document.getElementsByClassName('lockButton')[0].textContent = 'Unlock';
+        document.getElementById('mobileLockButton').textContent = 'Unlock';
+    }
+    else {
+        document.getElementsByClassName('lockButton')[0].textContent = 'Lock';
+        document.getElementById('mobileLockButton').textContent = 'Lock';
+    }
+}
+
 function handleDevicesButtonClick(event) {
     event.stopPropagation();
     hideMobileMenu();
@@ -142,6 +154,7 @@ createButtonForNavBar('OFF', 'startAudioButton navbarButton', handleOnButtonClic
 createButtonForNavBar('Save', 'saveStateButton navbarButton', handleSaveButtonClick);
 createButtonForNavBar('Share', 'shareStateButton navbarButton', handleShareButtonClick);
 createButtonForNavBar('Load', 'reloadStateButton navbarButton', handleLoadButtonClick);
+createButtonForNavBar('Lock', 'lockButton navbarButton', handleLockButtonClick);
 createButtonForNavBar('Devices', 'viewAllDevices navbarButton', handleDevicesButtonClick);
 createButtonForNavBar('Examples', 'exampleFilesButton navbarButton', handleExamplesButtonClick);
 createButtonForNavBar('About', 'helpButton navbarButton', handleAboutButtonClick);
@@ -337,6 +350,7 @@ let deviceCounts = {};
 let isAudioPlaying = false;
 let devices = {};
 let isDraggingDevice = false;
+let isDraggingLocked = false;
 let audioBuffers = {};
 let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
@@ -1804,11 +1818,12 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     // Add a drag event listener to the deviceDiv
     jsPlumb.draggable(deviceDiv, {
         start: function(event) {
+            if (isDraggingLocked) return false;
             isDraggingDevice = true;
-            // add the selectedNode class
             deviceDiv.classList.add('selectedNode');
         },
         stop: function(event) {
+            if (isDraggingLocked) return false;
             isDraggingDevice = false;
         }
     });
@@ -2711,5 +2726,10 @@ function handleInfoButtonClick(deviceType) {
     else {
         window.open(`https://github.com/nnirror/wax/blob/main/README.md#${getDisplayNameByFileName(deviceType)}`, '_blank');
     }
+}
+
+function toggleDragging() {
+    isDraggingLocked = !isDraggingLocked;
+    const status = isDraggingLocked ? 'frozen' : 'unfrozen';
 }
 /* END functions */
