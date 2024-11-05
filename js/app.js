@@ -2141,7 +2141,6 @@ function removeSelectedNodeClass(event) {
 }
 
 function handleDeviceMouseDown (event) {
-    if (isLocked) return false;
     removeSelectedNodeClass(event);
     let nodeElement = event.target.closest('.node');
     if (nodeElement) {
