@@ -25,7 +25,7 @@ For device documentation, click the `i` button at the top of the device.
 Creating connections between two devices will create a data flow between them at audio rate, from the output of the `source device` to the input of the `target device`. Device outputs are listed as buttons on the right of the device, and device inputs are listed as buttons on the left.
 
 ## Deleting connections
-There are two ways to delete a connection. Double-click on a connection deletes it. Single-clicking on a connection will highlights it. Once a connection is highlighted, press `delete` to delete the connection.
+There are two ways to delete a connection. Double-click on a connection deletes it. Single-clicking on a connection will highlight it. Once a connection is highlighted, press `delete` to delete the connection.
 
 ## Manipulating devices
 Click-drag on the workspace to select multiple devices at once. Selected devices have a bold, white border. Selected devices are draggable to anywhere the workspace.
@@ -329,6 +329,9 @@ Subtracts `input 2` from `input 1`.
 
 ## toggle
 Outputs a 0 when the button is `off` and outputs a 1 when the button is `on`. Click the button to switch states.
+
+## touchpad
+Outputs two floats between 0 and 1, corresponding to the selected x/y position in a 2D touchpad.
 
 ## triangle
 Generates a triangle wave between -1 and 1, oscillating at `frequency` and with configurable `pulsewidth`. The phase of the triangle wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.

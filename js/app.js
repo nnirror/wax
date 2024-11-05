@@ -1108,10 +1108,9 @@ function finishConnection(deviceId, inputIndex) {
             ];
             // create channel splitter
             let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
-    
-            // connect source device's output to the splitter
+
             sourceDevice.node.connect(splitter);
-    
+
             if (targetDevice) {
                 // If the target device is a regular device, connect it as usual
                 splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
@@ -1359,6 +1358,125 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 silenceGenerator.offset.value = slider.value;
             });
         }
+        else if (filename === "touchpad") {
+            const silenceGeneratorX = context.createConstantSource();
+            const silenceGeneratorY = context.createConstantSource();
+            silenceGeneratorX.offset.value = 0;
+            silenceGeneratorY.offset.value = 0;
+            silenceGeneratorX.start();
+            silenceGeneratorY.start();
+        
+            // create a channel merger node with two inputs
+            const mergerNode = context.createChannelMerger(2);
+        
+            // connect the silence generators to the merger node's inputs
+            silenceGeneratorX.connect(mergerNode, 0, 0); // Connect to input 0
+            silenceGeneratorY.connect(mergerNode, 0, 1); // Connect to input 1
+        
+            // create the device
+            const device = {
+                node: mergerNode,
+                stream: mergerNode,
+                source: mergerNode,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output x' }, { comment: 'output y' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
+        
+            // create a touchpad
+            const touchpad = document.createElement('div');
+            touchpad.className = 'touchpad';
+        
+            // create an indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'touchpadIndicator';
+            touchpad.appendChild(indicator);
+        
+            // find the existing form in the device
+            const form = deviceDiv.querySelector('form');
+        
+            // create a div to hold the touchpad
+            const div = document.createElement('div');
+            div.className = 'labelAndInputContainer';
+            div.style.left = '16px';
+            div.style.top = '34px';
+        
+            div.appendChild(touchpad);
+        
+            // append the div to the form
+            form.appendChild(div);
+        
+            let isDragging = false;
+        
+            // add event listeners to the touchpad
+            touchpad.addEventListener('mousedown', (event) => {
+                isDragging = true;
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        
+            document.addEventListener('mousemove', (event) => {
+                if (isDragging) {
+                    const rect = touchpad.getBoundingClientRect();
+                    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+                        const x = (event.clientX - rect.left) / rect.width;
+                        const y = 1 - (event.clientY - rect.top) / rect.height;
+                        silenceGeneratorX.offset.value = x;
+                        silenceGeneratorY.offset.value = y;
+                        indicator.style.left = `${event.clientX - rect.left}px`;
+                        indicator.style.top = `${event.clientY - rect.top}px`;
+                    }
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            });
+        
+            document.addEventListener('mouseup', (event) => {
+                isDragging = false;
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        
+            touchpad.addEventListener('touchstart', (event) => {
+                isDragging = true;
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        
+            document.addEventListener('touchmove', (event) => {
+                if (isDragging) {
+                    const rect = touchpad.getBoundingClientRect();
+                    const touch = event.touches[0];
+                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                        const x = (touch.clientX - rect.left) / rect.width;
+                        const y = 1 - (touch.clientY - rect.top) / rect.height;
+                        silenceGeneratorX.offset.value = x;
+                        silenceGeneratorY.offset.value = y;
+                        indicator.style.left = `${touch.clientX - rect.left}px`;
+                        indicator.style.top = `${touch.clientY - rect.top}px`;
+                    }
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            });
+        
+            document.addEventListener('touchend', (event) => {
+                isDragging = false;
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        
+            document.addEventListener('touchcancel', (event) => {
+                isDragging = false;
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        }
         else if (filename === "button") {
             const silenceGenerator = context.createConstantSource();
             silenceGenerator.offset.value = 0;
@@ -1518,6 +1636,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'slider') {
             deviceDiv.style.width = '200px';
             deviceDiv.style.height = '110px';
+        }
+        if (filename == 'touchpad') {
+            deviceDiv.style.width = '260px';
+            deviceDiv.style.height = '250px';
         }
         if (filename == 'button' || filename == 'toggle') {
             deviceDiv.style.height = '138px';

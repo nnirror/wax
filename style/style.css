@@ -700,3 +700,19 @@ body .CodeMirror {
     z-index: 1010;
     cursor: pointer;
 }
+.touchpad {
+    width: 200px;
+    height: 200px;
+    border: 1px solid black;
+    background: grey;
+    position: relative;
+}
+.touchpadIndicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgb(8, 56, 78);
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}

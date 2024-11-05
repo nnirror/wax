@@ -272,6 +272,10 @@ var wasmDeviceURLs = [
         "displayName": "toggle"
     },
     {
+        "fileName": "touchpad",
+        "displayName": "touchpad"
+    },
+    {
         "fileName": "tri",
         "displayName": "triangle"
     },
