@@ -940,7 +940,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
         // devices with inports that start 2 buttons down
         inportContainer.style.paddingTop = '52px';
     }
-    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock'].includes(deviceType) == false) {
+    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock','granular'].includes(deviceType) == false) {
         // devices with inports that start 1 button down
         inportContainer.style.paddingTop = '25px';
     }
@@ -1606,7 +1606,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const patcher = await response.json();
             const device = await RNBO.createDevice({ context, patcher });
             deviceDiv = addDeviceToWorkspace(device, filename, false);
-            if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' ) {
+            if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' ) {
                 createAudioLoader(device, context, deviceDiv);
                 if (audioBuffer) {
                     await device.setDataBuffer('buf', audioBuffer.buffer);
@@ -1638,6 +1638,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if ( filename == 'wave' ) {
             deviceDiv.style.width = '14em';
+        }
+        if ( filename == 'granular' ) {
+            deviceDiv.style.height = '160px';
         }
         if (filename == 'comment') {
             deviceDiv.style.width = '10em';

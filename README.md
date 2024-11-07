@@ -158,7 +158,10 @@ Applies a FFT-based bandpass filter to `input`, passing only frequencies between
 Applies a FFT-based bin threshold gate to `input`, passing only FFT bin frequencies higher than `threshold`. Values for `threshold` are normalized and clipped between 0 and 1.
 
 ## fold
-Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`. 
+Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`.
+
+## granular
+Generates grains lasting `size (ms)` from a loaded audio file, starting at the `position` point, which expects a float between 0 - 1. A new grain will generate every time `trigger` goes above 0.5.
 
 ## greater
 Computes the boolean representation of whether `input 1` is greater than `input 2`.
@@ -252,7 +255,7 @@ Generates a phasor between 0 and 1, oscillating at `frequency`.
 Applies a time-domain frequency shift effect of `shift amt` to `input`. A `shift amt` of 2 will be twice as high frequency.
 
 ## play
-Plays an audio file at `rate` every time `trigger` goes above 0.5.
+Plays a loaded audio file at `rate` every time `trigger` goes above 0.5.
 - The `sync` outlet signal is the current playback position normalized between 0 and 1. A nonzero `loop` input will loop file playback.
 - The `start pos` and `end pos` values control the relative start and end point of audio file playback and expect values between 0 and 1.
 
@@ -337,7 +340,7 @@ Outputs two floats between 0 and 1, corresponding to the selected x/y position i
 Generates a triangle wave between -1 and 1, oscillating at `frequency` and with configurable `pulsewidth`. The phase of the triangle wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.
 
 ## wavetable
-Reads through an audio file like a wavetable, with `phase` values between 0 and 1 selecting a corresponding relative position in the audio file.
+Reads through a loaded audio file like a wavetable, with `phase` values between 0 and 1 selecting a corresponding relative position in the audio file.
 
 ## wrap
 Wraps any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount exceeded plus `minimum` . If the input value is below `minimum`, the output will be the amount below subtracted from `maximum`. 

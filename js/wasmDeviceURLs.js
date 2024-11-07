@@ -96,6 +96,10 @@ var wasmDeviceURLs = [
         "displayName": "fold"
     },
     {
+        "fileName": "granular",
+        "displayName": "granular"
+    },
+    {
         "fileName": "greater",
         "displayName": "> (greater)"
     },
