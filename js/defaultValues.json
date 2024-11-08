@@ -45,6 +45,10 @@
         "minimum": -1,
         "maximum": 1
     },
+    "granular": {
+        "position": 0,
+        "size (ms)": 50
+    },
     "hpf": {
         "cutoff": 1000,
         "q": 0.1
