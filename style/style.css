@@ -280,7 +280,7 @@ body .sliderMin, body .sliderMax {
         display: block;
     }
 
-    body #infoDiv {
+    body #infoDiv, body .permissionDiv {
         width: 80%;
     }
     body .navbarButton:not(.startAudioButton,.waxButton) {
@@ -689,16 +689,33 @@ body .CodeMirror {
     bottom: 4px;
     background-color: rgb(8, 56, 78);
 }
-.permissionButton {
+.permissionDiv {
     position: fixed;
     top: 50%;
     left: 50%;
+    height: 173px;
+    padding: 1em;
     transform: translate(-50%, -50%);
-    width: 66%;
-    height: 66%;
-    font-size: 24px;
-    z-index: 1010;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    z-index: 1011;
+}
+.permissionButton {
+    border-radius: 10px;
+    font-size: 20px;
+    position: absolute;
+    top: 0px;
+    left: 0;
+    width: 90%;
+    margin-top: 16%;
+    margin-left: 5%;
+    margin-bottom: 5%;
+    padding: 1em;
+    height: 60%;
     cursor: pointer;
+    background: lightgrey;
 }
 .touchpad {
     width: 200px;

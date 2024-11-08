@@ -2388,26 +2388,39 @@ async function reconstructWorkspaceState(deviceStates = null) {
             return;
         }
         if ( hasMotionDevice ) {
-            // if permission is not granted, create and style the permission button
-            const permissionButton = document.createElement('button');
-            permissionButton.innerText = 'Loading Wax states requires access to device motion data. Please tap this button to grant permission, and then the state will be loaded.';
-            permissionButton.className = 'permissionButton';
-            document.body.appendChild(permissionButton);
+            const permissionDiv = document.createElement('div');
+            permissionDiv.className = 'permissionDiv';
+            permissionDiv.innerHTML = '<b>Before loading this state</b>:';
 
-            // add event listener to the button
+            const permissionButton = document.createElement('button');
+            permissionButton.className = 'permissionButton';
+            permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
             permissionButton.addEventListener('click', async () => {
-                const permissionGranted = await checkDeviceMotionPermission();
-                if (!permissionGranted) {
-                    showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
-                    return;
+                try {
+                    const response = await DeviceMotionEvent.requestPermission();
+                    if (response === 'granted') {
+                        localStorage.setItem('motionPermissionStatus', 'granted');
+                        // device motion event permission granted
+                    } else {
+                        showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
+                    }
+                } catch (error) {
+                    showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
                 }
 
-                // remove the button after permission is granted
-                document.body.removeChild(permissionButton);
+                // remove the div after handling interaction
+                document.body.removeChild(permissionDiv);
+                document.getElementsByClassName('permissionDiv')[0].remove();
 
                 // proceed with reconstructing the workspace state
                 await loadWorkspaceState(deviceStates);
             });
+
+            // attach the permission request button to the div
+            permissionDiv.appendChild(permissionButton);
+
+            // attach the div to the body
+            document.body.appendChild(permissionDiv);
         }
     } else {
         // proceed with reconstructing the workspace state directly
@@ -2451,9 +2464,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function showPermissionButton() {
+    const permissionDiv = document.createElement('div');
+    permissionDiv.className = 'permissionDiv';
+    permissionDiv.innerHTML = '<b>Have fun!</b> One last thing:';
+
     const permissionButton = document.createElement('button');
     permissionButton.className = 'permissionButton';
-    permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once!';
+    permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
     permissionButton.addEventListener('click', async () => {
         try {
             const response = await DeviceMotionEvent.requestPermission();
@@ -2467,12 +2484,15 @@ function showPermissionButton() {
             showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
         }
 
-        // remove the button after handling interaction
-        document.body.removeChild(permissionButton);
+        // remove the div after handling interaction
+        document.body.removeChild(permissionDiv);
     });
 
-    // attach the permission request button to the body
-    document.body.appendChild(permissionButton);
+    // attach the permission request button to the div
+    permissionDiv.appendChild(permissionButton);
+
+    // attach the div to the body
+    document.body.appendChild(permissionDiv);
 }
 
 async function loadExampleFile(filePath) {
