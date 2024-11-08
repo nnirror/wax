@@ -237,7 +237,7 @@ body .sliderMin, body .sliderMax {
         left: calc(71px + 8em * 2);
     }
     body .deviceListModal {
-        left: calc(40px + 8em * 2);
+        left: calc(57px + 8em * 2);
         top: calc(3vh + 80px);
     }
     body .exampleFilesButton {
@@ -363,26 +363,26 @@ body .sliderMin, body .sliderMax {
     border: 3px solid rgb(255,0,94);
     background: rgb(255,0,94);
 }
-.saveStateButton {
+.lockButton {
     left: calc(71px + 8em * 2);
 }
-.reloadStateButton {
+.saveStateButton {
     left: calc(71px + 8em * 3);
 }
-.lockButton {
+.reloadStateButton {
     left: calc(71px + 8em * 4);
 }
 .shareStateButton {
-    left: calc(71px + 8em * 5);
-}
-.viewAllDevices {
-    left: calc(71px + 8em * 6);
-}
-.helpButton {
     left: calc(71px + 8em * 7);
 }
-.exampleFilesButton {
+.viewAllDevices {
+    left: calc(71px + 8em * 5);
+}
+.helpButton {
     left: calc(71px + 8em * 8);
+}
+.exampleFilesButton {
+    left: calc(71px + 8em * 6);
 }
 .exampleFilesDiv::before {
     content: "";
@@ -409,7 +409,7 @@ body .sliderMin, body .sliderMax {
 }
 .deviceListModal {
     position: fixed;
-    left: calc(38px + 8em * 5);
+    left: calc(55px + 8em * 5);
     top: calc(3vh + 40px);
     border: 1px solid black;
     z-index: 1010;
