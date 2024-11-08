@@ -351,7 +351,7 @@ body .sliderMin, body .sliderMax {
     left: 24px;
     top: calc(3vh - 5px);
     color: white;
-    z-index: 1;
+    z-index: 1003;
     font-size: 2em;
     background: rgb(8, 56, 78);
     border: 0;
@@ -626,7 +626,7 @@ body .toggle-on {
     height: 70px;
     top: 10px;
     left: 10px;
-    z-index: 1001;
+    z-index: 1010;
 }
 .jtk-hover path {
     cursor: pointer;
