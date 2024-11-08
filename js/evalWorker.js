@@ -1,4 +1,4 @@
-importScripts('facetForWax.js', 'lib/tonal.min.js');
+importScripts('facetForWax.js', 'lib/Complex.js', 'lib/tonal.min.js');
 
 let stored_patterns = {};
 

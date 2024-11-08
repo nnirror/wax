@@ -3,8 +3,8 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 5,
-			"revision" : 6,
+			"minor" : 6,
+			"revision" : 4,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -47,7 +47,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "in1",
-								"comment" : "signal in"
+								"comment" : "input"
 							}
 , 							{
 								"type" : "signal",
@@ -72,7 +72,7 @@
 								"type" : "signal",
 								"index" : 1,
 								"tag" : "out1",
-								"comment" : "signal out"
+								"comment" : "output"
 							}
  ]
 					}
@@ -82,8 +82,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 5,
-							"revision" : 6,
+							"minor" : 6,
+							"revision" : 4,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -127,8 +127,8 @@
 											"fileversion" : 1,
 											"appversion" : 											{
 												"major" : 8,
-												"minor" : 5,
-												"revision" : 6,
+												"minor" : 6,
+												"revision" : 4,
 												"architecture" : "x64",
 												"modernui" : 1
 											}
@@ -165,14 +165,14 @@
 											"boxes" : [ 												{
 													"box" : 													{
 														"maxclass" : "codebox",
+														"numinlets" : 2,
 														"numoutlets" : 1,
-														"id" : "obj-13",
-														"fontsize" : 12.0,
-														"outlettype" : [ "" ],
 														"fontname" : "<Monospaced>",
 														"patching_rect" : [ 60.0, 64.5, 261.0, 233.0 ],
+														"outlettype" : [ "" ],
 														"fontface" : 0,
-														"numinlets" : 2,
+														"id" : "obj-13",
+														"fontsize" : 12.0,
 														"code" : "x = in1;\r\namount = in2;\r\nk = 2*amount/(1-amount);\nout1 = (1+k)*x/(1+k*abs(x));"
 													}
 
@@ -181,13 +181,13 @@
 													"box" : 													{
 														"maxclass" : "newobj",
 														"text" : "in 2 @comment driveshape @min -1 @max 1",
+														"numinlets" : 0,
 														"numoutlets" : 1,
-														"id" : "obj-28",
-														"fontsize" : 12.0,
-														"outlettype" : [ "" ],
 														"fontname" : "Lato",
 														"patching_rect" : [ 302.0, 30.0, 254.0, 23.0 ],
-														"numinlets" : 0
+														"outlettype" : [ "" ],
+														"id" : "obj-28",
+														"fontsize" : 12.0
 													}
 
 												}
@@ -195,13 +195,13 @@
 													"box" : 													{
 														"maxclass" : "newobj",
 														"text" : "in 1 @comment input",
+														"numinlets" : 0,
 														"numoutlets" : 1,
-														"id" : "obj-1",
-														"fontsize" : 12.0,
-														"outlettype" : [ "" ],
 														"fontname" : "Lato",
 														"patching_rect" : [ 60.0, 30.0, 127.0, 23.0 ],
-														"numinlets" : 0
+														"outlettype" : [ "" ],
+														"id" : "obj-1",
+														"fontsize" : 12.0
 													}
 
 												}
@@ -209,12 +209,12 @@
 													"box" : 													{
 														"maxclass" : "newobj",
 														"text" : "out 1",
+														"numinlets" : 1,
 														"numoutlets" : 0,
-														"id" : "obj-4",
-														"fontsize" : 12.0,
 														"fontname" : "Lato",
 														"patching_rect" : [ 60.0, 314.0, 38.0, 23.0 ],
-														"numinlets" : 1
+														"id" : "obj-4",
+														"fontsize" : 12.0
 													}
 
 												}
@@ -393,7 +393,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 524.0, 181.0318443775177, 141.0, 23.0 ],
 									"rnbo_classname" : "scale~",
-									"rnbo_serial" : 8,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "scale~_obj-7",
 									"text" : "scale~ 0. 0.99 0. 0.99 0.5"
 								}
@@ -408,7 +408,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 524.0, 143.299360752105713, 73.0, 23.0 ],
 									"rnbo_classname" : "clip~",
-									"rnbo_serial" : 6,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "clip~_obj-12",
 									"text" : "clip~ 0. 0.99"
 								}
@@ -1103,13 +1103,13 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 263.5, 257.738852500915527, 168.0, 23.0 ],
+									"patching_rect" : [ 263.5, 257.738852500915527, 144.0, 23.0 ],
 									"rnbo_classname" : "out~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-3",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1174,7 +1174,7 @@
 												"name" : "in1",
 												"type" : "signal",
 												"digest" : "signal sent to outlet with index 1",
-												"displayName" : "signal out",
+												"displayName" : "output",
 												"hot" : 1,
 												"docked" : 0
 											}
@@ -1188,7 +1188,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "out~ 1 @comment \"signal out\""
+									"text" : "out~ 1 @comment output"
 								}
 
 							}
@@ -1199,13 +1199,13 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 263.5, 26.0, 152.0, 23.0 ],
+									"patching_rect" : [ 263.5, 26.0, 128.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 4,
 									"rnbo_uniqueid" : "in~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1271,7 +1271,7 @@
 												"name" : "out1",
 												"type" : "signal",
 												"digest" : "signal from inlet with index 1",
-												"displayName" : "signal in",
+												"displayName" : "input",
 												"docked" : 0
 											}
  ],
@@ -1283,7 +1283,7 @@
 										"changesPatcherIO" : 1
 									}
 ,
-									"text" : "in~ 1 @comment \"signal in\""
+									"text" : "in~ 1 @comment input"
 								}
 
 							}
@@ -1374,11 +1374,12 @@
 
 					}
 ,
-					"rnboversion" : "1.2.1",
+					"rnboversion" : "1.2.6",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}

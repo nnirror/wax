@@ -1,7 +1,7 @@
 .node {
     position: absolute;
-    padding: 36px 10px 0px 10px;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
+    padding: 0px 10px 0px 10px;
+    background: rgb(203,203,203);
     border-radius: 10px;
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     display: table;
@@ -9,121 +9,443 @@
     -webkit-user-select: none;
     user-select: none;
     width: auto;
-    border: 3px solid #333;
+    border: 3px solid rgb(8,56,78);
     z-index: 1001;
+    min-height: 3.5em;
+    min-width: 100px;
+}
+.node form {
+    margin-top: 5px;
 }
 .input-container {
     position: absolute;
-    left: 0px;
-    top: 0px;
-    padding-top: 4px;
-    width: calc(100% - 4px);
+    top: 1.5em;
+    left: -12px;
+    height: auto;
+    width: 55%;
+    padding-top: 2px;
+    padding-bottom: 0px;
+    padding-left: 6px;
+    margin-bottom: 5px;
     overflow-x: auto;
     padding-left: 4px;
-    height: 26px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    background: #898989;
-}
-.input-container button, .output-container button {
-    background: white;
+    color: rgb(8,56,78);
 }
 .output-container {
+    float: right;
     position: relative;
-    left: -10px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    right: -18px;
+    top: -3px;
+    padding-top: 1.5em;
+    height: auto;
+    margin-left: -10px;
+    padding-top: 1px;
+    padding-bottom: 3px;
     padding-left: 6px;
-    width: calc(100% + 14px);
-    background: #898989;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
+    color: rgb(8,56,78);
+}
+.inportContainer {
+    padding-top: 24px;
+}
+.labelAndInputContainer {
+    position: absolute;
+    left: 48px;
+}
+.labelAndInputContainer .inport-checkbox {
+    position: relative;
+    left: 5px;
+    top: 1px;
+    width: 21px;
+    height: 21px;
+}
+.node .input-button, .node  .output-button {
+    display: block;
+    background: rgb(255,255,255);
+    color: rgb(8,56,78);
+    height: 24px;
+    width: 60px;
+    font-size: 9px;
+    margin-bottom: 4px;
+}
+body .node .inport-button {
+    display: block;
+    background: #CBCBCB;
+    color: rgb(255, 255, 255);
+    height: 0px;
+    width: 0px;
+    margin-left: 0px;
+    font-size: 8px;
+    margin-bottom: 0px;
+    position: relative;
+    top: -2px;
+}
+
+.inport-button img {
+    width: 30px;
+}
+.node button, #infoDiv button {
+    font-size: 0.75em;
+    cursor: pointer;
+    color: white;
+    border-radius: 10px;
+    border: 0;
+}
+.deviceLabel {
+    display: inline-block;
+    font-size: 1.25em;
+    text-align: center;
+    width: 100%;
+}
+.info-button {
+    background: transparent;
+    position: absolute;
+    width: 17px;
+    height: 17px;
+    top: 0;
+    left: 5px;
+}
+.delete-button {
+    width: 17px;
+    height: 17px;
+    position: absolute;
+    background-color: transparent;
+    top: 0;
+    right: 5px;
+}
+.delete-button img, .info-button img {
+    width: 20px;
+    position: relative;
+    left: -7px;
+    height: 20px;
+    top: -2px;
+}
+#closeInfoButton {
+    border-radius: 10px;
+    color: white;
+    border: 0;
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+}
+.delete-button, .info-button {
+    margin-top: 3px;
 }
 html {
     overscroll-behavior: none;
 }
-body {
+html, body {
+    height: 100%;
     margin: 0;
     font-family: Arial, sans-serif;
 }
 #workspace {
-    background-color: #222;
-    width: 5000px;
-    height: 10000px;
+    background-color: rgb(8,56,78);
     position: relative;
     overflow: auto;
+    height: 100%;
     touch-action: manipulation;
 }
 .delete-button {
     float: right;
-    margin-right: 8px;
+    width: 17px;
 }
 .info-button {
     float: right;
+    width: 17px;
 }
 .aLabelClass {
     color: white;
     font-size: 0.8em;
 }
-#toggleNavbarButton {
-    position: fixed;
-    top: 1vh;
-    right: 1vh;
-    height: 40px;
-    padding: 8px 4px;
-}
 .navbarButton {
     position: fixed;
-    width: 10em;
-    right: 1vh;
+    width: 7em;
+    top: 3vh;
     z-index: 1003;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
-    color: #000;
+    padding: 3px 20px;
+    border-radius: 10px;
+    border: 3px solid white;
+    background: rgb(8,56,78);
+    color: white;
     font-size: 1em;
     cursor: pointer;
     min-height: 20px;
 }
-.navbarButton:hover {
-    background: linear-gradient(to right, #c4c4c4, #f2f2f2);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+.navbarButton:not(.startAudioButton):not(.waxButton):hover, #exampleFiles:hover {
+    background: white;
+    color: rgb(8,56,78);
+}
+.mobileMenuToggleButton {
+    display: none;
+}
+body .sliderMin, body .sliderMax {
+    width: 3.5em;
+    margin-right: 10px;
+}
+#mobileMenu {
+    color: rgb(8,56,78);
+    position: fixed;
+    top: calc(3vh + 80px);
+    left: 10%;
+    width: 80%;
+    height: auto;
+    z-index: 1010;
+}
+.mobileMenuButton {
+    text-align: center;
+    z-index: 1001;
+    font-size: 48px;
+    padding: 10px 0px;
+    cursor: pointer;
+}
+.mobileMenuButton:nth-child(odd) {
+    background: white;
+}
+.mobileMenuButton:nth-child(even) {
+    background: rgb(101,255,229);
+}
+.mobileMenuButton:first-child {
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+}
+.mobileMenuButton:nth-last-child(1) {
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+}
+#deviceListHeader, #exampleListHeader {
+    display: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    font-weight: bold;
+    padding-left: 10px;
+    padding-top: 10px;
+    color: rgb(8, 56, 78);
+    position: absolute;
+    top: 0px;
+}
+@media screen and (min-width: 600px) and (max-width: 1120px) {
+    body .shareStateButton {
+        top: calc(3vh + 40px);
+        left: calc(71px + 8em * 1);
+    }
+    body .viewAllDevices {
+        top: calc(3vh + 40px);
+        left: calc(71px + 8em * 2);
+    }
+    body .deviceListModal {
+        left: calc(57px + 8em * 2);
+        top: calc(3vh + 80px);
+    }
+    body .exampleFilesButton {
+        top: calc(3vh + 40px);
+        left: calc(71px + 8em * 3);
+    }
+    body #exampleFiles {
+        left: calc(4px + 8em * 3);
+        top: calc(3vh + 80px);
+    }
+    body .helpButton {
+        top: calc(3vh + 40px);
+        left: calc(71px + 8em * 4);
+    }
+}
+@media screen and (max-width: 600px) {
+
+    body .waxButton {
+        position: fixed;
+        top: 3vh;
+        left: 18vw;
+        width: 6rem;
+        height: 3rem;
+    }
+    
+    body .startAudioButton {
+        position: fixed;
+        top: 3vh;
+        left: 45vw;
+        width: 6rem;
+        height: 3rem;
+    }
+    
+    body #ui-container .mobileMenuToggleButton {
+        position: fixed;
+        top: 3vh;
+        left: 72vw;
+        width: 6rem;
+        height: 3rem;
+        display: block;
+    }
+
+    body #infoDiv, body .permissionDiv {
+        width: 80%;
+    }
+    body .navbarButton:not(.startAudioButton,.waxButton) {
+        display: none;
+    }
+    #mobileMenu {
+        display: none;
+    }
+    body .deviceListModal {
+        top: calc(3vh + 80px);
+        padding: 0;
+        left: 10%;
+        right: 10%;
+    }
+    body .deviceListModal::before {
+        height: 0px;
+        background-color: white;
+    }
+    body #deviceListHeader, body #exampleListHeader {
+        display: block;
+    }
+    .deviceListModalContent {
+        border-radius: 10px;
+        margin-top: 48px;
+    }
+    .deviceListItem {
+        padding-left: 10px;
+    }
+    .deviceListItem:nth-child(odd) {
+        background: white;
+    }
+    .deviceListItem:nth-child(even) {
+        background: rgb(101,255,229);
+    }
+    body #exampleFiles {
+        left: 10%;
+        right: 10%;
+        top: calc(3vh + 80px);
+        z-index: 1010;
+        padding: 0;
+    }
+    body #exampleFiles a {
+        padding-left: 10px;
+    }
+    body .exampleFilesDiv::before {
+        height: 0px;
+    }
+    body #exampleFiles a:nth-child(odd) {
+        background: white;
+    }
+    body #exampleFiles a:nth-child(even) {
+        background: rgb(101,255,229);
+    }
+    body #exampleFiles a:last-child {
+        border-radius: 0px 0px 10px 10px;
+    }
+    body #exampleFiles a:first-of-type {
+        margin-top: 48px;
+    }
+}
+@media screen and (min-width: 601px) {
+    #mobileMenu {
+        display: none !important;
+    }
+}
+.waxButton {
+    position: fixed;
+    left: 24px;
+    top: calc(3vh - 5px);
+    color: white;
+    z-index: 1003;
+    font-size: 2em;
+    background: rgb(8, 56, 78);
+    border: 0;
+    font-weight: bold;
 }
 .startAudioButton {
-    top: 60px;
+    left: calc(71px + 8em * 1);
     color: white;
-    background: linear-gradient(to right, #005925, #002e13);
+    border: 3px solid rgb(255,0,94);
+    background: rgb(255,0,94);
 }
-.shareStateButton {
-    top: 110px;
+.lockButton {
+    left: calc(71px + 8em * 2);
 }
 .saveStateButton {
-    top: 160px;
+    left: calc(71px + 8em * 3);
 }
 .reloadStateButton {
-    top: 210px;
+    left: calc(71px + 8em * 4);
+}
+.shareStateButton {
+    left: calc(71px + 8em * 7);
 }
 .viewAllDevices {
-    top: 310px;
+    left: calc(71px + 8em * 5);
 }
 .helpButton {
-    top: 360px;
+    left: calc(71px + 8em * 8);
+}
+.exampleFilesButton {
+    left: calc(71px + 8em * 6);
+}
+.exampleFilesDiv::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 3px;
+    height: 10px;
+    background-color: white;
 }
 #exampleFiles {
     position: fixed;
-    top: 260px;
-    right: 1vh;
-    z-index: 1003;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    width: 10em;
-    font-size: 1em;
-    text-align: center;
-    background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+    top: calc(3vh + 40px);
+    left: calc(0.1em + 8em * 6);
+    z-index: 1010;
+    background: white;
+    padding: 2em;
+    border-radius: 10px;
+}
+#exampleFiles a, .deviceListModal a {
+    color: rgb(8, 56, 78);
+    padding: 5px;
+    display: block;
+}
+.deviceListModal {
+    position: fixed;
+    left: calc(55px + 8em * 5);
+    top: calc(3vh + 40px);
+    border: 1px solid black;
+    z-index: 1010;
+    display: none;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    max-height: 80vh;
+}
+
+.deviceListModalContent {
+    overflow: auto;
+    max-height: 60vh;
+}
+
+.deviceListModal::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 3px;
+    height: 10px;
+    background-color: white;
+}
+
+.deviceList {
+    list-style-type: none;
+    margin: 0;
+    padding-left: 0;
+    justify-content: center;
+}
+
+.deviceListItem {
+    color: rgb(8, 56, 78);
+    text-decoration: underline;
+    cursor: pointer;
 }
 .allDevicesButton {
     position: absolute;
@@ -135,47 +457,57 @@ body {
 .speakerChannelSelectorInput {
     width: 3em;
     margin-bottom: 6px;
+    float: right;
+    position: relative;
+    top: 5px;
+    left: 34px;
+}
+.speakerChannelSelectorLabel {
+    float: right;
+    position: relative;
+    right: 56px;
+    top: 9px;
+    font-size: 10px;
 }
 .deviceInportLabel {
-    display: inline-block;
-    width: 33%;
+    display: none;
+    width: 8em;
     font-size: 0.75em;
 }
 .deviceInport {
-    width: 62%;
-    display: inline-block;
+    width: 38px;
+    font-size: 10px;
+    margin-left: 9px;
+    float: right;
+    height: 22px;
 }
 .awesompleteContainer {
-    width: 12em;
-    padding: 0.5em;
+    width: 10em;
+    padding: 0.5em 1em;
     border-radius: 10px;
     background: linear-gradient(to right, #f2f2f2, #c4c4c4);
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     z-index: 1004 !important;
-}
-.awesomplete-submit {
-    position: absolute;
-    left: 12em;
 }
 .allDevicesButton {
     position: absolute;
     left: 13em;
 }
 .awesomplete input {
-    width: 8.5em !important;
+    width: 100%;
 }
-
 .awesomplete .awesomplete-highlight {
     background-color: #bde4ff;
 }
 
-mark{
+mark {
     background-color:lightblue !important;
     padding:0;
     margin:0;
 }
 .selectedNode {
     border: 3px solid white;
+    z-index: 1009;
 }
 #audioInputDevicesDropdown {
     position: absolute;
@@ -188,27 +520,36 @@ mark{
     top:-2px;
 }
 .audioInputDeviceSelect {
-    max-width: 10em;
+    width: 170px;
 }
 .audioFileName {
     font-size: 0.8em;
     margin-top: 4px;
     margin-left: 11px;
     margin-bottom: 0;
-    display: inline;
+    display: inline-block;
+    position: absolute;
+    bottom: 4px;
+    left: 60px;
+    max-width: 110px;
+    overflow: hidden;
 }
 #infoDiv {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 1em;
+    border-radius: 10px;
     text-align: center;
     display: none;
     font-size: 1.5em;
-    z-index: 1004;
+    z-index: 1011;
+}
+#infoDiv a {
+    color: rgb(8,56,78);
+    font-weight: bold;
 }
 #viewAllDevices {
     cursor: pointer;
@@ -239,85 +580,6 @@ mark{
     80% { opacity: 1; }
     100% { opacity: 0; }
 }
-.deviceListModal {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    border: 1px solid black;
-    z-index: 1005;
-    display: none;
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 5px;
-}
-.deviceList {
-    list-style-type: none;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-.deviceListItem {
-    margin: 10px;
-}
-/* screens smaller than 600px */
-@media (max-width: 600px) {
-    #exampleFiles, #viewAllDevices {
-        height: 8%;
-        min-height: 4vh;
-    }
-    .navbarButton {
-        height: 8%;
-        min-height: 4vh;
-    }
-    .startAudioButton {
-        top: calc(10% - 4.75%);
-    }
-    .shareStateButton {
-        top: calc(19% - 4.75%);
-    }
-    .saveStateButton {
-        top: calc(28% - 4.75%);
-    }
-    .reloadStateButton {
-        top: calc(37% - 4.75%);
-    }
-    #exampleFiles {
-        top: calc(55% - 4.75%);
-    }
-    .viewAllDevices {
-        top: calc(46% - 4.75%);
-    }
-    .helpButton {
-        top: calc(64% - 4.75%);
-    }
-    #toggleNavbarButton {
-        height: 4%;
-        min-height: 4%;
-        width: 10em;
-        font-size: 1em;
-    }
-}
-.hamburger {
-    width: 10em;
-    font-size: 1em;
-    padding: 15px 30px;
-    height: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    background: linear-gradient(to right, #acacac, #cecece);
-}
-
-.hamburger-line {
-    width: 100%;
-    height: 2px;
-    background-color: #000;
-}
-
 .jtk-endpoint {
     cursor: pointer;
 }
@@ -325,37 +587,152 @@ mark{
 .output-button {
     cursor: pointer;  
 }
-
-.input-container button {
-    cursor: pointer;
-}
-
-.device-hr {
-    border: 0;
-    height: 1px;
-    background: #333;
-    width: calc(100% + 20px);
-    position: relative;
-    left: -10px;
-    margin-bottom: 0;
-}
 .toggle-button {
-    height: 50px;
-    width: 96px;
-    min-height: 50px;
-    max-height: 50px;
+    background-color: grey;
+    height: 10px;
+    width: 75px;
+    padding: 0px 0;
+    position: relative;
+    left: 13px;
+    top: 54px;
+    min-height: 75px;
+    max-height: 75px;
+    border-radius: 10px !important;
+    text-align: center;
 }
 .toggle-off {
     background-color: grey;
 }
-.toggle-on {
+body .toggle-on {
     background-color: white;
+    color: rgb(8,56,78);
 }
 .button-ui {
     background-color: grey;
-    height: 50px;
-    width: 96px;
-    min-height: 50px;
-    max-height: 50px;
-    border-radius: 25px;
+    height: 10px;
+    width: 75px;
+    padding: 0px 0;
+    position: relative;
+    left: 13px;
+    top: 54px;
+    min-height: 75px;
+    max-height: 75px;
+    border-radius: 43px !important;
+    text-align: center;
+}
+#logo {
+    position: fixed;
+    height: 70px;
+    height: 70px;
+    top: 10px;
+    left: 10px;
+    z-index: 1010;
+}
+.jtk-hover path {
+    cursor: pointer;
+}
+body .CodeMirror {
+    height: 6em;
+}
+#comment {
+    position: absolute;
+    left: -36px;
+    top: 0px;
+}
+#slider {
+    width: 146px;
+    margin-right: 63px;
+    position: relative;
+    top: -6px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 30px;
+    background: #ddd;
+}
+
+#slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgb(8,56,78);
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+#slider::-moz-range-thumb {
+    width: 30px;
+    background: rgb(8,56,78);
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+#slider::-ms-thumb {
+    width: 30px;
+    background: rgb(8,56,78);
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.printvalue {
+    position: relative;
+    top: 2px;
+    left: 47px;
+}
+.audioFileLoaderButton {
+    margin-top: 10px;
+    position: absolute;
+    display: inline;
+    color: white;
+    bottom: 4px;
+    background-color: rgb(8, 56, 78);
+}
+.permissionDiv {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    height: 173px;
+    padding: 1em;
+    transform: translate(-50%, -50%);
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    z-index: 1011;
+}
+.permissionButton {
+    border-radius: 10px;
+    font-size: 20px;
+    position: absolute;
+    top: 0px;
+    left: 0;
+    width: 90%;
+    margin-top: 16%;
+    margin-left: 5%;
+    margin-bottom: 5%;
+    padding: 1em;
+    height: 60%;
+    cursor: pointer;
+    background: lightgrey;
+}
+.touchpad {
+    width: 200px;
+    height: 200px;
+    border: 1px solid black;
+    background: grey;
+    position: relative;
+}
+.touchpadIndicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgb(8, 56, 78);
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+.jtk-connector {
+    cursor: pointer;
 }
