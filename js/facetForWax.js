@@ -109,6 +109,18 @@ class FacetPattern {
     return this;
   }
 
+  vocode ( carrierPattern ) {
+    let bands = [0,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000];
+    let out_fp = new FacetPattern();
+    for (let i = 0; i < bands.length-1; i++) {
+      out_fp.sup(this.ffilter(bands[i],bands[i]+1000).follow(NYQUIST*0.0001,NYQUIST*0.0008)
+        .times(carrierPattern.ffilter(bands[i],bands[i]+1000))
+       )
+    }
+    this.data = out_fp.data;
+    return this;
+  }
+
   drunk (length, intensity, d = Math.random() ) {
     let drunk_sequence = [];
     length = Math.abs(Number(length));
