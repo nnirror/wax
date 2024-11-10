@@ -2778,6 +2778,14 @@ markov(states) {
       return 1 << count;
   }
 
+  nextPowerOf2 (n) {
+    if (n <= 0) {
+        return 1;
+    }
+    let power = Math.ceil(Math.log2(n));
+    return Math.pow(2, power);
+  }
+
   minimum () {
     let min = this.data[0];
     for (let i = 1; i < this.data.length; i++) {
@@ -3003,7 +3011,7 @@ markov(states) {
       rotations = rotations.data;
     }
     let dataLength = this.data.length;
-    let nextPowerOfTwo = nextPowerOfTwo(dataLength);
+    let nextPowerOfTwo = this.nextPowerOf2(dataLength);
     if (dataLength !== nextPowerOfTwo) {
         this.data.push(...Array(nextPowerOfTwo - dataLength).fill(0));
     }
@@ -3068,7 +3076,7 @@ markov(states) {
     const frames = [];
     for (let i = 0; i <= this.data.length - frameSize; i += hopSize) {
         let frame = this.data.slice(i, i + frameSize);
-        let nextPowerOfTwo = nextPowerOfTwo(frame.length);
+        let nextPowerOfTwo = this.nextPowerOf2(frame.length);
         if (frame.length !== nextPowerOfTwo) {
             frame.push(...Array(nextPowerOfTwo - frame.length).fill(0));
         }
@@ -3118,7 +3126,7 @@ fgate(binThresholds, invert = 0) {
       let sliceEnd = sliceStart + sliceSize;
       let dataSlice = this.data.slice(sliceStart, sliceEnd);
 
-      let next_power_of_two = nextPowerOfTwo(dataSlice.length);
+      let next_power_of_two = this.nextPowerOf2(dataSlice.length);
       dataSlice.push(...Array(next_power_of_two-dataSlice.length).fill(0));
       let n = dataSlice.length;
       let m = Math.log2(n);
@@ -3195,7 +3203,7 @@ fkey (midiNotes, binThreshold = 0.005, maxHarmonic = 10) {
   midiNotes = midiNotes.data;
 
   let original_size = this.data.length;
-  let next_power_of_two = nextPowerOfTwo(this.data.length);
+  let next_power_of_two = this.nextPowerOf2(this.data.length);
   this.append(new FacetPattern().silence(next_power_of_two-this.data.length));
   let n = this.data.length;
   let m = Math.log2(n);
@@ -3289,7 +3297,7 @@ ffilter (minFreqs, maxFreqs, invertMode = false) {
       let sliceEnd = sliceStart + sliceSize;
       let dataSlice = this.data.slice(sliceStart, sliceEnd);
 
-      let next_power_of_two = nextPowerOfTwo(dataSlice.length);
+      let next_power_of_two = this.nextPowerOf2(dataSlice.length);
       dataSlice.push(...Array(next_power_of_two-dataSlice.length).fill(0));
       let n = dataSlice.length;
       let m = Math.log2(n);
@@ -3368,7 +3376,7 @@ ffilter (minFreqs, maxFreqs, invertMode = false) {
         let sliceEnd = sliceStart + sliceSize;
         let dataSlice = this.data.slice(sliceStart, sliceEnd);
 
-        let next_power_of_two = nextPowerOfTwo(dataSlice.length);
+        let next_power_of_two = this.nextPowerOf2(dataSlice.length);
         dataSlice.push(...Array(next_power_of_two-dataSlice.length).fill(0));
         let n = dataSlice.length;
         let m = Math.log2(n);
