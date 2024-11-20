@@ -537,10 +537,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // listen for keydown events on the document
 document.addEventListener('keydown', (event) => {
     // check if Delete or Backspace key was pressed
+    if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input' || event.target.closest('.CodeMirror')) {
+        return;
+    }
     if (event.key === 'Delete' || event.key === 'Backspace') {
-        if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input') {
-            return;
-        }
         // get all selected nodes
         let nodes = document.querySelectorAll('.node');
         nodes.forEach((node) => {
@@ -744,6 +744,9 @@ function openAwesompleteUI() {
 
 function initializeAwesomplete () {
     document.addEventListener('keydown', function(event) {
+        if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input' || event.target.closest('.CodeMirror')) {
+            return;
+        }
         // check if 'n' key is pressed and no input is focused
         if ((event.key === 'n' || event.key === 'N') && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
             event.preventDefault();
@@ -808,7 +811,7 @@ async function createMicrophoneDevice() {
 
 async function createMotionDevice(context) {
     // check if DeviceOrientationEvent is supported
-    if (window.DeviceOrientationEvent) {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
         // request permission for DeviceMotionEvent
         const response = await DeviceMotionEvent.requestPermission();
         if (response === 'granted') {
@@ -1913,10 +1916,14 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                         });
                     }
                     if (input.comment == 'save') {
-                        let deviceForm = deviceDiv.querySelector('.labelAndInputContainer');
                         const saveButton = document.createElement('button');
-                        saveButton.textContent = '⬤';
+                        const saveImage = document.createElement('img');
+                        saveImage.src = 'img/regen.png';
+                        saveImage.alt = 'Regen';
+                        saveImage.className  = 'regenButtonImage';
+                        saveButton.appendChild(saveImage);
                         saveButton.className = 'inport-button';
+                        let deviceForm = deviceDiv.querySelector('.labelAndInputContainer');
                         deviceForm.appendChild(saveButton);
                         const offsetNode = context.createConstantSource();
                         offsetNode.offset.value = 0;
@@ -2352,7 +2359,7 @@ async function copySelectedNodes() {
 }
 
 async function checkDeviceMotionPermission() {
-    if (window.DeviceOrientationEvent) {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
             const response = await DeviceMotionEvent.requestPermission();
             return response === 'granted';
@@ -2361,8 +2368,7 @@ async function checkDeviceMotionPermission() {
             return false;
         }
     } else {
-        showGrowlNotification(`Sorry, your device does not support DeviceOrientationEvent`);
-        return false;
+        return true;
     }
 }
 
@@ -2397,12 +2403,14 @@ async function reconstructWorkspaceState(deviceStates = null) {
             permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
             permissionButton.addEventListener('click', async () => {
                 try {
-                    const response = await DeviceMotionEvent.requestPermission();
-                    if (response === 'granted') {
-                        localStorage.setItem('motionPermissionStatus', 'granted');
-                        // device motion event permission granted
-                    } else {
-                        showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
+                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                        const response = await DeviceMotionEvent.requestPermission();
+                        if (response === 'granted') {
+                            localStorage.setItem('motionPermissionStatus', 'granted');
+                            // device motion event permission granted
+                        } else {
+                            showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
+                        }
                     }
                 } catch (error) {
                     showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
@@ -2473,12 +2481,14 @@ function showPermissionButton() {
     permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
     permissionButton.addEventListener('click', async () => {
         try {
-            const response = await DeviceMotionEvent.requestPermission();
-            if (response === 'granted') {
-                localStorage.setItem('motionPermissionStatus', 'granted');
-                // device motion event permission granted
-            } else {
-                showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                const response = await DeviceMotionEvent.requestPermission();
+                if (response === 'granted') {
+                    localStorage.setItem('motionPermissionStatus', 'granted');
+                    // device motion event permission granted
+                } else {
+                    showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
+                }
             }
         } catch (error) {
             showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
