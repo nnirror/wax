@@ -99,6 +99,7 @@ async function handleExamplesButtonClick(event) {
         link.addEventListener('click', async function(event) {
             event.preventDefault();
             var selectedFile = file;
+            await stopAudio();
             await loadExampleFile('examples/' + selectedFile);
             await startAudio();
         });
@@ -238,7 +239,8 @@ window.onload = async function() {
     infoDiv.appendChild(closeButton);
     document.body.appendChild(infoDiv);
 
-    checkForQueryStringParams();
+    await checkForQueryStringParams();
+    await startAudio();
 };
 
 document.addEventListener('input', function(event) {
@@ -1025,7 +1027,9 @@ async function scheduleDeviceEvent(device, inport, value, deviceId) {
         }
         value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
-            value = executedTextPatterns[deviceId];
+            if ( executedTextPatterns[deviceId]) {
+                value = executedTextPatterns[deviceId];
+            }
             value = value.replace(/_\./g, '$().');
             // send the data to be evaluated to the worker
             let audioBuffersCopy = {};
@@ -1042,6 +1046,7 @@ async function scheduleDeviceEvent(device, inport, value, deviceId) {
                 }
                 values = event.data;
                 if (Array.isArray(values.data) && values.data.length > 0) {
+                    executedTextPatterns[deviceId] = value;
                     const float32Array = new Float32Array(values.data);
                     // create a new AudioBuffer
                     const audioBuffer = context.createBuffer(1, float32Array.length, context.sampleRate);
@@ -2422,6 +2427,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
 
                 // proceed with reconstructing the workspace state
                 await loadWorkspaceState(deviceStates);
+                await startAudio();
             });
 
             // attach the permission request button to the div
@@ -2433,6 +2439,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
     } else {
         // proceed with reconstructing the workspace state directly
         await loadWorkspaceState(deviceStates);
+        await startAudio();
     }
 }
 
@@ -2480,22 +2487,25 @@ function showPermissionButton() {
     permissionButton.className = 'permissionButton';
     permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
     permissionButton.addEventListener('click', async () => {
+        document.body.removeChild(permissionDiv);
         try {
+            // request DeviceMotionEvent permission
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                const response = await DeviceMotionEvent.requestPermission();
-                if (response === 'granted') {
+                const motionResponse = await DeviceMotionEvent.requestPermission();
+                if (motionResponse === 'granted') {
                     localStorage.setItem('motionPermissionStatus', 'granted');
                     // device motion event permission granted
                 } else {
                     showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
                 }
             }
-        } catch (error) {
-            showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
-        }
 
-        // remove the div after handling interaction
-        document.body.removeChild(permissionDiv);
+            // request microphone access
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            await startAudio();
+        } catch (error) {
+            showGrowlNotification(`Error requesting permissions: ${error}`);
+        }
     });
 
     // attach the permission request button to the div
@@ -2765,7 +2775,7 @@ async function startAudio() {
     isAudioPlaying = true;
 }
 
-function checkForQueryStringParams() {
+async function checkForQueryStringParams() {
     // get the query string from the current URL
     let params = new URLSearchParams(window.location.search);
 
@@ -2781,7 +2791,8 @@ function checkForQueryStringParams() {
         let workspaceState = JSON.parse(serializedState);
 
         // load the workspace state
-        reconstructWorkspaceState(workspaceState);
+        await reconstructWorkspaceState(workspaceState);
+        await startAudio();
     }
 }
 
