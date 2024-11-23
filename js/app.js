@@ -1889,7 +1889,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     regenImage.className  = 'regenButtonImage';
                     regenButton.appendChild(regenImage);
                     regenButton.style.display = 'block';
-                    regenButton.style.width = '30px';
+                    regenButton.style.width = '40px';
                     regenButton.style.height = '30px'; 
                     regenButton.style.zIndex = '1000';
                     regenButton.className = 'inport-button';
