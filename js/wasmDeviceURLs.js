@@ -60,10 +60,6 @@ var wasmDeviceURLs = [
         "displayName": "cross"
     },
     {
-        "fileName": "cycle",
-        "displayName": "sine"
-    },
-    {
         "fileName": "delay",
         "displayName": "delay"
     },
@@ -240,16 +236,20 @@ var wasmDeviceURLs = [
         "displayName": "scale"
     },
     {
+        "fileName": "cycle",
+        "displayName": "sine"
+    },
+    {
         "fileName": "skipper",
         "displayName": "skipper"
     },
     {
-        "fileName": "smooth",
-        "displayName": "smooth"
-    },
-    {
         "fileName": "slider",
         "displayName": "slider"
+    },
+    {
+        "fileName": "smooth",
+        "displayName": "smooth"
     },
     {
         "fileName": "speedlim",

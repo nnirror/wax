@@ -2,42 +2,16 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 8,
-			"minor" : 6,
-			"revision" : 4,
+			"major" : 9,
+			"minor" : 0,
+			"revision" : 0,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
 		"rect" : [ 59.0, 81.0, 640.0, 480.0 ],
-		"bglocked" : 0,
-		"openinpresentation" : 0,
-		"default_fontsize" : 12.0,
-		"default_fontface" : 0,
-		"default_fontname" : "Arial",
-		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 1,
-		"objectsnaponopen" : 1,
-		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
-		"lefttoolbarpinned" : 0,
-		"toptoolbarpinned" : 0,
-		"righttoolbarpinned" : 0,
-		"bottomtoolbarpinned" : 0,
-		"toolbars_unpinned_last_save" : 0,
-		"tallnewobj" : 0,
-		"boxanimatetime" : 200,
-		"enablehscroll" : 1,
-		"enablevscroll" : 1,
-		"devicewidth" : 0.0,
-		"description" : "",
-		"digest" : "",
-		"tags" : "",
-		"style" : "",
-		"subpatcher_template" : "",
-		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
 					"autosave" : 1,
@@ -87,44 +61,33 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 8,
-							"minor" : 6,
-							"revision" : 4,
+							"major" : 9,
+							"minor" : 0,
+							"revision" : 0,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "rnbo",
 						"rect" : [ 34.0, 62.0, 1289.0, 1024.0 ],
-						"bglocked" : 0,
-						"openinpresentation" : 0,
-						"default_fontsize" : 12.0,
-						"default_fontface" : 0,
-						"default_fontname" : "Lato",
-						"gridonopen" : 1,
 						"gridsize" : [ 15.0, 15.0 ],
-						"gridsnaponopen" : 1,
-						"objectsnaponopen" : 1,
-						"statusbarvisible" : 2,
-						"toolbarvisible" : 1,
-						"lefttoolbarpinned" : 0,
-						"toptoolbarpinned" : 0,
-						"righttoolbarpinned" : 0,
-						"bottomtoolbarpinned" : 0,
-						"toolbars_unpinned_last_save" : 0,
-						"tallnewobj" : 0,
-						"boxanimatetime" : 200,
-						"enablehscroll" : 1,
-						"enablevscroll" : 1,
-						"devicewidth" : 0.0,
-						"description" : "",
-						"digest" : "",
-						"tags" : "",
-						"style" : "",
-						"subpatcher_template" : "",
-						"assistshowspatchername" : 0,
 						"title" : "untitled",
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-8",
+									"maxclass" : "newobj",
+									"numinlets" : 3,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 552.0, 349.935498952865601, 94.0, 23.0 ],
+									"rnbo_classname" : "clip~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "clip~_obj-8",
+									"text" : "clip~ 0. 0.99999"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-25",
 									"maxclass" : "newobj",
@@ -360,9 +323,9 @@
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
 										"channelmode" : "wrap",
-										"channels" : 1.0,
-										"interp" : "linear",
 										"indexmode" : "wave",
+										"interp" : "linear",
+										"channels" : 1.0,
 										"boundmode" : "wrap"
 									}
 ,
@@ -546,7 +509,7 @@
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"enum" : [ "linear", "cubic", "spline", "cosine", "step", "none" ],
+												"enum" : [ "linear", "cubic", "spline", "cosine", "step", "none", "fastcubic", "spline6" ],
 												"type" : "enum",
 												"defaultValue" : "linear"
 											}
@@ -599,7 +562,7 @@
 										"aliasOf" : "wave~",
 										"classname" : "wave~",
 										"operator" : 0,
-										"versionId" : -2119515924,
+										"versionId" : -397654917,
 										"changesPatcherIO" : 0
 									}
 ,
@@ -1236,9 +1199,9 @@
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
 										"channelmode" : "wrap",
-										"channels" : 1.0,
-										"interp" : "linear",
 										"indexmode" : "wave",
+										"interp" : "linear",
+										"channels" : 1.0,
 										"boundmode" : "wrap"
 									}
 ,
@@ -1422,7 +1385,7 @@
 												"attachable" : 0,
 												"isparam" : 0,
 												"deprecated" : 0,
-												"enum" : [ "linear", "cubic", "spline", "cosine", "step", "none" ],
+												"enum" : [ "linear", "cubic", "spline", "cosine", "step", "none", "fastcubic", "spline6" ],
 												"type" : "enum",
 												"defaultValue" : "linear"
 											}
@@ -1475,7 +1438,7 @@
 										"aliasOf" : "wave~",
 										"classname" : "wave~",
 										"operator" : 0,
-										"versionId" : -2119515924,
+										"versionId" : -397654917,
 										"changesPatcherIO" : 0
 									}
 ,
@@ -1493,10 +1456,10 @@
 									"patching_rect" : [ 393.285688102245331, 349.935498952865601, 89.0, 23.0 ],
 									"rnbo_classname" : "buffer~",
 									"rnbo_extra_attributes" : 									{
-										"samplerate" : 0.0,
+										"fill" : "",
 										"file" : "",
-										"type" : "",
-										"fill" : ""
+										"samplerate" : 0.0,
+										"type" : ""
 									}
 ,
 									"rnbo_serial" : 1,
@@ -1939,7 +1902,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -2029,7 +1992,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 552.0, 349.935498952865601, 132.0, 23.0 ],
+									"patching_rect" : [ 552.0, 310.0, 132.0, 23.0 ],
 									"rnbo_classname" : "in~",
 									"rnbo_extra_attributes" : 									{
 										"meta" : ""
@@ -2120,7 +2083,7 @@
  ],
 						"lines" : [ 							{
 								"patchline" : 								{
-									"destination" : [ "obj-15", 0 ],
+									"destination" : [ "obj-8", 0 ],
 									"source" : [ "obj-1", 0 ]
 								}
 
@@ -2262,6 +2225,13 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-15", 0 ],
+									"source" : [ "obj-8", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-3", 0 ],
 									"midpoints" : [ 402.785688102245331, 483.0, 746.5, 483.0 ],
 									"source" : [ "obj-9", 0 ]
@@ -2269,18 +2239,7 @@
 
 							}
  ],
-						"default_bgcolor" : [ 0.031372549019608, 0.125490196078431, 0.211764705882353, 1.0 ],
-						"color" : [ 0.929412, 0.929412, 0.352941, 1.0 ],
-						"elementcolor" : [ 0.357540726661682, 0.515565991401672, 0.861786782741547, 1.0 ],
-						"accentcolor" : [ 0.343034118413925, 0.506230533123016, 0.86220508813858, 1.0 ],
-						"stripecolor" : [ 0.258338063955307, 0.352425158023834, 0.511919498443604, 1.0 ],
-						"bgfillcolor_type" : "color",
-						"bgfillcolor_color" : [ 0.031372549019608, 0.125490196078431, 0.211764705882353, 1.0 ],
-						"bgfillcolor_color1" : [ 0.031372549019608, 0.125490196078431, 0.211764705882353, 1.0 ],
-						"bgfillcolor_color2" : [ 0.263682, 0.004541, 0.038797, 1.0 ],
-						"bgfillcolor_angle" : 270.0,
-						"bgfillcolor_proportion" : 0.39,
-						"bgfillcolor_autogradient" : 0.0,
+						"originid" : "pat-78",
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
@@ -2298,12 +2257,13 @@
 
 					}
 ,
-					"rnboversion" : "1.2.6",
+					"rnboversion" : "1.3.3",
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
 							"parameter_longname" : "rnbo~",
 							"parameter_modmode" : 0,
+							"parameter_osc_name" : "<default>",
 							"parameter_shortname" : "rnbo~",
 							"parameter_type" : 3
 						}
@@ -2365,6 +2325,7 @@
 			}
  ],
 		"lines" : [  ],
+		"originid" : "pat-76",
 		"parameters" : 		{
 			"obj-1" : [ "rnbo~", "rnbo~", 0 ],
 			"parameterbanks" : 			{
