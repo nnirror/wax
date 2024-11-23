@@ -1888,6 +1888,10 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     regenImage.alt = 'Regen';
                     regenImage.className  = 'regenButtonImage';
                     regenButton.appendChild(regenImage);
+                    regenButton.style.display = 'block';
+                    regenButton.style.width = '30px';
+                    regenButton.style.height = '30px'; 
+                    regenButton.style.zIndex = '1000';
                     regenButton.className = 'inport-button';
                     if (deviceType == 'pattern') {
                         regenButton.style.top = '2px';
@@ -1895,6 +1899,13 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     }
                     deviceForm.appendChild(regenButton);
                     regenButton.addEventListener('click', () => {
+                        const inputElements = deviceDiv.querySelectorAll('input, textarea');
+                        inputElements.forEach((inputElement) => {
+                            const event = new Event('change');
+                            inputElement.dispatchEvent(event);
+                        });
+                    });
+                    regenButton.addEventListener('touchstart', () => {
                         const inputElements = deviceDiv.querySelectorAll('input, textarea');
                         inputElements.forEach((inputElement) => {
                             const event = new Event('change');

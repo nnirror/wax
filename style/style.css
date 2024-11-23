@@ -73,7 +73,7 @@
 }
 body .node .inport-button {
     display: block;
-    background: #CBCBCB;
+    background: rgba(0, 0, 0, 0);
     color: rgb(255, 255, 255);
     height: 0px;
     width: 0px;
@@ -254,7 +254,6 @@ body .sliderMin, body .sliderMax {
     }
 }
 @media screen and (max-width: 600px) {
-
     body .waxButton {
         position: fixed;
         top: 3vh;
