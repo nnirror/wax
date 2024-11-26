@@ -74,21 +74,6 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
-									"id" : "obj-8",
-									"maxclass" : "newobj",
-									"numinlets" : 3,
-									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 552.0, 349.935498952865601, 94.0, 23.0 ],
-									"rnbo_classname" : "clip~",
-									"rnbo_serial" : 1,
-									"rnbo_uniqueid" : "clip~_obj-8",
-									"text" : "clip~ 0. 0.99999"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"id" : "obj-25",
 									"maxclass" : "newobj",
 									"numinlets" : 2,
@@ -2083,7 +2068,7 @@
  ],
 						"lines" : [ 							{
 								"patchline" : 								{
-									"destination" : [ "obj-8", 0 ],
+									"destination" : [ "obj-15", 0 ],
 									"source" : [ "obj-1", 0 ]
 								}
 
@@ -2220,13 +2205,6 @@
 									"destination" : [ "obj-9", 0 ],
 									"order" : 0,
 									"source" : [ "obj-6", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-15", 0 ],
-									"source" : [ "obj-8", 0 ]
 								}
 
 							}
