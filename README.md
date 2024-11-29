@@ -240,8 +240,10 @@ Connects the audio stream to the computer's selected audio output device on chan
 
 ## pattern
 Generates a customizable wavetable using [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. 
-- `phase` values between 0 and 1 select a corresponding relative position in the wavetable.
-- Every time the `enter` key is pressed, the pattern will reevaluate. Hold the `command` key while pressing `enter` in order to avoid creating a newline.
+- `phase` values between 0 and 1 select a corresponding relative position in the wavetable. That data is outputted via the `output (phase)` outlet.
+- Every time `trigger` goes above 0.5, the entire wavetable will be outputted at audio-rate via the `output (trigger)` outlet.
+- Every time the `[ctrl] + enter` key combonation is pressed, the pattern will reevaluate.
+- `[ctrl] + f` will reformat the code.
 - The `size` outlet returns a signal corresponding to the number of samples in the pattern.
 - **NOTE:** FacetPatterns must be initialized with `_`. So the all `pattern` devices should have code looking like the following examples, which are all valid:
 	- `_.noise(16)`

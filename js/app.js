@@ -1046,6 +1046,7 @@ async function scheduleDeviceEvent(device, inport, value, deviceId) {
                 }
                 values = event.data;
                 if (Array.isArray(values.data) && values.data.length > 0) {
+                    console.log(values.data)
                     executedTextPatterns[deviceId] = value;
                     const float32Array = new Float32Array(values.data);
                     // create a new AudioBuffer
