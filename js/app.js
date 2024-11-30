@@ -2452,7 +2452,6 @@ async function reconstructWorkspaceState(deviceStates = null) {
         await loadWorkspaceState(deviceStates);
         await startAudio();
     }
-    await resetAudioContext();
 }
 
 async function loadWorkspaceState(deviceStates) {
@@ -2806,21 +2805,6 @@ async function checkForQueryStringParams() {
         await reconstructWorkspaceState(workspaceState);
         await startAudio();
     }
-}
-
-async function resetAudioContext() {
-    if (context) {
-        await context.close();
-    }
-
-    let WAContext = window.AudioContext || window.webkitAudioContext;
-    context = new WAContext();
-    context.destination.channelCount = context.destination.maxChannelCount;
-    context.destination.channelCountMode = "explicit";
-    context.destination.channelInterpretation = "discrete";
-    await context.suspend();
-    let channelMerger = context.createChannelMerger(context.destination.channelCount);
-    channelMerger.connect(context.destination);
 }
 
 function showVisualConfirmationOfConnectionButtonClick(event) {
