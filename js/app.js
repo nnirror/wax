@@ -1045,7 +1045,6 @@ async function scheduleDeviceEvent(device, inport, value, deviceId) {
                 }
                 values = event.data;
                 if (Array.isArray(values.data) && values.data.length > 0) {
-                    console.log(values.data)
                     executedTextPatterns[deviceId] = value;
                     const float32Array = new Float32Array(values.data);
                     // create a new AudioBuffer
@@ -2453,6 +2452,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
         await loadWorkspaceState(deviceStates);
         await startAudio();
     }
+    await resetAudioContext();
 }
 
 async function loadWorkspaceState(deviceStates) {
@@ -2806,6 +2806,21 @@ async function checkForQueryStringParams() {
         await reconstructWorkspaceState(workspaceState);
         await startAudio();
     }
+}
+
+async function resetAudioContext() {
+    if (context) {
+        await context.close();
+    }
+
+    let WAContext = window.AudioContext || window.webkitAudioContext;
+    context = new WAContext();
+    context.destination.channelCount = context.destination.maxChannelCount;
+    context.destination.channelCountMode = "explicit";
+    context.destination.channelInterpretation = "discrete";
+    await context.suspend();
+    let channelMerger = context.createChannelMerger(context.destination.channelCount);
+    channelMerger.connect(context.destination);
 }
 
 function showVisualConfirmationOfConnectionButtonClick(event) {
