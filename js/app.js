@@ -2404,13 +2404,14 @@ async function reconstructWorkspaceState(deviceStates = null) {
     }
 
     if (hasMotionDevice || deviceStates == null) {
-        const permissionGranted = await checkDeviceMotionPermission();
-        if (permissionGranted) {
+        const motionPermissionStatus = localStorage.getItem('motionPermissionStatus');
+        if (motionPermissionStatus === 'granted') {
             // permission granted, proceed with reconstructing the workspace state
             await loadWorkspaceState(deviceStates);
             return;
         }
         if ( hasMotionDevice ) {
+            // when a shared state has a motion device in it, we need to initiate the permission request via user input
             const permissionDiv = document.createElement('div');
             permissionDiv.className = 'permissionDiv';
             permissionDiv.innerHTML = '<b>Before loading this state</b>:';
