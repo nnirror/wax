@@ -2510,10 +2510,6 @@ function showPermissionButton() {
                     showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
                 }
             }
-
-            // request microphone access
-            // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // await resetAudioContext();
             await startAudio();
         } catch (error) {
             showGrowlNotification(`Error requesting permissions: ${error}`);
@@ -2806,21 +2802,6 @@ async function checkForQueryStringParams() {
         await reconstructWorkspaceState(workspaceState);
         await startAudio();
     }
-}
-
-async function resetAudioContext() {
-    if (context) {
-        await context.close();
-    }
-
-    let WAContext = window.AudioContext || window.webkitAudioContext;
-    context = new WAContext();
-    context.destination.channelCount = context.destination.maxChannelCount;
-    context.destination.channelCountMode = "explicit";
-    context.destination.channelInterpretation = "discrete";
-    await context.suspend();
-    let channelMerger = context.createChannelMerger(context.destination.channelCount);
-    channelMerger.connect(context.destination);
 }
 
 function showVisualConfirmationOfConnectionButtonClick(event) {
