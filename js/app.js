@@ -2513,7 +2513,7 @@ function showPermissionButton() {
 
             // request microphone access
             // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            await resetAudioContext();
+            // await resetAudioContext();
             await startAudio();
         } catch (error) {
             showGrowlNotification(`Error requesting permissions: ${error}`);
