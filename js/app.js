@@ -1113,38 +1113,61 @@ function finishConnection(deviceId, inputIndex) {
             const sourceButton = document.getElementById(sourceButtonId);
             const targetButton = document.getElementById(targetButtonId);
             const verticalOffset = 40;
-            const sourcePosition = [
-                1,
-                (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
-            ];
-    
-            const targetPosition = [
-                0,
-                (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
-            ];
+            let sourcePosition, targetPosition;
+            let initialSourceHeight, initialTargetHeight;
+
+            if (sourceDeviceId.split('-')[0] === 'pattern') {
+                initialSourceHeight = sourceButton.parentNode.parentNode.offsetHeight;
+                const relativeSourcePosition = (sourceButton.offsetTop + verticalOffset) / initialSourceHeight;
+
+                sourcePosition = [1, relativeSourcePosition];
+                targetPosition = [
+                    0,
+                    (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
+                ];
+            } else if (deviceId.split('-')[0] === 'pattern') {
+                initialTargetHeight = targetButton.parentNode.parentNode.offsetHeight;
+                const relativeTargetPosition = (targetButton.offsetTop + verticalOffset) / initialTargetHeight;
+
+                sourcePosition = [
+                    1,
+                    (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
+                ];
+                targetPosition = [0, relativeTargetPosition];
+            } else {
+                sourcePosition = [
+                    1,
+                    (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
+                ];
+                targetPosition = [
+                    0,
+                    (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
+                ];
+            }
+
             // create channel splitter
             let splitter = context.createChannelSplitter(sourceDevice.numOutputChannels);
 
             sourceDevice.node.connect(splitter);
 
             if (targetDevice) {
-                // If the target device is a regular device, connect it as usual
+                // if the target device is a regular device, connect it as usual
                 splitter.connect(targetDevice.node, sourceOutputIndex, inputIndex);
             } else {
-                // If the target device is one of the special divs, connect it to the channelMerger
+                // if the target device is one of the special divs, connect it to the channelMerger
                 splitter.connect(channelMerger, sourceOutputIndex, inputIndex);
             }
-    
+
             devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
             devices[sourceDeviceId].splitter = splitter;
-    
+
             let targetDeviceInputName;
             if (deviceId.startsWith('output')) {
                 targetDeviceInputName = `speaker channel`;
-            }
-            else {
+            } else {
                 targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
             }
+
             // visualize the connection
             const jsPlumbConnection = jsPlumb.connect({
                 source: sourceDeviceId,
@@ -1155,17 +1178,41 @@ function finishConnection(deviceId, inputIndex) {
                 endpoint: ["Dot", { radius: 0 }],
                 connector: ["Straight"]
             });
-    
+
             let jsPlumbConnectionId = jsPlumbConnection.getId();
             let connection = { id: jsPlumbConnectionId, splitter, target: deviceId, output: sourceOutputIndex, input: inputIndex };
             devices[sourceDeviceId].connections.push(connection);
-        
+
+            // listen for resizing of the pattern device so that connections can be redrawn
+            if (sourceDeviceId.split('-')[0] === 'pattern') {
+                const patternDeviceDiv = document.getElementById(sourceDeviceId);
+                const resizeObserver = new ResizeObserver(() => {
+                    const newSourceHeight = sourceButton.parentNode.parentNode.offsetHeight;
+                    const newRelativeSourcePosition = (sourceButton.offsetTop + verticalOffset) / newSourceHeight;
+
+                    jsPlumbConnection.endpoints[0].anchor.y = newRelativeSourcePosition;
+                    jsPlumb.repaintEverything();
+                });
+                resizeObserver.observe(patternDeviceDiv);
+            }
+
+            if (deviceId.split('-')[0] === 'pattern') {
+                const patternDeviceDiv = document.getElementById(deviceId);
+                const resizeObserver = new ResizeObserver(() => {
+                    const newTargetHeight = targetButton.parentNode.parentNode.offsetHeight;
+                    const newRelativeTargetPosition = (targetButton.offsetTop + verticalOffset) / newTargetHeight;
+
+                    jsPlumbConnection.endpoints[1].anchor.y = newRelativeTargetPosition;
+                    jsPlumb.repaintEverything();
+                });
+                resizeObserver.observe(patternDeviceDiv);
+            }
+
             sourceDeviceId = null;
             sourceOutputIndex = null;
         }
         jsPlumb.repaintEverything();
-    }
-    catch (error) {
+    } catch (error) {
         console.log('error making connection:' + error);
     }
 }
