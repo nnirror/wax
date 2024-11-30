@@ -787,7 +787,6 @@ async function createMicrophoneDevice() {
             autoGainControl: false,
             noiseSuppression: false,
             echoCancellation: false,
-            sampleRate: 44100,
             deviceId: defaultDevice.deviceId
         }
     };
