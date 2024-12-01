@@ -978,13 +978,19 @@ function addInputsForDevice(device, deviceType, deviceId) {
             inportText.className = 'deviceInport'
             inportText.addEventListener('change', function(event) {
                 if (document.activeElement !== event.target) {
-                    scheduleDeviceEvent(device, inport, this.value, deviceId);
+                    scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+                }
+            });
+
+            inportText.addEventListener('regen', function(event) {
+                if (document.activeElement !== event.target) {
+                    scheduleDeviceEvent(device, inport, this.value, deviceId, true);
                 }
             });
             
             inportText.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
-                    scheduleDeviceEvent(device, inport, this.value, deviceId);
+                    scheduleDeviceEvent(device, inport, this.value, deviceId, false);
                 }
             });
     
@@ -1018,7 +1024,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
     return inportForm;
 }
 
-async function scheduleDeviceEvent(device, inport, value, deviceId) {
+async function scheduleDeviceEvent(device, inport, value, deviceId, fromRegenButton) {
     try {
         let values;
         if (value == undefined) {
@@ -1026,7 +1032,7 @@ async function scheduleDeviceEvent(device, inport, value, deviceId) {
         }
         value = value.replace(/_\./g, '$().');
         if (device.dataBufferIds == 'pattern') {
-            if ( executedTextPatterns[deviceId]) {
+            if ( executedTextPatterns[deviceId] && fromRegenButton === false) {
                 value = executedTextPatterns[deviceId];
             }
             value = value.replace(/_\./g, '$().');
@@ -1947,7 +1953,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     regenButton.addEventListener('click', () => {
                         const inputElements = deviceDiv.querySelectorAll('input, textarea');
                         inputElements.forEach((inputElement) => {
-                            const event = new Event('change');
+                            const event = new Event('regen');
                             inputElement.dispatchEvent(event);
                         });
                     });
