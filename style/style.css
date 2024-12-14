@@ -182,7 +182,7 @@ html, body {
 .mobileMenuToggleButton {
     display: none;
 }
-body .sliderMin, body .sliderMax {
+body .sliderMin, body .sliderMax, body .rootNote {
     width: 3.5em;
     margin-right: 10px;
 }

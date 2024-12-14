@@ -1302,6 +1302,182 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 }
             });
         }
+        else if (filename === "keyboard") {
+            const silenceGenerator = context.createConstantSource();
+            silenceGenerator.offset.value = 0;
+            silenceGenerator.start();
+        
+            // create the device
+            const device = {
+                node: silenceGenerator,
+                source: silenceGenerator,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
+        
+            // create a div to hold the piano keyboard
+            const keyboardDiv = document.createElement('div');
+            keyboardDiv.className = 'pianoKeyboard';
+            keyboardDiv.style.position = 'relative';
+            keyboardDiv.style.width = '392px';
+            keyboardDiv.style.marginBottom = '9px';
+            keyboardDiv.style.height = '100px';
+            keyboardDiv.style.border = '1px solid black';
+        
+            // create keys
+            const keys = [
+                { note: 'C', color: 'white' },
+                { note: 'C#', color: 'black' },
+                { note: 'D', color: 'white' },
+                { note: 'D#', color: 'black' },
+                { note: 'E', color: 'white' },
+                { note: 'F', color: 'white' },
+                { note: 'F#', color: 'black' },
+                { note: 'G', color: 'white' },
+                { note: 'G#', color: 'black' },
+                { note: 'A', color: 'white' },
+                { note: 'A#', color: 'black' },
+                { note: 'B', color: 'white' },
+                { note: 'C', color: 'white' }
+            ];
+        
+            let isMouseDown = false;
+            let rootNote = 60; // default middle C
+            let previousKeyDiv = null;
+        
+            const midiToFrequency = (midiNote) => {
+                return 440 * Math.pow(2, (midiNote - 69) / 12);
+            };
+        
+            const highlightKey = (keyDiv) => {
+                if (previousKeyDiv && previousKeyDiv !== keyDiv) {
+                    resetKey(previousKeyDiv);
+                }
+                keyDiv.style.backgroundColor = 'yellow';
+                const freq = midiToFrequency(parseInt(keyDiv.dataset.value));
+                silenceGenerator.offset.value = freq;
+                previousKeyDiv = keyDiv;
+            };
+        
+            const resetKey = (keyDiv) => {
+                keyDiv.style.backgroundColor = keyDiv.dataset.color === 'white' ? 'white' : 'black';
+            };
+        
+            const handleMouseOver = (keyDiv) => {
+                if (isMouseDown) {
+                    highlightKey(keyDiv);
+                }
+            };
+        
+            const handleTouchMove = (event) => {
+                const touch = event.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                const keyDiv = element && element.classList.contains('pianoKey') ? element : null;
+                if (keyDiv) {
+                    highlightKey(keyDiv);
+                }
+            };
+        
+            document.addEventListener('mouseup', () => {
+                isMouseDown = false;
+                if (previousKeyDiv) {
+                    resetKey(previousKeyDiv);
+                    previousKeyDiv = null;
+                }
+            });
+        
+            document.addEventListener('touchend', () => {
+                if (previousKeyDiv) {
+                    resetKey(previousKeyDiv);
+                    previousKeyDiv = null;
+                }
+            });
+        
+            document.addEventListener('touchcancel', () => {
+                if (previousKeyDiv) {
+                    resetKey(previousKeyDiv);
+                    previousKeyDiv = null;
+                }
+            });
+        
+            keys.forEach((key, index) => {
+                const keyDiv = document.createElement('div');
+                keyDiv.className = `pianoKey ${key.color}`;
+                keyDiv.style.position = 'absolute';
+                keyDiv.style.width = '30px';
+                keyDiv.style.height = '100px';
+                keyDiv.style.left = `${index * 30}px`;
+                keyDiv.style.backgroundColor = key.color === 'white' ? 'white' : 'black';
+                keyDiv.style.border = '1px solid black';
+                keyDiv.dataset.note = key.note;
+                keyDiv.dataset.value = rootNote + index;
+                keyDiv.dataset.color = key.color;
+        
+                keyDiv.addEventListener('mousedown', () => {
+                    isMouseDown = true;
+                    highlightKey(keyDiv);
+                });
+        
+                keyDiv.addEventListener('mouseover', () => handleMouseOver(keyDiv));
+        
+                keyDiv.addEventListener('mouseup', () => isMouseDown = false);
+        
+                keyDiv.addEventListener('touchstart', (event) => {
+                    event.preventDefault();
+                    highlightKey(keyDiv);
+                }, { passive: false });
+        
+                keyDiv.addEventListener('touchmove', (event) => {
+                    event.preventDefault();
+                    handleTouchMove(event);
+                }, { passive: false });
+        
+                keyboardDiv.appendChild(keyDiv);
+            });
+        
+            // append the keyboard to the device div
+            deviceDiv.appendChild(keyboardDiv);
+        
+            // create label for the root note input
+            const rootNoteLabel = document.createElement('label');
+            rootNoteLabel.for = 'rootNote';
+            rootNoteLabel.textContent = 'Root Note';
+            rootNoteLabel.className = 'deviceInportLabel';
+            rootNoteLabel.style.display = 'inline-block';
+            rootNoteLabel.style.width = '70px';
+            
+            // create input for the root note
+            const rootNoteInput = document.createElement('input');
+            rootNoteInput.type = 'text';
+            rootNoteInput.value = rootNote;
+            rootNoteInput.id = 'rootNote';
+            rootNoteInput.className = 'rootNote';
+            rootNoteInput.addEventListener('input', (event) => {
+                rootNote = parseInt(event.target.value, 10);
+                keys.forEach((key, index) => {
+                    const keyDiv = keyboardDiv.children[index];
+                    keyDiv.dataset.value = rootNote + index;
+                });
+            });
+
+            rootNoteInput.addEventListener('change', (event) => {
+                rootNote = parseInt(event.target.value, 10);
+                keys.forEach((key, index) => {
+                    const keyDiv = keyboardDiv.children[index];
+                    keyDiv.dataset.value = rootNote + index;
+                });
+            });
+        
+            // append the root note label and input to the device div
+            deviceDiv.appendChild(rootNoteLabel);
+            deviceDiv.appendChild(rootNoteInput);
+        }
         else if (filename === "slider") {
             const silenceGenerator = context.createConstantSource();
             silenceGenerator.offset.value = 0;
@@ -1744,6 +1920,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         if (filename == 'downsamp') {
             deviceDiv.style.width = '10em';
+        }
+        if (filename == 'keyboard') {
+            deviceDiv.style.width = '450px';
+            deviceDiv.style.height = '170px';
         }
         return deviceDiv;
     }
@@ -2667,6 +2847,11 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         // because the min and max need to be set before the correct range is recalled
         if (deviceName === 'slider') {
             inputs[0].value = deviceState.inputs['slider'];
+            inputs[0].dispatchEvent(new Event('change'));
+        }
+
+        if (deviceName === 'keyboard') {
+            console.log(`dispatching second keyboard event for ${inputs[0].value}`);
             inputs[0].dispatchEvent(new Event('change'));
         }
 

@@ -112,6 +112,10 @@ var wasmDeviceURLs = [
         "displayName": "hztosamps"
     },
     {
+        "fileName": "keyboard",
+        "displayName": "keyboard"
+    },
+    {
         "fileName": "less",
         "displayName": "< (less)"
     },

@@ -184,6 +184,9 @@ This feature is experimental because each browser's implementation of the web au
 
 **NOTE:** if audio is muted when a microphone is added, audio will resume so that the microphone is created correctly.
 
+## keyboard
+Outputs a MIDI note between the selected root note and one octave above the root. Click-drag or touch a key to select a new note.
+
 ## less
 Computes the boolean representation of whether `input 1` is greater than `input 2`.
 
