@@ -1307,13 +1307,23 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             silenceGenerator.offset.value = 0;
             silenceGenerator.start();
         
+            const triggerSource = context.createConstantSource();
+            triggerSource.offset.value = 0;
+            triggerSource.start();
+        
+            const merger = context.createChannelMerger(2);
+        
+            // connect the generators to the merger
+            silenceGenerator.connect(merger, 0, 0);
+            triggerSource.connect(merger, 0, 1);
+        
             // create the device
             const device = {
-                node: silenceGenerator,
-                source: silenceGenerator,
+                node: merger,
+                source: merger,
                 it: {
                     T: {
-                        outlets: [{ comment: 'output' }],
+                        outlets: [{ comment: 'frequency' }, { comment: 'trigger' }],
                         inlets: []
                     }
                 }
@@ -1362,6 +1372,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 keyDiv.style.backgroundColor = 'yellow';
                 const freq = midiToFrequency(parseInt(keyDiv.dataset.value));
                 silenceGenerator.offset.value = freq;
+                triggerSource.offset.setValueAtTime(1, context.currentTime);
+                triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // Briefly output 1
                 previousKeyDiv = keyDiv;
             };
         
@@ -1465,7 +1477,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     keyDiv.dataset.value = rootNote + index;
                 });
             });
-
+        
             rootNoteInput.addEventListener('change', (event) => {
                 rootNote = parseInt(event.target.value, 10);
                 keys.forEach((key, index) => {

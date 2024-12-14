@@ -5,7 +5,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "add",
-        "displayName": "+ (add)"
+        "displayName": "add (+)"
     },
     {
         "fileName": "adr",
@@ -17,7 +17,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "and",
-        "displayName": "&& (and)"
+        "displayName": "and (&&)"
     },
     {
         "fileName": "bpf",
@@ -65,7 +65,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "divide",
-        "displayName": "/ (divide)"
+        "displayName": "divide (/)"
     },
     {
         "fileName": "downsamp",
@@ -77,7 +77,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "equals",
-        "displayName": "== (equals)"
+        "displayName": "equals (==)"
     },
     {
         "fileName": "fgate",
@@ -97,7 +97,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "greater",
-        "displayName": "> (greater)"
+        "displayName": "greater (>)"
     },
     {
         "fileName": "hpf",
@@ -117,7 +117,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "less",
-        "displayName": "< (less)"
+        "displayName": "less (<)"
     },
     {
         "fileName": "limi",
@@ -145,7 +145,11 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "modulo",
-        "displayName": "% (modulo)"
+        "displayName": "modulo (%)"
+    },
+    {
+        "fileName": "times",
+        "displayName": "multiply (*)"
     },
     {
         "fileName": "noise",
@@ -153,7 +157,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "not",
-        "displayName": "! (not)"
+        "displayName": "not (!)"
     },
     {
         "fileName": "number",
@@ -161,7 +165,7 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "or",
-        "displayName": "|| (or)"
+        "displayName": "or (||)"
     },
     {
         "fileName": "overdrive",
@@ -265,15 +269,11 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "subtract",
-        "displayName": "- (subtract)"
+        "displayName": "subtract (-)"
     },
     {
         "fileName": "swanramp",
         "displayName": "declick"
-    },
-    {
-        "fileName": "times",
-        "displayName": "* (multiply)"
     },
     {
         "fileName": "toggle",
