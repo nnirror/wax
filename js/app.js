@@ -92,7 +92,7 @@ async function handleExamplesButtonClick(event) {
 
     exampleFilesDiv.appendChild(header);
 
-    ['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip', 'microphone.zip'].forEach(function(file) {
+    ['amplitude_modulation.zip', 'audio_file_playback.zip', 'frequency_modulation.zip', 'hello_world.zip', 'microphone.zip', 'mono_synth.zip', 'patterns_with_facet.zip', 'regenerating_parameters.zip'].forEach(function(file) {
         var link = document.createElement('a');
         link.href = '#';
         link.textContent = file.replace(/_/g, ' ').replace('.zip', '');
