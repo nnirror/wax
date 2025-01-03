@@ -7,6 +7,8 @@ All devices communicate to each other with audio signals, similar to a modular s
 
 As a supplement to the README document, this [walkthrough video](https://youtu.be/1iOWyA3fWJg) demonstrates how Wax works.
 
+If you have any questions, please feel free to reach out to Michael Cella `mjcella@umich.edu` or Anıl Çamcı `acamci@umich.edu`.
+
 # Getting started
 
 Wax runs entirely in the browser. When you load the web page, the virtual workspace is empty except for two `speaker` devices at the bottom.
