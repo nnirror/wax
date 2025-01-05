@@ -77,9 +77,6 @@ Press the `load` button to load a previously saved .zip file, including all audi
 # Locking the workspace
 Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices.
 
-## Recording a session
-With devices connected to an `output` objet, press the `start recording` button. When you want to stop, press the `stop recording button`, and enter the name for your wav file. It will then initiate an automatic download to your computer. **NOTE:** on mobile devices, recordings that include microphone input might sound garbled.
-
 # Device reference
 
 ## absolute
