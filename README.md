@@ -50,7 +50,7 @@ Some devices have a `regen` button which causes all device parameters to regener
 
 For example, if you have a `number` device, and you enter `ri(10,1000)` for its `value`, then each time the `regen` signal goes above 0.5, the output from `number` will be a new, random integer between 10 and 1000. If you entered `choose([2,3,4,6,8])` as its `value`, then the output from `number` would be either 2, 3, 4, 6, or 8.
 
-**IMPORTANT:** inputs will not regenerate while the cursor is inside of it. After modifying an input, click outside of it to begin regenerating.
+**IMPORTANT:** inputs will not regenerate while the cursor is inside of it (unless you press `[enter]`). After modifying an input, click outside of it to begin regenerating.
 
 ## Key combinations
 - create new device: `n`
