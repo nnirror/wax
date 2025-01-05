@@ -2692,6 +2692,11 @@ async function reconstructWorkspaceState(deviceStates = null) {
             // attach the div to the body
             document.body.appendChild(permissionDiv);
         }
+        else {
+            // proceed with reconstructing the workspace state directly
+            await loadWorkspaceState(deviceStates);
+            await startAudio();
+        }
     } else {
         // proceed with reconstructing the workspace state directly
         await loadWorkspaceState(deviceStates);
