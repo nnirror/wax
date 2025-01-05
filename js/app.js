@@ -1933,6 +1933,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'downsamp') {
             deviceDiv.style.width = '10em';
         }
+        if (filename == 'motion') {
+            deviceDiv.style.width = '7em';
+        }
         if (filename == 'keyboard') {
             deviceDiv.style.width = '450px';
             deviceDiv.style.height = '170px';
@@ -3143,6 +3146,9 @@ async function pasteNodesFromClipboard() {
 
 function getFileNameByDisplayName(displayName) {
     const device = wasmDeviceURLs.find(device => device.displayName === displayName);
+    if ( displayName == 'motion' ) {
+        return displayName;
+    }
     if (device) {
         return device.fileName;
     } else {
@@ -3152,6 +3158,9 @@ function getFileNameByDisplayName(displayName) {
 }
 
 function getDisplayNameByFileName(fileName) {
+    if ( fileName == 'motion' ) {
+        return fileName;
+    }
     const device = wasmDeviceURLs.find(device => device.fileName === fileName);
     if (device) {
         return device.displayName;
