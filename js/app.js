@@ -168,6 +168,7 @@ window.onbeforeunload = function() {
 
 // add the initial speaker objects and getting started text
 window.onload = async function() {
+    await loadAllJsonFiles();
     setTimeout(function() {
         window.scrollTo(0, 0);
     }, 10);
@@ -354,6 +355,7 @@ let devices = {};
 let isDraggingDevice = false;
 let isLocked = false;
 let audioBuffers = {};
+let jsonFiles = {};
 let mousePosition = { x: 0, y: 0 };
 let sourceDeviceId = null;
 let sourceButtonId = null;
@@ -1850,8 +1852,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             else if (filename == "!" ) {
                 filename = "not";
             }
-            const response = await fetch(`wasm/${filename}.json`);
-            const patcher = await response.json();
+            const patcher = jsonFiles[`${filename}`];
             const device = await RNBO.createDevice({ context, patcher });
             deviceDiv = addDeviceToWorkspace(device, filename, false);
             if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' ) {
@@ -2660,7 +2661,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
             // when a shared state has a motion device in it, we need to initiate the permission request via user input
             const permissionDiv = document.createElement('div');
             permissionDiv.className = 'permissionDiv';
-            permissionDiv.innerHTML = '<b>Before loading this state</b>:';
+            permissionDiv.innerHTML = '<b>Have fun!</b> One last thing:';
 
             const permissionButton = document.createElement('button');
             permissionButton.className = 'permissionButton';
@@ -3200,5 +3201,19 @@ function handleInfoButtonClick(deviceType) {
 function toggleDragging() {
     isLocked = !isLocked;
     const status = isLocked ? 'frozen' : 'unfrozen';
+}
+
+async function loadAllJsonFiles() {
+    const response = await fetch('wasm/wax_devices.zip');
+    const arrayBuffer = await response.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    for (const fileName of Object.keys(zip.files)) {
+        if (fileName.endsWith('.json')) {
+            const fileData = await zip.file(fileName).async('string');
+            const key = fileName.replace('.json', '');
+            jsonFiles[key] = JSON.parse(fileData);
+        }
+    }
 }
 /* END functions */
