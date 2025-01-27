@@ -203,9 +203,9 @@ Applies a low-pass filter to `input`.
 Mixes `input 1` and `input 2` together using a `crossfade` parameter between 0 and 1. A `crossfade` value of 0.5 will mix the signals together equally, and a `crossfade` value of 0 or 1 will return only the signal at that input.
 
 ## motion
-Outputs two floats between -1 and 1 corresponding to the device's orientation in space.
-- The `pitch` outlet returns the device's tilt upwards or downwards: pointing straight up is 1; pointing straight down is -1; and resting flat is 0.
-- The `roll` outlet returns the device's rotational position around its front-to-back axis.
+Outputs two floats between 0 and 1 corresponding to the orientation in space of the computer on which Wax is running.
+- The `pitch` outlet returns the computer's tilt upwards or downwards. Resting flat with the screen facing up produces a 0. A vertical position either in either direction produces a 0.5. Resting flat with the screen facing down produces a 1.
+- The `roll` outlet returns the computer's rotational position around its front-to-back axis and works similarly to pitch.
 - **NOTE:** this device is only available on mobile devices which report device motion data via [DeviceMotionEvents](https://developer.mozilla.org/en-US/docs/Web/API/Device_orientation_events).
 
 ## mstohz

@@ -830,8 +830,8 @@ async function createMotionDevice(context) {
             // add event listener for deviceorientation
             window.addEventListener('deviceorientation', function(event) {
                 // normalize each axis to the range of -1 to 1
-                betaNode.offset.value = event.beta / 90; // pitch
-                gammaNode.offset.value = event.gamma / 90; // roll
+                betaNode.offset.value = Math.sin(event.beta * (Math.PI / 180)); // pitch
+                gammaNode.offset.value = Math.sin(event.gamma * (Math.PI / 90)); // roll
             });
 
             // create a ChannelMergerNode to combine the outputs of the two nodes
