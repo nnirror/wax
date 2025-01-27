@@ -609,14 +609,18 @@ document.addEventListener('keydown', async function(event) {
     }
 });
 
-
-
 initializeAwesomplete();
 /* END event handlers */
 
 /* BEGIN functions */
 
-function addMotionDeviceToDropdown (deviceDropdown) {
+function addMotionDeviceToDropdown(deviceDropdown) {
+    // check if the motion option already exists
+    const existingMotionOption = Array.from(deviceDropdown.options).find(option => option.value === "motion");
+    if (existingMotionOption) {
+        return;
+    }
+
     const motionInputOption = document.createElement('option');
     motionInputOption.value = "motion";
     motionInputOption.innerText = "motion";
@@ -2370,9 +2374,16 @@ function getFirstLineOfBlock(initial_line,cm) {
     return last_line;
   }
 
-function createDropdownofAllDevices () {
+  function createDropdownofAllDevices() {
+    // check if the dropdown already exists and remove it
+    const existingDropdown = document.querySelector('.deviceDropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+    }
+
     const deviceDropdown = document.createElement('select');
     deviceDropdown.className = 'deviceDropdown';
+    
     // load each WASM device into dropdown
     wasmDeviceURLs.sort().forEach((wasmDevice) => {
         const displayName = wasmDevice.displayName;
@@ -2382,10 +2393,11 @@ function createDropdownofAllDevices () {
         deviceDropdown.appendChild(option);
     });
 
-    // add dropdown to navBar
+    // add dropdown to nav
     navBar.appendChild(deviceDropdown);
-     // create motion input device, if available and working
-     if (window.DeviceOrientationEvent) {
+    
+    // create motion input device, if available and working
+    if (window.DeviceOrientationEvent) {
         let deviceOrientationWorks = false;
         const testDeviceOrientation = function(event) {
             if (event.alpha !== null || event.beta !== null || event.gamma !== null) {
@@ -2671,8 +2683,10 @@ async function reconstructWorkspaceState(deviceStates = null) {
                     if (typeof DeviceMotionEvent.requestPermission === 'function') {
                         const response = await DeviceMotionEvent.requestPermission();
                         if (response === 'granted') {
-                            localStorage.setItem('motionPermissionStatus', 'granted');
                             // device motion event permission granted
+                            localStorage.setItem('motionPermissionStatus', 'granted');
+                            let deviceDropdown = createDropdownofAllDevices();
+                            addMotionDeviceToDropdown(deviceDropdown);
                         } else {
                             showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
                         }
@@ -2758,8 +2772,10 @@ function showPermissionButton() {
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
                 const motionResponse = await DeviceMotionEvent.requestPermission();
                 if (motionResponse === 'granted') {
-                    localStorage.setItem('motionPermissionStatus', 'granted');
                     // device motion event permission granted
+                    localStorage.setItem('motionPermissionStatus', 'granted');
+                    let deviceDropdown = createDropdownofAllDevices();
+                    addMotionDeviceToDropdown(deviceDropdown);
                 } else {
                     showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
                 }
@@ -2940,7 +2956,10 @@ function displayAllDevices() {
     var dropdown = document.querySelector('.deviceDropdown');
 
     // get the options from the dropdown
-    var options = dropdown.options;
+    var options = Array.from(dropdown.options);
+
+    // sort the options alphabetically
+    options = options.sort((a, b) => a.text.localeCompare(b.text));
 
     // create a div for the modal
     var modal = document.createElement('div');
