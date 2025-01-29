@@ -2663,45 +2663,37 @@ async function reconstructWorkspaceState(deviceStates = null) {
     }
 
     if (hasMotionDevice || deviceStates == null) {
-        const motionPermissionStatus = localStorage.getItem('motionPermissionStatus');
-        if (motionPermissionStatus === 'granted') {
-            // permission granted, proceed with reconstructing the workspace state
-            await loadWorkspaceState(deviceStates);
-            return;
-        }
         if ( hasMotionDevice ) {
+            // first, hide the "main" permission button
+            hidePermissionButton();
             // when a shared state has a motion device in it, we need to initiate the permission request via user input
             const permissionDiv = document.createElement('div');
             permissionDiv.className = 'permissionDiv';
             permissionDiv.innerHTML = '<b>Have fun!</b> One last thing:';
-
             const permissionButton = document.createElement('button');
             permissionButton.className = 'permissionButton';
-            permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
+            permissionButton.innerText = 'Please tap this button to enable motion sensing.';
             permissionButton.addEventListener('click', async () => {
                 try {
                     if (typeof DeviceMotionEvent.requestPermission === 'function') {
                         const response = await DeviceMotionEvent.requestPermission();
                         if (response === 'granted') {
                             // device motion event permission granted
-                            localStorage.setItem('motionPermissionStatus', 'granted');
                             let deviceDropdown = createDropdownofAllDevices();
                             addMotionDeviceToDropdown(deviceDropdown);
                         } else {
                             showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
                         }
+                        // remove the div after handling interaction
+                        document.body.removeChild(permissionDiv);
+
+                        // proceed with reconstructing the workspace state
+                        await loadWorkspaceState(deviceStates);
+                        await startAudio();
                     }
                 } catch (error) {
                     showGrowlNotification(`Error requesting DeviceMotionEvent permission: ${error}`);
                 }
-
-                // remove the div after handling interaction
-                document.body.removeChild(permissionDiv);
-                document.getElementsByClassName('permissionDiv')[0].remove();
-
-                // proceed with reconstructing the workspace state
-                await loadWorkspaceState(deviceStates);
-                await startAudio();
             });
 
             // attach the permission request button to the div
@@ -2750,10 +2742,7 @@ async function loadWorkspaceState(deviceStates) {
 document.addEventListener('DOMContentLoaded', async () => {
     const isMobileOrTablet = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
     if (window.DeviceOrientationEvent && isMobileOrTablet) {
-        const motionPermissionStatus = localStorage.getItem('motionPermissionStatus');
-        if (motionPermissionStatus !== 'granted') {
-            showPermissionButton();
-        }
+        showPermissionButton();
     }
 });
 
@@ -2764,7 +2753,7 @@ function showPermissionButton() {
 
     const permissionButton = document.createElement('button');
     permissionButton.className = 'permissionButton';
-    permissionButton.innerText = 'Please tap this button to enable motion sensing. You will only have to do this once.';
+    permissionButton.innerText = 'Please tap this button to enable motion sensing.';
     permissionButton.addEventListener('click', async () => {
         document.body.removeChild(permissionDiv);
         try {
@@ -2772,8 +2761,6 @@ function showPermissionButton() {
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
                 const motionResponse = await DeviceMotionEvent.requestPermission();
                 if (motionResponse === 'granted') {
-                    // device motion event permission granted
-                    localStorage.setItem('motionPermissionStatus', 'granted');
                     let deviceDropdown = createDropdownofAllDevices();
                     addMotionDeviceToDropdown(deviceDropdown);
                 } else {
@@ -2791,6 +2778,13 @@ function showPermissionButton() {
 
     // attach the div to the body
     document.body.appendChild(permissionDiv);
+}
+
+function hidePermissionButton() {
+    const permissionDiv = document.querySelector('.permissionDiv');
+    if (permissionDiv) {
+        document.body.removeChild(permissionDiv);
+    }
 }
 
 async function loadExampleFile(filePath) {
