@@ -2160,7 +2160,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     regenButton.addEventListener('touchstart', () => {
                         const inputElements = deviceDiv.querySelectorAll('input, textarea');
                         inputElements.forEach((inputElement) => {
-                            const event = new Event('change');
+                            const event = new Event('regen');
                             inputElement.dispatchEvent(event);
                         });
                     });
@@ -2882,7 +2882,6 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         }
 
         if (deviceName === 'keyboard') {
-            console.log(`dispatching second keyboard event for ${inputs[0].value}`);
             inputs[0].dispatchEvent(new Event('change'));
         }
 
