@@ -3426,9 +3426,25 @@ function toggleDragging() {
 }
 
 async function loadAllJsonFiles() {
+    const cacheName = 'json-files-cache';
+    const fileUrl = 'wasm/wax_devices.zip';
     const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
-    const response = await fetch('wasm/wax_devices.zip');
+    let response;
+
+    // open the cache
+    const cache = await caches.open(cacheName);
+
+    // check if the file is already in the cache
+    const cachedResponse = await cache.match(fileUrl);
+    if (cachedResponse) {
+        response = cachedResponse;
+    } else {
+        // fetch the file and store it in the cache
+        response = await fetch(fileUrl);
+        cache.put(fileUrl, response.clone());
+    }
+
     const contentLength = response.headers.get('content-length');
     const total = parseInt(contentLength, 10);
     let loaded = 0;
@@ -3440,7 +3456,7 @@ async function loadAllJsonFiles() {
                 reader.read().then(({ done, value }) => {
                     if (done) {
                         controller.close();
-                        progressContainer.style.display = 'none'; // Hide the progress container
+                        progressContainer.style.display = 'none'; // hide the progress container
                         return;
                     }
                     loaded += value.byteLength;
