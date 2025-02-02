@@ -123,7 +123,11 @@ function handleAboutButtonClick(event) {
 }
 
 function handleMenuButtonClick(event) {
-    document.getElementById('infoDiv').style.display = 'none';
+    try {
+        document.getElementById('infoDiv').style.display = 'none';
+    } catch (error) {
+        console.error('An error occurred while hiding the infoDiv:', error);
+    }
     var mobileMenu = document.getElementById('mobileMenu');
     var deviceListModal = document.getElementById('deviceListModal');
     var exampleFiles = document.getElementById('exampleFiles');

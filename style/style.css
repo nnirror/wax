@@ -189,7 +189,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
 #mobileMenu {
     color: rgb(8,56,78);
     position: fixed;
-    top: calc(14px + 80px);
+    top: 12vh;
     left: 10%;
     width: 80%;
     height: auto;
