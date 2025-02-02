@@ -2879,7 +2879,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
             // when a shared state has a motion device in it, we need to initiate the permission request via user input
             const permissionDiv = document.createElement('div');
             permissionDiv.className = 'permissionDiv';
-            permissionDiv.innerHTML = '<b>Welcome to Wax!</b> Before starting:';
+            permissionDiv.innerHTML = '<b>Welcome to Wax!</b>';
             const permissionButton = document.createElement('button');
             permissionButton.className = 'permissionButton';
             permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
@@ -2959,7 +2959,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function showPermissionButton() {
     const permissionDiv = document.createElement('div');
     permissionDiv.className = 'permissionDiv';
-    permissionDiv.innerHTML = '<b>Welcome to Wax!</b> Before starting:';
+    permissionDiv.innerHTML = '<b>Welcome to Wax!</b>';
 
     const permissionButton = document.createElement('button');
     permissionButton.className = 'permissionButton';
