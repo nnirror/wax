@@ -238,6 +238,36 @@ body .sliderMin, body .sliderMax, body .rootNote {
     z-index: 1010;
 }
 
+.endpointCircle {
+    z-index: 1000;
+}
+
+#progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: lightgray;
+}
+
+#progress-bar::-webkit-progress-value {
+    background-color: rgb(8, 56, 78);
+}
+
+#progress-bar::-moz-progress-bar {
+    background-color: rgb(8, 56, 78);
+}
+
+#progress-container span {
+    position: fixed;
+    bottom: 2vh;
+    width: 80%;
+    text-align: center;
+    left: 10%;
+    color: white;
+}
+
 @media screen and (min-width: 600px) and (max-width: 1120px) {
     body .shareStateButton {
         top: calc(14px + 40px);

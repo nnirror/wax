@@ -118,16 +118,18 @@ async function handleExamplesButtonClick(event) {
 }
 
 function handleAboutButtonClick(event) {
-    document.getElementById('infoDiv').style.display = 'block';
+    try {
+        document.getElementById('infoDiv').style.display = 'block';
+    } catch (error) {
+        console.error('Failed to display info div:', error);
+    }
     event.stopPropagation();
 }
 
 function handleMenuButtonClick(event) {
     try {
         document.getElementById('infoDiv').style.display = 'none';
-    } catch (error) {
-        console.error('An error occurred while hiding the infoDiv:', error);
-    }
+    } catch (error) {}
     var mobileMenu = document.getElementById('mobileMenu');
     var deviceListModal = document.getElementById('deviceListModal');
     var exampleFiles = document.getElementById('exampleFiles');
@@ -201,57 +203,59 @@ window.onload = async function() {
         mousePosition.y = event.pageY;
     });
     
+    // create the info div element
+    let infoDiv = document.createElement('div');
+    infoDiv.id = 'infoDiv';
+    var link = document.createElement('a');
+    link.href = "https://github.com/nnirror/wax/blob/main/README.md";
+    link.textContent = "documentation";
+    link.target = "_blank"; // to open the link in a new tab
+
+    infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the full ";
+    infoDiv.appendChild(link);
+
+    var period = document.createTextNode(".");
+    infoDiv.appendChild(period);
+    infoDiv.style.display = 'block';
+
+    // stop propagation of click event in infoDiv
+    infoDiv.onclick = function(event) {
+        event.stopPropagation();
+    };
+
+    // create the button to close the info div
+    let closeButton = document.createElement('button');
+    closeButton.id = 'closeInfoButton';
+    closeButton.className = 'delete-button';
+
+    // create the image element for the close icon
+    const closeIcon = document.createElement('img');
+    closeIcon.src = 'img/delete.png';
+    closeIcon.alt = 'Delete';
+
+    // append the image to the button
+    closeButton.appendChild(closeIcon);
+
+    closeButton.onclick = function(event) {
+        infoDiv.style.display = 'none';
+        event.stopPropagation();
+    };
+
+    // set the value in localStorage to indicate that the user has seen the info div
+    localStorage.setItem('infoDivSeen', 'true');
+
+    // add event listener to document to hide infoDiv when clicked
+    document.onclick = function() {
+        infoDiv.style.display = 'none';
+    };
+
+    // add the close button to the info div and the info div to body
+    infoDiv.appendChild(closeButton);
+    document.body.appendChild(infoDiv);
+
     // check if the user has already seen the info div
-    if (!localStorage.getItem('infoDivSeen')) {
-        // create the info div element
-        let infoDiv = document.createElement('div');
-        infoDiv.id = 'infoDiv';
-        var link = document.createElement('a');
-        link.href = "https://github.com/nnirror/wax/blob/main/README.md";
-        link.textContent = "documentation";
-        link.target = "_blank"; // to open the link in a new tab
-
-        infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the full ";
-        infoDiv.appendChild(link);
-
-        var period = document.createTextNode(".");
-        infoDiv.appendChild(period);
-        infoDiv.style.display = 'block';
-
-        // stop propagation of click event in infoDiv
-        infoDiv.onclick = function(event) {
-            event.stopPropagation();
-        };
-
-        // create the button to close the info div
-        let closeButton = document.createElement('button');
-        closeButton.id = 'closeInfoButton';
-        closeButton.className = 'delete-button';
-
-        // create the image element for the close icon
-        const closeIcon = document.createElement('img');
-        closeIcon.src = 'img/delete.png';
-        closeIcon.alt = 'Delete';
-
-        // append the image to the button
-        closeButton.appendChild(closeIcon);
-
-        closeButton.onclick = function(event) {
-            infoDiv.style.display = 'none';
-            event.stopPropagation();
-        };
-
-        // set the value in localStorage to indicate that the user has seen the info div
-        localStorage.setItem('infoDivSeen', 'true');
-
-        // add event listener to document to hide infoDiv when clicked
-        document.onclick = function() {
-            infoDiv.style.display = 'none';
-        };
-
-        // add the close button to the info div and the info div to body
-        infoDiv.appendChild(closeButton);
-        document.body.appendChild(infoDiv);
+    if (localStorage.getItem('infoDivSeen')) {
+        infoDiv.style.display = 'none';
     }
 
     await checkForQueryStringParams();
@@ -474,7 +478,7 @@ jsPlumb.bind("click", function(connection, originalEvent) {
     // update the style for the clicked connection
     connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
     connection.endpoints.forEach(endpoint => {
-        endpoint.setPaintStyle({ fill: "grey", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
+        endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
     });
 });
 
@@ -1325,34 +1329,35 @@ function finishConnection(deviceId, inputIndex) {
             const sourceButton = document.getElementById(sourceButtonId);
             const targetButton = document.getElementById(targetButtonId);
             const verticalOffset = 40;
+            const horizontalOffset = 12;
             let sourcePosition, targetPosition;
             let initialSourceHeight, initialTargetHeight;
-
+            
             if (sourceDeviceId.split('-')[0] === 'pattern') {
                 initialSourceHeight = sourceButton.parentNode.parentNode.offsetHeight;
                 const relativeSourcePosition = (sourceButton.offsetTop + verticalOffset) / initialSourceHeight;
-
-                sourcePosition = [1, relativeSourcePosition];
+            
+                sourcePosition = [(1 + horizontalOffset / sourceButton.parentNode.parentNode.offsetWidth), relativeSourcePosition];
                 targetPosition = [
-                    0,
+                    (0 - horizontalOffset / targetButton.parentNode.parentNode.offsetWidth),
                     (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
                 ];
             } else if (deviceId.split('-')[0] === 'pattern') {
                 initialTargetHeight = targetButton.parentNode.parentNode.offsetHeight;
                 const relativeTargetPosition = (targetButton.offsetTop + verticalOffset) / initialTargetHeight;
-
+            
                 sourcePosition = [
-                    1,
+                    (1 + horizontalOffset / sourceButton.parentNode.parentNode.offsetWidth),
                     (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
                 ];
-                targetPosition = [0, relativeTargetPosition];
+                targetPosition = [(0 - horizontalOffset / targetButton.parentNode.parentNode.offsetWidth), relativeTargetPosition];
             } else {
                 sourcePosition = [
-                    1,
+                    (1 + horizontalOffset / sourceButton.parentNode.parentNode.offsetWidth),
                     (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
                 ];
                 targetPosition = [
-                    0,
+                    (0 - horizontalOffset / targetButton.parentNode.parentNode.offsetWidth),
                     (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
                 ];
             }
@@ -1386,8 +1391,11 @@ function finishConnection(deviceId, inputIndex) {
                 target: deviceId,
                 anchors: [sourcePosition, targetPosition],
                 paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
-                endpointStyle: { fill: "grey", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" },
-                endpoint: ["Dot", { radius: 14 }],
+                endpointStyle: { fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2 },
+                endpoints: [
+                    ["Dot", { radius: 12, cssClass: "endpointCircle sourceEndpoint" }],
+                    ["Dot", { radius: 12, cssClass: "endpointCircle targetEndpoint" }]
+                ],
                 connector: ["Straight"]
             });
 
@@ -2851,9 +2859,7 @@ async function checkDeviceMotionPermission() {
 async function reconstructWorkspaceState(deviceStates = null) {
     try {
         document.getElementById('infoDiv').style.display = 'none';
-    } catch (error) {
-        console.error('An error occurred while hiding the infoDiv:', error);
-    }
+    } catch (error) {}
     // check if any device has a deviceName of 'motion'
     let hasMotionDevice = false;
     if (deviceStates) {
@@ -3313,7 +3319,7 @@ function resetConnectionStyle(connection) {
     try {
         connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
         connection.endpoints.forEach(endpoint => {
-            endpoint.setPaintStyle({ fill: "grey", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
+            endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
         });
     }
     catch (error) {}
@@ -3420,8 +3426,35 @@ function toggleDragging() {
 }
 
 async function loadAllJsonFiles() {
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
     const response = await fetch('wasm/wax_devices.zip');
-    const arrayBuffer = await response.arrayBuffer();
+    const contentLength = response.headers.get('content-length');
+    const total = parseInt(contentLength, 10);
+    let loaded = 0;
+
+    const reader = response.body.getReader();
+    const stream = new ReadableStream({
+        start(controller) {
+            function push() {
+                reader.read().then(({ done, value }) => {
+                    if (done) {
+                        controller.close();
+                        progressContainer.style.display = 'none'; // Hide the progress container
+                        return;
+                    }
+                    loaded += value.byteLength;
+                    progressBar.value = (loaded / total) * 100;
+                    controller.enqueue(value);
+                    push();
+                });
+            }
+            push();
+        }
+    });
+
+    const newResponse = new Response(stream);
+    const arrayBuffer = await newResponse.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
 
     for (const fileName of Object.keys(zip.files)) {
