@@ -2882,7 +2882,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
             permissionDiv.innerHTML = '<b>Have fun!</b> One last thing:';
             const permissionButton = document.createElement('button');
             permissionButton.className = 'permissionButton';
-            permissionButton.innerText = 'Please tap this button to enable motion sensing';
+            permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
             permissionButton.addEventListener('click', async () => {
                 try {
                     if (typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -2963,7 +2963,7 @@ function showPermissionButton() {
 
     const permissionButton = document.createElement('button');
     permissionButton.className = 'permissionButton';
-    permissionButton.innerText = 'Please tap this button to enable motion sensing.';
+    permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
     permissionButton.addEventListener('click', async () => {
         document.body.removeChild(permissionDiv);
         try {
