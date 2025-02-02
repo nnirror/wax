@@ -20,6 +20,10 @@ const workspace = document.getElementById('workspace');
 const navBar = document.getElementById('ui-container');
 // create dropdown of all audio devices
 let deviceDropdown = createDropdownofAllDevices();
+const isMobileOrTablet = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+if (window.DeviceOrientationEvent && isMobileOrTablet) {
+    addMotionDeviceToDropdown(deviceDropdown);
+}
 
 async function handleOnButtonClick() {
     if (isAudioPlaying) {
@@ -269,7 +273,7 @@ document.addEventListener('input', function(event) {
 });
 
 // event listener for window resize when element exceeds edge
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const workspace = document.getElementById('workspace');
     const edgeThreshold = 50; // distance from edge to trigger expansion
     const expansionRate = 10; // pixels to expand per interval
@@ -1441,6 +1445,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
     try {
         let deviceDiv;
         if (filename === "motion") {
+            await showMotionPermissionButton();
             const device = await createMotionDevice(context);
             deviceDiv = addDeviceToWorkspace(device, "motion", false);
         }
@@ -2949,45 +2954,20 @@ async function loadWorkspaceState(deviceStates) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function showMotionPermissionButton() {
     const isMobileOrTablet = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
     if (window.DeviceOrientationEvent && isMobileOrTablet) {
-        showPermissionButton();
-    }
-});
-
-function showPermissionButton() {
-    const permissionDiv = document.createElement('div');
-    permissionDiv.className = 'permissionDiv';
-    permissionDiv.innerHTML = '<b>Welcome to Wax!</b>';
-
-    const permissionButton = document.createElement('button');
-    permissionButton.className = 'permissionButton';
-    permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
-    permissionButton.addEventListener('click', async () => {
-        document.body.removeChild(permissionDiv);
         try {
             // request DeviceMotionEvent permission
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
                 const motionResponse = await DeviceMotionEvent.requestPermission();
-                if (motionResponse === 'granted') {
-                    let deviceDropdown = createDropdownofAllDevices();
-                    addMotionDeviceToDropdown(deviceDropdown);
-                } else {
+                if (motionResponse !== 'granted') {
                     showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
-                }
-            }
-            await startAudio();
+                }            }
         } catch (error) {
             showGrowlNotification(`Error requesting permissions: ${error}`);
         }
-    });
-
-    // attach the permission request button to the div
-    permissionDiv.appendChild(permissionButton);
-
-    // attach the div to the body
-    document.body.appendChild(permissionDiv);
+    }
 }
 
 function hidePermissionButton() {

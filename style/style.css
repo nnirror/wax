@@ -420,7 +420,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
     }
 
     body #ui-background {
-        height: 8vh;
+        height: 10vh;
     }
 }
 @media screen and (min-width: 601px) {
