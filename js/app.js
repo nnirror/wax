@@ -2161,7 +2161,12 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         return deviceDiv;
     }
     catch (error) {
-        showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
+        if ( filename === 'motion' ) {
+            showGrowlNotification(`Error creating device: motion is not supported in this machine.`);
+        }
+        else {
+            showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
+        }
     }
 }
 
@@ -2474,24 +2479,31 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                 mode: "javascript",
                 value: ``,
                 theme: "mbo",
+                inputStyle: 'textarea',
                 lineWrapping: true,
                 matchBrackets: true,
                 lint: {options: {esversion: 2021, asi: true}}
             });
             adjustCodeMirrorHeight(editor);
+            
             // update the hidden textarea's value
             editor.on('change', function(instance) {
                 textarea.value = instance.getValue();
                 adjustCodeMirrorHeight(editor);
             });
-            
+    
+            // add touchstart event listener to focus the editor and the underlying textarea
+            editor.getWrapperElement().addEventListener('touchstart', function() {
+                editor.focus();
+            });
+    
             editor.on('keydown', function(instance, event) {
                 if (event.ctrlKey && (event.keyCode === 13 || event.keyCode === 82)) {
                     // evaluate facet pattern
                     let cursor = editor.getCursor();
                     let line = cursor.line;
-                    let first_line_of_block = getFirstLineOfBlock(line,editor);
-                    let last_line_of_block = getLastLineOfBlock(line,editor);
+                    let first_line_of_block = getFirstLineOfBlock(line, editor);
+                    let last_line_of_block = getLastLineOfBlock(line, editor);
                     // highlight the text that will run for 100ms
                     editor.setSelection({line: first_line_of_block, ch: 0 }, {line: last_line_of_block, ch: 10000 });
                     // de-highlight, set back to initial cursor position
@@ -2499,21 +2511,21 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     executedTextPatterns[deviceDiv.id] = instance.getValue();
                     textarea.dispatchEvent(new Event('change'));
                 }
-
-                if ( event.ctrlKey && event.keyCode === 70 ) {
+    
+                if (event.ctrlKey && event.keyCode === 70) {
                     var cursor = editor.getCursor();
                     var currentLine = cursor.line;
                     let scroll_info = editor.getScrollInfo();
                     editor.setValue(js_beautify(editor.getValue(), {
-                      indent_size: 2,
-                      break_chained_methods: true
-                    }))
+                        indent_size: 2,
+                        break_chained_methods: true
+                    }));
                     editor.focus();
                     editor.setCursor({
-                      line: currentLine-1
+                        line: currentLine - 1
                     });
-                    editor.scrollTo(scroll_info.left,scroll_info.top);
-                  }
+                    editor.scrollTo(scroll_info.left, scroll_info.top);
+                }
             });
         }
     }
@@ -2635,16 +2647,16 @@ function removeSelectedNodeClass(event) {
         if (node === event.target) return;
         if (node.classList.contains('selectedNode')) {
             node.classList.remove('selectedNode');
-        }
+        }``
     });
 }
 
 function handleDeviceMouseDown (event) {
-    removeSelectedNodeClass(event);
-    let nodeElement = event.target.closest('.node');
-    if (nodeElement) {
-        nodeElement.classList.add('selectedNode');
-    }
+    // removeSelectedNodeClass(event);
+    // let nodeElement = event.target.closest('.node');
+    // if (nodeElement) {
+    //     nodeElement.classList.add('selectedNode');
+    // }
 }
 
 function deselectAllNodes () {
@@ -3412,53 +3424,71 @@ async function loadAllJsonFiles() {
     const progressBar = document.getElementById('progress-bar');
     let response;
 
-    // open the cache
-    const cache = await caches.open(cacheName);
+    try {
+        if ('caches' in window) {
+            // open the cache
+            const cache = await caches.open(cacheName);
 
-    // check if the file is already in the cache
-    const cachedResponse = await cache.match(fileUrl);
-    if (cachedResponse) {
-        response = cachedResponse;
-    } else {
-        // fetch the file and store it in the cache
-        response = await fetch(fileUrl);
-        cache.put(fileUrl, response.clone());
-    }
-
-    const contentLength = response.headers.get('content-length');
-    const total = parseInt(contentLength, 10);
-    let loaded = 0;
-
-    const reader = response.body.getReader();
-    const stream = new ReadableStream({
-        start(controller) {
-            function push() {
-                reader.read().then(({ done, value }) => {
-                    if (done) {
-                        controller.close();
-                        progressContainer.style.display = 'none'; // hide the progress container
-                        return;
-                    }
-                    loaded += value.byteLength;
-                    progressBar.value = (loaded / total) * 100;
-                    controller.enqueue(value);
-                    push();
-                });
+            // check if the file is already in the cache
+            const cachedResponse = await cache.match(fileUrl);
+            if (cachedResponse) {
+                response = cachedResponse;
+            } else {
+                // fetch the file and store it in the cache
+                response = await fetch(fileUrl);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                cache.put(fileUrl, response.clone());
             }
-            push();
+        } else {
+            // fetch the file directly if caches API is not available
+            response = await fetch(fileUrl);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
         }
-    });
 
-    const newResponse = new Response(stream);
-    const arrayBuffer = await newResponse.arrayBuffer();
-    const zip = await JSZip.loadAsync(arrayBuffer);
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10);
+        let loaded = 0;
 
-    for (const fileName of Object.keys(zip.files)) {
-        if (fileName.endsWith('.json')) {
-            const fileData = await zip.file(fileName).async('string');
-            const key = fileName.replace('.json', '');
-            jsonFiles[key] = JSON.parse(fileData);
+        const reader = response.body.getReader();
+        const stream = new ReadableStream({
+            start(controller) {
+                function push() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            controller.close();
+                            progressContainer.style.display = 'none'; // hide the progress container
+                            return;
+                        }
+                        loaded += value.byteLength;
+                        progressBar.value = (loaded / total) * 100;
+                        controller.enqueue(value);
+                        push();
+                    }).catch(error => {
+                        console.error('Error reading stream:', error);
+                        controller.error(error);
+                    });
+                }
+                push();
+            }
+        });
+
+        const newResponse = new Response(stream);
+        const arrayBuffer = await newResponse.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+
+        for (const fileName of Object.keys(zip.files)) {
+            if (fileName.endsWith('.json')) {
+                const fileData = await zip.file(fileName).async('string');
+                const key = fileName.replace('.json', '');
+                jsonFiles[key] = JSON.parse(fileData);
+            }
         }
+    } catch (error) {
+        console.error('Error loading JSON files:', error);
     }
 }
 /* END functions */
