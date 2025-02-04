@@ -1226,6 +1226,10 @@ let dragStartButton = null;
 let tempLine = null;
 
 document.addEventListener('mousedown', (event) => {
+    // click-drag functionality is only available on non-touchscreen machines
+    if (isMobileOrTablet) {
+        return;
+    }
     const button = event.target.closest('button');
     if (button && (button.closest('.input-container') || button.closest('.output-container'))) {
         isDragging = true;
