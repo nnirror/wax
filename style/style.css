@@ -147,7 +147,7 @@ html, body {
     position: relative;
     overflow: auto;
     height: 100%;
-    touch-action: pan-x pan-y;
+    touch-action: auto;
     -webkit-overflow-scrolling: touch;
 }
 .delete-button {
