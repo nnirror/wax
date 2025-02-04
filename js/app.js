@@ -1303,8 +1303,8 @@ document.addEventListener('mouseup', (event) => {
 
 function updateTempLine(mouseX, mouseY) {
     const rect = dragStartButton.getBoundingClientRect();
-    const startX = rect.left + rect.width / 2;
-    const startY = rect.top + rect.height / 2;
+    const startX = rect.left + rect.width / 2 + window.scrollX;
+    const startY = rect.top + rect.height / 2 + window.scrollY;
 
     const length = Math.sqrt((mouseX - startX) ** 2 + (mouseY - startY) ** 2);
     const angle = Math.atan2(mouseY - startY, mouseX - startX) * 180 / Math.PI;
