@@ -1256,18 +1256,32 @@ document.addEventListener('mouseup', (event) => {
             const startDeviceId = dragStartButton.closest('.node').id;
             const startIsInputButton = dragStartButton.closest('.input-container') !== null;
             const startIndex = Array.from(dragStartButton.parentNode.children).indexOf(dragStartButton);
-
             const endDeviceId = button.closest('.node').id;
             const endIsInputButton = button.closest('.input-container') !== null;
             const endIndex = Array.from(button.parentNode.children).indexOf(button);
-
-            if (startIsInputButton !== endIsInputButton) {
-                if (startIsInputButton) {
-                    startConnection(endDeviceId, endIndex);
-                    finishConnection(startDeviceId, startIndex);
-                } else {
-                    startConnection(startDeviceId, startIndex);
-                    finishConnection(endDeviceId, endIndex);
+        
+            if (endDeviceId.includes('output')) {
+                // special handling for the output node
+                const outputChannelInput = document.querySelector(`#${endDeviceId} #output_channel`);
+                const outputChannel = outputChannelInput.value - 1;
+                if (startIsInputButton !== endIsInputButton) {
+                    if (startIsInputButton) {
+                        startConnection(endDeviceId, endIndex);
+                        finishConnection(startDeviceId, startIndex);
+                    } else {
+                        startConnection(startDeviceId, startIndex);
+                        finishConnection(endDeviceId, outputChannel);
+                    }
+                }
+            } else {
+                if (startIsInputButton !== endIsInputButton) {
+                    if (startIsInputButton) {
+                        startConnection(endDeviceId, endIndex);
+                        finishConnection(startDeviceId, startIndex);
+                    } else {
+                        startConnection(startDeviceId, startIndex);
+                        finishConnection(endDeviceId, endIndex);
+                    }
                 }
             }
         }
@@ -2652,11 +2666,11 @@ function removeSelectedNodeClass(event) {
 }
 
 function handleDeviceMouseDown (event) {
-    // removeSelectedNodeClass(event);
-    // let nodeElement = event.target.closest('.node');
-    // if (nodeElement) {
-    //     nodeElement.classList.add('selectedNode');
-    // }
+    removeSelectedNodeClass(event);
+    let nodeElement = event.target.closest('.node');
+    if (nodeElement) {
+        nodeElement.classList.add('selectedNode');
+    }
 }
 
 function deselectAllNodes () {
