@@ -332,6 +332,8 @@ body .sliderMin, body .sliderMax, body .rootNote {
         width: 20vw;
         height: 8vh;
         display: block;
+        background: rgb(8,56,78);
+        color: white;
         border: 1vw solid white;
         font-size: 4vw;
         border-radius: 4vw;
@@ -346,6 +348,8 @@ body .sliderMin, body .sliderMax, body .rootNote {
         width: 20vw;
         height: 8vh;
         display: block;
+        background: rgb(8,56,78);
+        color: white;
         border: 1vw solid white;
         font-size: 4vw;
         border-radius: 4vw;
@@ -363,7 +367,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
         display: none;
     }
     body .deviceListModal {
-        top: calc(14px + 80px);
+        top: 12vh;
         padding: 0;
         left: 10%;
         right: 10%;
@@ -391,7 +395,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
     body #exampleFiles {
         left: 10%;
         right: 10%;
-        top: calc(14px + 80px);
+        top: 12vh;
         z-index: 1010;
         padding: 0;
     }
