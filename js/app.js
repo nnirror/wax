@@ -3468,7 +3468,9 @@ async function loadAllJsonFiles() {
             }
         }
 
-        const contentLength = response.headers.get('content-length');
+        // this is the number of bytes of the wax_devices file - hard-coded for now
+        // while i figure out how to configure the content-length header on the server
+        const contentLength = 12540345;
         const total = parseInt(contentLength, 10);
         let loaded = 0;
 
