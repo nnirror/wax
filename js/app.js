@@ -2486,7 +2486,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         stop: function(event) {
             if (isLocked) return false;
             isDraggingDevice = false;
-        }
+        },
+        containment: true
     });
 
     if (deviceType === 'pattern') {
