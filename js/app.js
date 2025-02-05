@@ -20,6 +20,10 @@ const workspace = document.getElementById('workspace');
 const navBar = document.getElementById('ui-container');
 // create dropdown of all audio devices
 let deviceDropdown = createDropdownofAllDevices();
+const isMobileOrTablet = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+if (window.DeviceOrientationEvent && isMobileOrTablet) {
+    addMotionDeviceToDropdown(deviceDropdown);
+}
 
 async function handleOnButtonClick() {
     if (isAudioPlaying) {
@@ -46,10 +50,12 @@ function handleLockButtonClick() {
     toggleDragging();
     if (isLocked) {
         document.getElementsByClassName('lockButton')[0].textContent = 'Unlock';
+        document.getElementsByClassName('mobileMenuLockButton')[0].textContent = 'Unlock';
         document.getElementById('mobileLockButton').textContent = 'Unlock';
     }
     else {
         document.getElementsByClassName('lockButton')[0].textContent = 'Lock';
+        document.getElementsByClassName('mobileMenuLockButton')[0].textContent = 'Lock';
         document.getElementById('mobileLockButton').textContent = 'Lock';
     }
 }
@@ -116,12 +122,18 @@ async function handleExamplesButtonClick(event) {
 }
 
 function handleAboutButtonClick(event) {
-    document.getElementById('infoDiv').style.display = 'block';
+    try {
+        document.getElementById('infoDiv').style.display = 'block';
+    } catch (error) {
+        console.error('Failed to display info div:', error);
+    }
     event.stopPropagation();
 }
 
 function handleMenuButtonClick(event) {
-    document.getElementById('infoDiv').style.display = 'none';
+    try {
+        document.getElementById('infoDiv').style.display = 'none';
+    } catch (error) {}
     var mobileMenu = document.getElementById('mobileMenu');
     var deviceListModal = document.getElementById('deviceListModal');
     var exampleFiles = document.getElementById('exampleFiles');
@@ -160,6 +172,8 @@ createButtonForNavBar('Devices', 'viewAllDevices navbarButton', handleDevicesBut
 createButtonForNavBar('Examples', 'exampleFilesButton navbarButton', handleExamplesButtonClick);
 createButtonForNavBar('About', 'helpButton navbarButton', handleAboutButtonClick);
 createButtonForNavBar('Menu', 'mobileMenuToggleButton navbarButton', handleMenuButtonClick);
+createButtonForNavBar('Lock', 'mobileMenuLockButton navbarButton', handleLockButtonClick);
+
 
 // prevent accidental refreshes which would lose unsaved changes
 window.onbeforeunload = function() {
@@ -231,6 +245,9 @@ window.onload = async function() {
         event.stopPropagation();
     };
 
+    // set the value in localStorage to indicate that the user has seen the info div
+    localStorage.setItem('infoDivSeen', 'true');
+
     // add event listener to document to hide infoDiv when clicked
     document.onclick = function() {
         infoDiv.style.display = 'none';
@@ -239,6 +256,11 @@ window.onload = async function() {
     // add the close button to the info div and the info div to body
     infoDiv.appendChild(closeButton);
     document.body.appendChild(infoDiv);
+
+    // check if the user has already seen the info div
+    if (localStorage.getItem('infoDivSeen')) {
+        infoDiv.style.display = 'none';
+    }
 
     await checkForQueryStringParams();
     await startAudio();
@@ -251,12 +273,11 @@ document.addEventListener('input', function(event) {
 });
 
 // event listener for window resize when element exceeds edge
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const workspace = document.getElementById('workspace');
     const edgeThreshold = 50; // distance from edge to trigger expansion
     const expansionRate = 10; // pixels to expand per interval
     const scrollRate = 10; // pixels to scroll per interval
-    let expandInterval;
 
     function getEventCoordinates(event) {
         if (event.touches && event.touches.length > 0) {
@@ -266,52 +287,98 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    let expandInterval = null;
+    let scrollInterval = null;
+    
     function checkEdgeAndExpand(event) {
         if (!isDraggingDevice) {
             return;
         }
         const rect = workspace.getBoundingClientRect();
         const { x: mouseX, y: mouseY } = getEventCoordinates(event);
-
+    
         let expandX = false;
         let expandY = false;
-
+        let scrollX = false;
+        let scrollY = false;
+    
+        const edgeThreshold = 50;
+    
+        // check if the device is near the edge of the visible window
+        if (mouseX >= window.innerWidth - edgeThreshold) {
+            scrollX = true;
+        } else if (mouseX <= edgeThreshold) {
+            scrollX = true;
+        }
+    
+        if (mouseY >= window.innerHeight - edgeThreshold) {
+            scrollY = true;
+        } else if (mouseY <= edgeThreshold) {
+            scrollY = true;
+        }
+    
+        // check if the device is near the edge of the workspace
         if (mouseX >= rect.right - edgeThreshold) {
             expandX = true;
         } else if (mouseX <= rect.left + edgeThreshold) {
             expandX = true;
         }
-
+    
         if (mouseY >= rect.bottom - edgeThreshold) {
             expandY = true;
         } else if (mouseY <= rect.top + edgeThreshold) {
             expandY = true;
         }
-
+    
         if (expandX || expandY) {
             if (!expandInterval) {
                 expandInterval = setInterval(() => {
                     if (expandX) {
                         workspace.style.width = workspace.offsetWidth + expansionRate + 'px';
-                        window.scrollBy(scrollRate, 0);
                     }
                     if (expandY) {
                         workspace.style.height = workspace.offsetHeight + expansionRate + 'px';
-                        window.scrollBy(0, scrollRate);
                     }
-                }, 20);
+                }, 10);
             }
         } else {
             clearInterval(expandInterval);
             expandInterval = null;
         }
+    
+        // scroll the window if the device is near the edge of the visible window
+        if (scrollX || scrollY) {
+            if (!scrollInterval) {
+                scrollInterval = setInterval(() => {
+                    if (scrollX) {
+                        if (mouseX >= window.innerWidth - edgeThreshold) {
+                            window.scrollBy(scrollRate, 0);
+                        } else if (mouseX <= edgeThreshold) {
+                            window.scrollBy(-scrollRate, 0);
+                        }
+                    }
+                    if (scrollY) {
+                        if (mouseY >= window.innerHeight - edgeThreshold) {
+                            window.scrollBy(0, scrollRate);
+                        } else if (mouseY <= edgeThreshold) {
+                            window.scrollBy(0, -scrollRate);
+                        }
+                    }
+                }, 20);
+            }
+        } else {
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+        }
     }
-
+    
     function stopExpand() {
         clearInterval(expandInterval);
         expandInterval = null;
+        clearInterval(scrollInterval);
+        scrollInterval = null;
     }
-
+    
     document.addEventListener('mousemove', checkEdgeAndExpand);
     document.addEventListener('mouseup', stopExpand);
     document.addEventListener('touchmove', checkEdgeAndExpand);
@@ -362,7 +429,7 @@ let sourceButtonId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
-let selectedConnection = null;
+let selectedConnections = [];
 let executedTextPatterns = {};
 let selectionDiv = null;
 let startPoint = null;
@@ -400,16 +467,22 @@ jsPlumb.bind("connectionDetached", function(info) {
 });
 
 
-// Event listener to detect when a connection is clicked
+// event listener to detect when a connection is clicked
 jsPlumb.bind("click", function(connection, originalEvent) {
+    // reset styles for all connections
     jsPlumb.getAllConnections().forEach(conn => {
         resetConnectionStyle(conn);
     });
+
+    // deselect all nodes
     deselectAllNodes();
-    selectedConnection = connection;
+
+    selectedConnections = [connection];
+
+    // update the style for the clicked connection
     connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
     connection.endpoints.forEach(endpoint => {
-        endpoint.setPaintStyle({ fill: 'transparent', outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" });
+        endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
     });
 });
 
@@ -419,10 +492,7 @@ document.body.addEventListener('click', function(event) {
     if (event.target.matches('.output-button, .input-button, .output-button *, .input-button *, .inport-button, .regenButtonImage')) {
         showVisualConfirmationOfConnectionButtonClick(event);
     }
-    if (selectedConnection && !event.target.closest('.jtk-connector')) {
-        resetConnectionStyle(selectedConnection);
-        selectedConnection = null;
-    }
+
     var mobileMenu = document.getElementById('mobileMenu');
     var style = window.getComputedStyle(mobileMenu);
     var isMobileMenuVisible = style.display !== 'none';
@@ -435,6 +505,12 @@ document.body.addEventListener('click', function(event) {
 // listen for mousedown events on the workspaceElement
 workspaceElement.addEventListener('mousedown', (event) => {
     if (isLocked) return;
+    if (!event.target.closest('.jtk-connector')) {
+        selectedConnections.forEach(connection => {
+            resetConnectionStyle(connection);
+        });
+        selectedConnections = [];
+    }
     // only start the selection if the target is the workspaceElement itself
     if (event.target === workspaceElement) {
         let rect = workspaceElement.getBoundingClientRect();
@@ -469,9 +545,35 @@ workspaceElement.addEventListener('mousemove', (event) => {
     }
 });
 
+function isConnectionInSelection(connection, selRect) {
+    const sourceEndpoint = connection.endpoints[0].canvas.getBoundingClientRect();
+    const targetEndpoint = connection.endpoints[1].canvas.getBoundingClientRect();
+
+    const numSamples = 250;
+    for (let i = 0; i <= numSamples; i++) {
+        const t = i / numSamples;
+        const x = sourceEndpoint.left + t * (targetEndpoint.left - sourceEndpoint.left);
+        const y = sourceEndpoint.top + t * (targetEndpoint.top - sourceEndpoint.top);
+
+        if (
+            x >= selRect.left &&
+            x <= selRect.right &&
+            y >= selRect.top &&
+            y <= selRect.bottom
+        ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // listen for mouseup events on the workspaceElement
-workspaceElement.addEventListener('click', (event) => {
+workspaceElement.addEventListener('mouseup', (event) => {
     if (startPoint) {
+        // clear the previous selection
+        selectedConnections = [];
+
         // check which elements are within the selection div
         let nodes = document.querySelectorAll('.node');
         nodes.forEach((node) => {
@@ -483,9 +585,26 @@ workspaceElement.addEventListener('click', (event) => {
                 // add a special CSS class to the selected node
                 node.classList.add('selectedNode');
             } else {
-                if ( event.target.id == 'workspace' ) {
+                if (event.target.id == 'workspace') {
                     // remove the special class from the node if it's not selected
                     node.classList.remove('selectedNode'); 
+                }
+            }
+        });
+
+        // check which connections are within the selection div
+        jsPlumb.getAllConnections().forEach((connection) => {
+            let selRect = selectionDiv.getBoundingClientRect();
+            if (isConnectionInSelection(connection, selRect)) {
+                // add the connection to the selectedConnections array
+                selectedConnections.push(connection);
+                // add a special CSS class to the selected connection
+                connection.canvas.classList.add('selectedConnection');
+                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
+            } else {
+                if (event.target.id == 'workspace') {
+                    // remove the special class from the connection if it's not selected
+                    connection.canvas.classList.remove('selectedConnection');
                 }
             }
         });
@@ -562,10 +681,12 @@ document.addEventListener('keydown', (event) => {
             }
         });
 
-        if (selectedConnection) {
-            if ( !isLocked )  {
-                jsPlumb.deleteConnection(selectedConnection);
-                selectedConnection = null;
+        if (selectedConnections.length > 0) {
+            if (!isLocked) {
+                selectedConnections.forEach(connection => {
+                    jsPlumb.deleteConnection(connection);
+                });
+                selectedConnections = [];
             }
         }
 
@@ -627,7 +748,7 @@ function addMotionDeviceToDropdown(deviceDropdown) {
     deviceDropdown.appendChild(motionInputOption);
 }
 
-function openAwesompleteUI() {
+function openAwesompleteUI(event) {
     if (isLocked) return;
     deselectAllNodes();
     // get the dropdown element
@@ -691,7 +812,7 @@ function openAwesompleteUI() {
             div.style.display = 'none';
 
         }
-        // remove all elements with class name "awesomplete"
+        // remove all elements with class name "awesompleteContainer"
         var elements = document.getElementsByClassName('awesompleteContainer');
         try {
             while(elements.length > 0){
@@ -729,7 +850,6 @@ function openAwesompleteUI() {
         }
     }
 
-
     // add event listener for keydown event on the input
     input.addEventListener('keydown', async function(event) {
         // if enter key is pressed, call the createDeviceByName function
@@ -748,6 +868,17 @@ function openAwesompleteUI() {
 
     // add event listener for blur event to also hide the autocomplete
     input.addEventListener('blur', hideAwesomplete);
+
+    // check if the autocomplete UI is partially off the workspace
+    const workspaceRect = document.getElementById('workspace').getBoundingClientRect();
+    const divRect = div.getBoundingClientRect();
+
+    if (divRect.right > workspaceRect.right) {
+        // expand the workspace
+        document.getElementById('workspace').style.width = (workspaceRect.width + (divRect.right - workspaceRect.right)) + 'px';
+        // scroll rightwards
+        window.scrollBy(divRect.right - workspaceRect.right, 0);
+    }
 }
 
 function initializeAwesomplete () {
@@ -1090,6 +1221,101 @@ async function scheduleDeviceEvent(device, inport, value, deviceId, fromRegenBut
     }
 }
 
+let isDragging = false;
+let dragStartButton = null;
+let tempLine = null;
+
+document.addEventListener('mousedown', (event) => {
+    // click-drag functionality is only available on non-touchscreen machines
+    if (isMobileOrTablet) {
+        return;
+    }
+    const button = event.target.closest('button');
+    if (button && (button.closest('.input-container') || button.closest('.output-container'))) {
+        isDragging = true;
+        dragStartButton = button;
+
+        // create temporary line element to indicate potential connection
+        tempLine = document.createElement('div');
+        tempLine.style.position = 'absolute';
+        tempLine.style.backgroundColor = 'transparent';
+        tempLine.style.border = '1px dashed gray';
+        tempLine.style.width = '2px';
+        document.body.appendChild(tempLine);
+
+        updateTempLine(event.pageX, event.pageY);
+    }
+});
+
+document.addEventListener('mousemove', (event) => {
+    if (isDragging && tempLine) {
+        updateTempLine(event.pageX, event.pageY);
+    }
+});
+
+document.addEventListener('mouseup', (event) => {
+    if (isDragging) {
+        const button = event.target.closest('button');
+        if (button && (button.closest('.input-container') || button.closest('.output-container'))) {
+            const startDeviceId = dragStartButton.closest('.node').id;
+            const startIsInputButton = dragStartButton.closest('.input-container') !== null;
+            const startIndex = Array.from(dragStartButton.parentNode.children).indexOf(dragStartButton);
+            const endDeviceId = button.closest('.node').id;
+            const endIsInputButton = button.closest('.input-container') !== null;
+            const endIndex = Array.from(button.parentNode.children).indexOf(button);
+        
+            if (endDeviceId.includes('output')) {
+                // special handling for the output node
+                const outputChannelInput = document.querySelector(`#${endDeviceId} #output_channel`);
+                const outputChannel = outputChannelInput.value - 1;
+                if (startIsInputButton !== endIsInputButton) {
+                    if (startIsInputButton) {
+                        startConnection(endDeviceId, endIndex);
+                        finishConnection(startDeviceId, startIndex);
+                    } else {
+                        startConnection(startDeviceId, startIndex);
+                        finishConnection(endDeviceId, outputChannel);
+                    }
+                }
+            } else {
+                if (startIsInputButton !== endIsInputButton) {
+                    if (startIsInputButton) {
+                        startConnection(endDeviceId, endIndex);
+                        finishConnection(startDeviceId, startIndex);
+                    } else {
+                        startConnection(startDeviceId, startIndex);
+                        finishConnection(endDeviceId, endIndex);
+                    }
+                }
+            }
+        }
+
+        // remove temporary connection line
+        if (tempLine) {
+            document.body.removeChild(tempLine);
+            tempLine = null;
+        }
+
+        isDragging = false;
+        dragStartButton = null;
+    }
+});
+
+function updateTempLine(mouseX, mouseY) {
+    const rect = dragStartButton.getBoundingClientRect();
+    const startX = rect.left + rect.width / 2 + window.scrollX;
+    const startY = rect.top + rect.height / 2 + window.scrollY;
+
+    const length = Math.sqrt((mouseX - startX) ** 2 + (mouseY - startY) ** 2);
+    const angle = Math.atan2(mouseY - startY, mouseX - startX) * 180 / Math.PI;
+
+    tempLine.style.height = `${length}px`;
+    tempLine.style.transform = `rotate(${angle-90}deg)`;
+    tempLine.style.transformOrigin = '0 0';
+    tempLine.style.left = `${startX}px`;
+    tempLine.style.top = `${startY}px`;
+}
+
 function handleButtonClick(deviceId, index, isInputButton) {
     if (isLocked) return;
     if (lastClicked && ((lastClicked.isInputButton && !isInputButton) || (!lastClicked.isInputButton && isInputButton))) {
@@ -1125,34 +1351,35 @@ function finishConnection(deviceId, inputIndex) {
             const sourceButton = document.getElementById(sourceButtonId);
             const targetButton = document.getElementById(targetButtonId);
             const verticalOffset = 40;
+            const horizontalOffset = 12;
             let sourcePosition, targetPosition;
             let initialSourceHeight, initialTargetHeight;
-
+            
             if (sourceDeviceId.split('-')[0] === 'pattern') {
                 initialSourceHeight = sourceButton.parentNode.parentNode.offsetHeight;
                 const relativeSourcePosition = (sourceButton.offsetTop + verticalOffset) / initialSourceHeight;
-
-                sourcePosition = [1, relativeSourcePosition];
+            
+                sourcePosition = [(1 + horizontalOffset / sourceButton.parentNode.parentNode.offsetWidth), relativeSourcePosition];
                 targetPosition = [
-                    0,
+                    (0 - horizontalOffset / targetButton.parentNode.parentNode.offsetWidth),
                     (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
                 ];
             } else if (deviceId.split('-')[0] === 'pattern') {
                 initialTargetHeight = targetButton.parentNode.parentNode.offsetHeight;
                 const relativeTargetPosition = (targetButton.offsetTop + verticalOffset) / initialTargetHeight;
-
+            
                 sourcePosition = [
-                    1,
+                    (1 + horizontalOffset / sourceButton.parentNode.parentNode.offsetWidth),
                     (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
                 ];
-                targetPosition = [0, relativeTargetPosition];
+                targetPosition = [(0 - horizontalOffset / targetButton.parentNode.parentNode.offsetWidth), relativeTargetPosition];
             } else {
                 sourcePosition = [
-                    1,
+                    (1 + horizontalOffset / sourceButton.parentNode.parentNode.offsetWidth),
                     (sourceButton.offsetTop + verticalOffset) / sourceButton.parentNode.parentNode.offsetHeight
                 ];
                 targetPosition = [
-                    0,
+                    (0 - horizontalOffset / targetButton.parentNode.parentNode.offsetWidth),
                     (targetButton.offsetTop + verticalOffset) / targetButton.parentNode.parentNode.offsetHeight
                 ];
             }
@@ -1186,8 +1413,11 @@ function finishConnection(deviceId, inputIndex) {
                 target: deviceId,
                 anchors: [sourcePosition, targetPosition],
                 paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
-                endpointStyle: { fill: "transparent", outlineStroke: "transparent", outlineWidth: 12, cssClass: "endpointClass" },
-                endpoint: ["Dot", { radius: 0 }],
+                endpointStyle: { fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2 },
+                endpoints: [
+                    ["Dot", { radius: 12, cssClass: "endpointCircle sourceEndpoint" }],
+                    ["Dot", { radius: 12, cssClass: "endpointCircle targetEndpoint" }]
+                ],
                 connector: ["Straight"]
             });
 
@@ -1233,6 +1463,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
     try {
         let deviceDiv;
         if (filename === "motion") {
+            await showMotionPermissionButton();
             const device = await createMotionDevice(context);
             deviceDiv = addDeviceToWorkspace(device, "motion", false);
         }
@@ -1948,7 +2179,12 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         return deviceDiv;
     }
     catch (error) {
-        showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
+        if ( filename === 'motion' ) {
+            showGrowlNotification(`Error creating device: motion is not supported in this machine.`);
+        }
+        else {
+            showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
+        }
     }
 }
 
@@ -2250,7 +2486,8 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         stop: function(event) {
             if (isLocked) return false;
             isDraggingDevice = false;
-        }
+        },
+        containment: true
     });
 
     if (deviceType === 'pattern') {
@@ -2261,24 +2498,31 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                 mode: "javascript",
                 value: ``,
                 theme: "mbo",
+                inputStyle: 'textarea',
                 lineWrapping: true,
                 matchBrackets: true,
                 lint: {options: {esversion: 2021, asi: true}}
             });
             adjustCodeMirrorHeight(editor);
+            
             // update the hidden textarea's value
             editor.on('change', function(instance) {
                 textarea.value = instance.getValue();
                 adjustCodeMirrorHeight(editor);
             });
-            
+    
+            // add touchstart event listener to focus the editor and the underlying textarea
+            editor.getWrapperElement().addEventListener('touchstart', function() {
+                editor.focus();
+            });
+    
             editor.on('keydown', function(instance, event) {
                 if (event.ctrlKey && (event.keyCode === 13 || event.keyCode === 82)) {
                     // evaluate facet pattern
                     let cursor = editor.getCursor();
                     let line = cursor.line;
-                    let first_line_of_block = getFirstLineOfBlock(line,editor);
-                    let last_line_of_block = getLastLineOfBlock(line,editor);
+                    let first_line_of_block = getFirstLineOfBlock(line, editor);
+                    let last_line_of_block = getLastLineOfBlock(line, editor);
                     // highlight the text that will run for 100ms
                     editor.setSelection({line: first_line_of_block, ch: 0 }, {line: last_line_of_block, ch: 10000 });
                     // de-highlight, set back to initial cursor position
@@ -2286,21 +2530,21 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     executedTextPatterns[deviceDiv.id] = instance.getValue();
                     textarea.dispatchEvent(new Event('change'));
                 }
-
-                if ( event.ctrlKey && event.keyCode === 70 ) {
+    
+                if (event.ctrlKey && event.keyCode === 70) {
                     var cursor = editor.getCursor();
                     var currentLine = cursor.line;
                     let scroll_info = editor.getScrollInfo();
                     editor.setValue(js_beautify(editor.getValue(), {
-                      indent_size: 2,
-                      break_chained_methods: true
-                    }))
+                        indent_size: 2,
+                        break_chained_methods: true
+                    }));
                     editor.focus();
                     editor.setCursor({
-                      line: currentLine-1
+                        line: currentLine - 1
                     });
-                    editor.scrollTo(scroll_info.left,scroll_info.top);
-                  }
+                    editor.scrollTo(scroll_info.left, scroll_info.top);
+                }
             });
         }
     }
@@ -2312,7 +2556,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
 }
 
 function adjustCodeMirrorHeight(editor) {
-    const lineHeight = 16;
+    const lineHeight = 17;
     const lines = editor.lineCount();
     const newHeight = Math.max(lines * lineHeight, 3 * lineHeight);
     editor.getWrapperElement().style.height = `${newHeight}px`;
@@ -2422,7 +2666,7 @@ function removeSelectedNodeClass(event) {
         if (node === event.target) return;
         if (node.classList.contains('selectedNode')) {
             node.classList.remove('selectedNode');
-        }
+        }``
     });
 }
 
@@ -2649,7 +2893,9 @@ async function checkDeviceMotionPermission() {
 }
 
 async function reconstructWorkspaceState(deviceStates = null) {
-    document.getElementById('infoDiv').style.display = 'none';
+    try {
+        document.getElementById('infoDiv').style.display = 'none';
+    } catch (error) {}
     // check if any device has a deviceName of 'motion'
     let hasMotionDevice = false;
     if (deviceStates) {
@@ -2669,10 +2915,10 @@ async function reconstructWorkspaceState(deviceStates = null) {
             // when a shared state has a motion device in it, we need to initiate the permission request via user input
             const permissionDiv = document.createElement('div');
             permissionDiv.className = 'permissionDiv';
-            permissionDiv.innerHTML = '<b>Have fun!</b> One last thing:';
+            permissionDiv.innerHTML = '<b>Welcome to Wax!</b>';
             const permissionButton = document.createElement('button');
             permissionButton.className = 'permissionButton';
-            permissionButton.innerText = 'Please tap this button to enable motion sensing';
+            permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
             permissionButton.addEventListener('click', async () => {
                 try {
                     if (typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -2739,45 +2985,20 @@ async function loadWorkspaceState(deviceStates) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function showMotionPermissionButton() {
     const isMobileOrTablet = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
     if (window.DeviceOrientationEvent && isMobileOrTablet) {
-        showPermissionButton();
-    }
-});
-
-function showPermissionButton() {
-    const permissionDiv = document.createElement('div');
-    permissionDiv.className = 'permissionDiv';
-    permissionDiv.innerHTML = '<b>Have fun!</b> One last thing:';
-
-    const permissionButton = document.createElement('button');
-    permissionButton.className = 'permissionButton';
-    permissionButton.innerText = 'Please tap this button to enable motion sensing.';
-    permissionButton.addEventListener('click', async () => {
-        document.body.removeChild(permissionDiv);
         try {
             // request DeviceMotionEvent permission
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
                 const motionResponse = await DeviceMotionEvent.requestPermission();
-                if (motionResponse === 'granted') {
-                    let deviceDropdown = createDropdownofAllDevices();
-                    addMotionDeviceToDropdown(deviceDropdown);
-                } else {
+                if (motionResponse !== 'granted') {
                     showGrowlNotification('Permission for DeviceMotionEvent was not granted.');
-                }
-            }
-            await startAudio();
+                }            }
         } catch (error) {
             showGrowlNotification(`Error requesting permissions: ${error}`);
         }
-    });
-
-    // attach the permission request button to the div
-    permissionDiv.appendChild(permissionButton);
-
-    // attach the div to the body
-    document.body.appendChild(permissionDiv);
+    }
 }
 
 function hidePermissionButton() {
@@ -3109,7 +3330,7 @@ function resetConnectionStyle(connection) {
     try {
         connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
         connection.endpoints.forEach(endpoint => {
-            endpoint.setPaintStyle({ fill: "transparent", outlineStroke: "transparent", outlineWidth: 12 });
+            endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
         });
     }
     catch (error) {}
@@ -3216,16 +3437,77 @@ function toggleDragging() {
 }
 
 async function loadAllJsonFiles() {
-    const response = await fetch('wasm/wax_devices.zip');
-    const arrayBuffer = await response.arrayBuffer();
-    const zip = await JSZip.loadAsync(arrayBuffer);
+    const cacheName = 'json-files-cache';
+    const fileUrl = 'wasm/wax_devices.zip';
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    let response;
 
-    for (const fileName of Object.keys(zip.files)) {
-        if (fileName.endsWith('.json')) {
-            const fileData = await zip.file(fileName).async('string');
-            const key = fileName.replace('.json', '');
-            jsonFiles[key] = JSON.parse(fileData);
+    try {
+        if ('caches' in window) {
+            // open the cache
+            const cache = await caches.open(cacheName);
+
+            // check if the file is already in the cache
+            const cachedResponse = await cache.match(fileUrl);
+            if (cachedResponse) {
+                response = cachedResponse;
+            } else {
+                // fetch the file and store it in the cache
+                response = await fetch(fileUrl);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                cache.put(fileUrl, response.clone());
+            }
+        } else {
+            // fetch the file directly if caches API is not available
+            response = await fetch(fileUrl);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
         }
+
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10);
+        let loaded = 0;
+
+        const reader = response.body.getReader();
+        const stream = new ReadableStream({
+            start(controller) {
+                function push() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            controller.close();
+                            progressContainer.style.display = 'none'; // hide the progress container
+                            return;
+                        }
+                        loaded += value.byteLength;
+                        progressBar.value = (loaded / total) * 100;
+                        controller.enqueue(value);
+                        push();
+                    }).catch(error => {
+                        console.error('Error reading stream:', error);
+                        controller.error(error);
+                    });
+                }
+                push();
+            }
+        });
+
+        const newResponse = new Response(stream);
+        const arrayBuffer = await newResponse.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+
+        for (const fileName of Object.keys(zip.files)) {
+            if (fileName.endsWith('.json')) {
+                const fileData = await zip.file(fileName).async('string');
+                const key = fileName.replace('.json', '');
+                jsonFiles[key] = JSON.parse(fileData);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading JSON files:', error);
     }
 }
 /* END functions */

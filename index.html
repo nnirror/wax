@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.667, maximum-scale=0.667, user-scalable=no, shrink-to-fit=no">
     <link rel="stylesheet" href="style/style.css">
     <link rel="stylesheet" href="node_modules/awesomplete/awesomplete.css">
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
@@ -19,8 +19,13 @@
     <noscript>this app requires JavaScript to be enabled.</noscript>
     <div id="ui-container">
         <img src="img/logo.png" id="logo" alt="Wax logo">
+        <div id="ui-background"></div>
     </div>
     <div id="workspace"></div>
+    <div id="progress-container">
+        <span>loading Wax devices...</span>
+        <progress id="progress-bar" value="0" max="100"></progress>
+    </div>
     <div id="mobileMenu">
         <div class="mobileMenuButton" onclick="handleSaveButtonClick(event)">Save</div>
         <div class="mobileMenuButton" onclick="handleLoadButtonClick(event)">Load</div>

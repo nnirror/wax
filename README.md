@@ -36,7 +36,7 @@ Click-drag on the workspace to select multiple devices at once. Selected devices
 When a device is selected, press `delete` or click the `x` button to delete the device.
 
 ## Device parameters
-Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers or expressions in [Facet](https://github.com/nnirror/facet), a live coding language based in JavaScript. Press `enter` to transmit the number or expression into the device, or if on a mobile device, press the `regen` button.
+Some devices have text inputs which allow the user to type in values to control the device. These text inputs accept numbers, JavaScript expressions that resolve to a number, or expressions in [Facet](https://github.com/nnirror/facet) that resolve to a number. Press `enter` to transmit the number or expression into the device, or if on a mobile device, press the `regen` button.
 
 **IMPORTANT:** Many parameters are available via both the text input _and_ as an audio rate data flow connection. In this case, the signal input takes precedence, and the corresponding text input will have no effect until the signal is disconnected.
 

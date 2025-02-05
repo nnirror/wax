@@ -3,7 +3,6 @@
     padding: 0px 10px 0px 10px;
     background: rgb(203,203,203);
     border-radius: 10px;
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     display: table;
     min-width: 5.5em;
     -webkit-user-select: none;
@@ -141,13 +140,17 @@ html, body {
     height: 100%;
     margin: 0;
     font-family: Arial, sans-serif;
+    background: rgb(8,56,78)
 }
 #workspace {
     background-color: rgb(8,56,78);
     position: relative;
     overflow: auto;
     height: 100%;
-    touch-action: manipulation;
+    touch-action: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 4em;
+    margin-left: 1em;
 }
 .delete-button {
     float: right;
@@ -164,8 +167,8 @@ html, body {
 .navbarButton {
     position: fixed;
     width: 7em;
-    top: 3vh;
-    z-index: 1003;
+    top: 15px;
+    z-index: 1011;
     padding: 3px 20px;
     border-radius: 10px;
     border: 3px solid white;
@@ -179,7 +182,7 @@ html, body {
     background: white;
     color: rgb(8,56,78);
 }
-.mobileMenuToggleButton {
+.mobileMenuToggleButton, .mobileMenuLockButton {
     display: none;
 }
 body .sliderMin, body .sliderMax, body .rootNote {
@@ -189,7 +192,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
 #mobileMenu {
     color: rgb(8,56,78);
     position: fixed;
-    top: calc(3vh + 80px);
+    top: 12vh;
     left: 10%;
     width: 80%;
     height: auto;
@@ -227,56 +230,136 @@ body .sliderMin, body .sliderMax, body .rootNote {
     position: absolute;
     top: 0px;
 }
+
+#ui-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 1188px;
+    height: 4em;
+    background:rgb(8,56,78);
+    z-index: 1010;
+}
+
+.endpointCircle {
+    z-index: 1000;
+}
+
+#progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: lightgray;
+}
+
+#progress-bar::-webkit-progress-value {
+    background-color: rgb(8, 56, 78);
+}
+
+#progress-bar::-moz-progress-bar {
+    background-color: rgb(8, 56, 78);
+}
+
+#progress-container span {
+    position: fixed;
+    bottom: 2vh;
+    width: 80%;
+    text-align: center;
+    left: 10%;
+    color: white;
+}
+
 @media screen and (min-width: 600px) and (max-width: 1120px) {
     body .shareStateButton {
-        top: calc(3vh + 40px);
-        left: calc(71px + 8em * 1);
+        top: calc(14px + 40px);
+        left: calc(36px + 8em * 1);
     }
     body .viewAllDevices {
-        top: calc(3vh + 40px);
-        left: calc(71px + 8em * 2);
+        top: calc(14px + 40px);
+        left: calc(36px + 8em * 2);
     }
     body .deviceListModal {
         left: calc(57px + 8em * 2);
-        top: calc(3vh + 80px);
+        top: calc(14px + 80px);
     }
     body .exampleFilesButton {
-        top: calc(3vh + 40px);
-        left: calc(71px + 8em * 3);
+        top: calc(14px + 40px);
+        left: calc(36px + 8em * 3);
     }
     body #exampleFiles {
         left: calc(4px + 8em * 3);
-        top: calc(3vh + 80px);
+        top: calc(14px + 80px);
     }
     body .helpButton {
-        top: calc(3vh + 40px);
-        left: calc(71px + 8em * 4);
+        top: calc(14px + 40px);
+        left: calc(36px + 8em * 4);
+    }
+
+    body #ui-background {
+        height: 6em;
+        width: calc(36px + 10em * 4);
+    }
+    body #workspace {
+        margin-top: 6em;
     }
 }
 @media screen and (max-width: 600px) {
     body .waxButton {
         position: fixed;
-        top: 3vh;
-        left: 18vw;
-        width: 6rem;
-        height: 3rem;
+        top: 1.15vh;
+        left: 11vw;
+        width: 20vw;
+        height: 8vh;
+        font-size: 7vw;
+        border-radius: 4vw;
+        padding: 0;
+        min-height: 0px;
     }
     
     body .startAudioButton {
         position: fixed;
-        top: 3vh;
-        left: 45vw;
-        width: 6rem;
-        height: 3rem;
+        top: 1vh;
+        left: 32vw;
+        width: 20vw;
+        height: 8vh;
+        font-size: 4vw;
+        padding: 0;
+        border-radius: 4vw;
+        min-height: 0px;
     }
     
     body #ui-container .mobileMenuToggleButton {
         position: fixed;
-        top: 3vh;
-        left: 72vw;
-        width: 6rem;
-        height: 3rem;
+        top: 1vh;
+        left: 54vw;
+        width: 20vw;
+        height: 8vh;
         display: block;
+        background: rgb(8,56,78);
+        color: white;
+        border: 1vw solid white;
+        font-size: 4vw;
+        border-radius: 4vw;
+        padding: 0;
+        min-height: 0px;
+    }
+
+    body #ui-container .mobileMenuLockButton {
+        position: fixed;
+        top: 1vh;
+        left: 76vw;
+        width: 20vw;
+        height: 8vh;
+        display: block;
+        background: rgb(8,56,78);
+        color: white;
+        border: 1vw solid white;
+        font-size: 4vw;
+        border-radius: 4vw;
+        padding: 0;
+        min-height: 0px;
     }
 
     body #infoDiv, body .permissionDiv {
@@ -289,7 +372,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
         display: none;
     }
     body .deviceListModal {
-        top: calc(3vh + 80px);
+        top: 12vh;
         padding: 0;
         left: 10%;
         right: 10%;
@@ -317,7 +400,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
     body #exampleFiles {
         left: 10%;
         right: 10%;
-        top: calc(3vh + 80px);
+        top: 12vh;
         z-index: 1010;
         padding: 0;
     }
@@ -339,6 +422,19 @@ body .sliderMin, body .sliderMax, body .rootNote {
     body #exampleFiles a:first-of-type {
         margin-top: 48px;
     }
+    body #logo {
+        left: 1vw;
+        width: 5vh;
+        height: 5vh;
+        top: 2.5vh;
+    }
+
+    body #ui-background {
+        height: 10vh;
+    }
+    body #workspace {
+        margin-top: 10vh;
+    }
 }
 @media screen and (min-width: 601px) {
     #mobileMenu {
@@ -347,41 +443,42 @@ body .sliderMin, body .sliderMax, body .rootNote {
 }
 .waxButton {
     position: fixed;
-    left: 24px;
-    top: calc(3vh - 5px);
+    left: -10px;
+    top: 9px;
     color: white;
-    z-index: 1003;
+    z-index: 1011;
     font-size: 2em;
-    background: rgb(8, 56, 78);
+    background: none;
     border: 0;
     font-weight: bold;
+    cursor: auto;
 }
 .startAudioButton {
-    left: calc(71px + 8em * 1);
+    left: calc(36px + 8em * 1);
     color: white;
     border: 3px solid rgb(255,0,94);
     background: rgb(255,0,94);
 }
 .lockButton {
-    left: calc(71px + 8em * 2);
+    left: calc(36px + 8em * 2);
 }
 .saveStateButton {
-    left: calc(71px + 8em * 3);
+    left: calc(36px + 8em * 3);
 }
 .reloadStateButton {
-    left: calc(71px + 8em * 4);
+    left: calc(36px + 8em * 4);
 }
 .shareStateButton {
-    left: calc(71px + 8em * 5);
+    left: calc(36px + 8em * 5);
 }
 .viewAllDevices {
-    left: calc(71px + 8em * 6);
+    left: calc(36px + 8em * 6);
 }
 .helpButton {
-    left: calc(71px + 8em * 8);
+    left: calc(36px + 8em * 8);
 }
 .exampleFilesButton {
-    left: calc(71px + 8em * 7);
+    left: calc(36px + 8em * 7);
 }
 .exampleFilesDiv::before {
     content: "";
@@ -394,7 +491,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
 }
 #exampleFiles {
     position: fixed;
-    top: calc(3vh + 40px);
+    top: calc(14px + 40px);
     left: calc(0.1em + 8em * 7);
     z-index: 1010;
     background: white;
@@ -409,7 +506,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
 .deviceListModal {
     position: fixed;
     left: calc(55px + 8em * 6);
-    top: calc(3vh + 40px);
+    top: calc(14px + 40px);
     border: 1px solid black;
     z-index: 1010;
     display: none;
@@ -485,7 +582,6 @@ body .sliderMin, body .sliderMax, body .rootNote {
     padding: 0.5em 1em;
     border-radius: 10px;
     background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     z-index: 1004 !important;
 }
 .allDevicesButton {
@@ -558,7 +654,6 @@ mark {
     left: 10px;
     border-radius: 5px;
     background: linear-gradient(to right, #f2f2f2, #c4c4c4);
-    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     border: none;
 }
 .growl-notification {
@@ -621,11 +716,11 @@ body .toggle-on {
 }
 #logo {
     position: fixed;
-    height: 70px;
-    height: 70px;
-    top: 10px;
-    left: 10px;
-    z-index: 1010;
+    height: 33px;
+    height: 33px;
+    top: 14px;
+    left: 14px;
+    z-index: 1012;
 }
 .jtk-hover path {
     cursor: pointer;
