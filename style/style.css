@@ -725,6 +725,13 @@ body .toggle-on {
 .jtk-hover path {
     cursor: pointer;
 }
+.endpointCircle {
+    background: rgba(0,0,0,0);
+}
+.endpointCircle circle {
+    fill: rgba(0,0,0,0);
+    stroke: rgba(0,0,0,0);
+}
 body .CodeMirror {
     height: 6em;
 }

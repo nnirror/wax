@@ -406,7 +406,7 @@ class FacetPattern {
     return this;
   }
   
-  tri (frequencies, duration = SAMPLE_RATE, sampleRate = SAMPLE_RATE, fade_in_and_out = true ) {
+  tri (frequencies, duration = SAMPLE_RATE, fade_in_and_out = true ) {
     if (typeof frequencies == 'number' || Array.isArray(frequencies) === true) {
         frequencies = new FacetPattern().from(frequencies);
     }
@@ -418,7 +418,7 @@ class FacetPattern {
     for (let i = 0; i < duration; i++) {
         let frequency = frequencies.data[i];
         wave[i] = 2 * amplitude * Math.abs(2 * (phase - Math.floor(phase + 0.5))) - amplitude;
-        phase += frequency / sampleRate;
+        phase += frequency / SAMPLE_RATE;
         phase -= Math.floor(phase);
     }
     this.data = wave;
@@ -608,6 +608,7 @@ class FacetPattern {
   at (position, value) {
     let replace_position = Math.round(position * (this.data.length-1));
     this.data[replace_position] = value;
+    this.flatten().fixnan();
     return this;
   }
 
@@ -2891,6 +2892,22 @@ markov(states) {
     return this;
   }
 
+  spread (iterations, command, startRelativePosition = 0, endRelativePosition = 1, skipIterations = []) {
+    if (typeof skipIterations == 'number' || Array.isArray(skipIterations) === true) {
+      skipIterations = new FacetPattern().from(skipIterations);
+    }
+    skipIterations.round().clip(0, iterations - 1);
+    let out_fp = new FacetPattern();
+    for (var a = 0; a < iterations; a++) {
+      if (!skipIterations.data.includes(a)) {
+        let calculatedPosition = startRelativePosition + (a / iterations) * (endRelativePosition - startRelativePosition);
+        out_fp.sup(new FacetPattern().sometimes(1,command,{i:a,iters:iterations}),calculatedPosition);
+      }
+    }
+    this.data = out_fp.data;
+    return this;
+  }
+
   iter (iters, command, prob = 1) {
     this.original_data = this.data;
     prob = Math.abs(Number(prob));
@@ -2941,19 +2958,19 @@ markov(states) {
     return this;
   }
 
-  sometimes (prob, command) {
-    if ( typeof command != 'function' ) {
+  sometimes ( prob, command, vars = {} ) {
+    if (typeof command != 'function') {
       throw `2nd argument must be a function, type found: ${typeof command}`;
     }
     command = command.toString();
     command = command.replace(/current_slice./g, 'this.');
     command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
     prob = Math.abs(Number(prob));
-    let i = this.current_iteration_number;
-    let iters = this.current_total_iterations;
+    let i = vars.i ? vars.i : this.current_iteration_number;
+    let iters = vars.iters ? vars.iters : this.current_total_iterations;
     let s = this.current_slice_number;
     let num_slices = this.current_total_slices;
-    if ( Math.random() < prob ) {
+    if (Math.random() < prob) {
       eval(command);
     }
     return this;

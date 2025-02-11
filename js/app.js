@@ -480,7 +480,7 @@ jsPlumb.bind("click", function(connection, originalEvent) {
     selectedConnections = [connection];
 
     // update the style for the clicked connection
-    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
+    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
     connection.endpoints.forEach(endpoint => {
         endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
     });
@@ -600,7 +600,7 @@ workspaceElement.addEventListener('mouseup', (event) => {
                 selectedConnections.push(connection);
                 // add a special CSS class to the selected connection
                 connection.canvas.classList.add('selectedConnection');
-                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
+                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
             } else {
                 if (event.target.id == 'workspace') {
                     // remove the special class from the connection if it's not selected
@@ -625,8 +625,16 @@ workspaceElement.addEventListener('mouseup', (event) => {
 document.addEventListener('DOMContentLoaded', function() {
     const workspace = document.getElementById('workspace');
     let lastTap = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    let touchTimeout;
 
     function handleDoubleClick(event) {
+        if (isMobileOrTablet) {
+            return;
+        }
         let target = event.target;
 
         // traverse up the DOM tree to find the element with the 'jtk-connector' class
@@ -645,6 +653,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleDoubleTap(event) {
+        if (isMobileOrTablet) {
+            return;
+        }
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTap;
         if (tapLength < 500 && tapLength > 0) {
@@ -653,8 +664,90 @@ document.addEventListener('DOMContentLoaded', function() {
         lastTap = currentTime;
     }
 
+    function handleTouchStart(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector')) {
+            touchStartX = event.changedTouches[0].screenX;
+            touchStartY = event.changedTouches[0].screenY;
+            target.dataset.swipeTarget = true; // mark the target for swipe detection
+
+            // prevent scrolling
+            event.preventDefault();
+
+            // find the connection associated with the target
+            const connection = jsPlumb.getConnections().find(conn => conn.connector.canvas === target);
+            if (connection) {
+                // reset styles for all connections
+                jsPlumb.getAllConnections().forEach(conn => {
+                    resetConnectionStyle(conn);
+                });
+
+                // deselect all nodes
+                deselectAllNodes();
+
+                selectedConnections = [connection];
+
+                // update the style for the touched connection
+                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+                connection.endpoints.forEach(endpoint => {
+                    endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
+                });
+            }
+        }
+    }
+
+    function handleTouchMove(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector') && target.dataset.swipeTarget) {
+            // Prevent scrolling
+            event.preventDefault();
+        }
+    }
+
+    function handleTouchEnd(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector') && target.dataset.swipeTarget) {
+            touchEndX = event.changedTouches[0].screenX;
+            touchEndY = event.changedTouches[0].screenY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // check for a vertical swipe
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                const connection = jsPlumb.getConnections().find(conn => conn.connector.canvas === target);
+                if (connection && !isLocked) {
+                    jsPlumb.deleteConnection(connection);
+                }
+            }
+
+            delete target.dataset.swipeTarget; // clean up the marker
+        }
+    }
+
     workspace.addEventListener('dblclick', handleDoubleClick);
     workspace.addEventListener('touchend', handleDoubleTap);
+    workspace.addEventListener('touchstart', handleTouchStart);
+    workspace.addEventListener('touchmove', handleTouchMove);
+    workspace.addEventListener('touchend', handleTouchEnd);
 });
 
 // listen for keydown events on the document
@@ -1351,7 +1444,7 @@ function finishConnection(deviceId, inputIndex) {
             const sourceButton = document.getElementById(sourceButtonId);
             const targetButton = document.getElementById(targetButtonId);
             const verticalOffset = 40;
-            const horizontalOffset = 12;
+            const horizontalOffset = 0;
             let sourcePosition, targetPosition;
             let initialSourceHeight, initialTargetHeight;
             
@@ -1400,19 +1493,12 @@ function finishConnection(deviceId, inputIndex) {
             devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
             devices[sourceDeviceId].splitter = splitter;
 
-            let targetDeviceInputName;
-            if (deviceId.startsWith('output')) {
-                targetDeviceInputName = `speaker channel`;
-            } else {
-                targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
-            }
-
             // visualize the connection
             const jsPlumbConnection = jsPlumb.connect({
                 source: sourceDeviceId,
                 target: deviceId,
                 anchors: [sourcePosition, targetPosition],
-                paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
+                paintStyle: { stroke: "white", strokeWidth: 12, fill: "transparent" },
                 endpointStyle: { fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2 },
                 endpoints: [
                     ["Dot", { radius: 12, cssClass: "endpointCircle sourceEndpoint" }],
@@ -3328,7 +3414,7 @@ async function getDefaultValues() {
 
 function resetConnectionStyle(connection) {
     try {
-        connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
+        connection.setPaintStyle({ stroke: "white", strokeWidth: 12, fill: "transparent" });
         connection.endpoints.forEach(endpoint => {
             endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
         });
