@@ -48,15 +48,22 @@ async function handleLoadButtonClick() {
 
 function handleLockButtonClick() {
     toggleDragging();
+    updateLockButton();
+}
+
+function setLockState(desiredState) {
+    isLocked = desiredState;
+    toggleDragging();
+    updateLockButton();
+}
+
+function updateLockButton() {
     if (isLocked) {
         document.getElementsByClassName('lockButton')[0].textContent = 'Unlock';
         document.getElementsByClassName('mobileMenuLockButton')[0].textContent = 'Unlock';
-        document.getElementById('mobileLockButton').textContent = 'Unlock';
-    }
-    else {
+    } else {
         document.getElementsByClassName('lockButton')[0].textContent = 'Lock';
         document.getElementsByClassName('mobileMenuLockButton')[0].textContent = 'Lock';
-        document.getElementById('mobileLockButton').textContent = 'Lock';
     }
 }
 
@@ -215,7 +222,7 @@ window.onload = async function() {
     link.textContent = "documentation";
     link.target = "_blank"; // to open the link in a new tab
 
-    infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the full ";
+    infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to an 'output' device to play sound. For more information, see the full ";
     infoDiv.appendChild(link);
 
     var period = document.createTextNode(".");
@@ -429,6 +436,7 @@ let sourceButtonId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
+let zIndexCounter = 1;
 let selectedConnections = [];
 let executedTextPatterns = {};
 let selectionDiv = null;
@@ -481,6 +489,13 @@ jsPlumb.bind("click", function(connection, originalEvent) {
 
     // update the style for the clicked connection
     connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+
+    const connectorElement = connection.connector.canvas;
+    if (connectorElement) {
+        zIndexCounter += 1;
+        connectorElement.style.zIndex = zIndexCounter;
+    }
+
     connection.endpoints.forEach(endpoint => {
         endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
     });
@@ -601,6 +616,11 @@ workspaceElement.addEventListener('mouseup', (event) => {
                 // add a special CSS class to the selected connection
                 connection.canvas.classList.add('selectedConnection');
                 connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+                const connectorElement = connection.connector.canvas;
+                if (connectorElement) {
+                    zIndexCounter += 1;
+                    connectorElement.style.zIndex = zIndexCounter;
+                }
             } else {
                 if (event.target.id == 'workspace') {
                     // remove the special class from the connection if it's not selected
@@ -616,9 +636,30 @@ workspaceElement.addEventListener('mouseup', (event) => {
     }
 });
 
-workspaceElement.addEventListener('mouseup', (event) => {
-    if (event.target !== workspaceElement) {
+document.addEventListener('mouseup', (event) => {
+    // check if the event target is a child or instance of device .node
+    let target = event.target;
+    let isNode = false;
+
+    while (target) {
+        if (target.classList && target.classList.contains('node')) {
+            isNode = true;
+            break;
+        }
+        target = target.parentElement;
+    }
+
+    // check if there are any elements with the class 'selectedNode'
+    const selectedNodes = document.getElementsByClassName('selectedNode');
+
+    // clear the drag selection if the target is not a .node and there are no selected nodes
+    if (!isNode && selectedNodes.length == 0) {
         jsPlumb.clearDragSelection();
+    }
+    else {
+        if ( selectedNodes.length == 1 ) {
+            jsPlumb.clearDragSelection();
+        }
     }
 });
 
@@ -695,6 +736,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // update the style for the touched connection
                 connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+                const connectorElement = connection.connector.canvas;
+                if (connectorElement) {
+                    zIndexCounter += 1;
+                    connectorElement.style.zIndex = zIndexCounter;
+                }
                 connection.endpoints.forEach(endpoint => {
                     endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
                 });
@@ -1370,7 +1416,22 @@ document.addEventListener('mouseup', (event) => {
                         finishConnection(endDeviceId, outputChannel);
                     }
                 }
-            } else {
+            }
+            else if (startDeviceId.includes('output')) {
+                // special handling for the output node
+                const outputChannelInput = document.querySelector(`#${startDeviceId} #output_channel`);
+                const outputChannel = outputChannelInput.value - 1;
+                if (startIsInputButton !== endIsInputButton) {
+                    if (startIsInputButton) {
+                        startConnection(endDeviceId, endIndex);
+                        finishConnection(startDeviceId, outputChannel);
+                    } else {
+                        startConnection(startDeviceId, outputChannel);
+                        finishConnection(endDeviceId, endIndex);
+                    }
+                }
+            }
+            else {
                 if (startIsInputButton !== endIsInputButton) {
                     if (startIsInputButton) {
                         startConnection(endDeviceId, endIndex);
@@ -1498,7 +1559,7 @@ function finishConnection(deviceId, inputIndex) {
                 source: sourceDeviceId,
                 target: deviceId,
                 anchors: [sourcePosition, targetPosition],
-                paintStyle: { stroke: "white", strokeWidth: 12, fill: "transparent" },
+                paintStyle: { stroke: 'rgba(112, 132, 145, 1)', strokeWidth: 12, fill: "transparent" },
                 endpointStyle: { fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2 },
                 endpoints: [
                     ["Dot", { radius: 12, cssClass: "endpointCircle sourceEndpoint" }],
@@ -2752,7 +2813,7 @@ function removeSelectedNodeClass(event) {
         if (node === event.target) return;
         if (node.classList.contains('selectedNode')) {
             node.classList.remove('selectedNode');
-        }``
+        }
     });
 }
 
@@ -2845,6 +2906,9 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
 
         workspaceState.push(deviceState);
     }
+
+    // include locked status in the workspace state
+    workspaceState.push({ isLocked: isLocked });
 
     if (createShareLink == true) {
         let encodedState = LZString.compressToEncodedURIComponent(JSON.stringify(workspaceState));
@@ -2979,6 +3043,7 @@ async function checkDeviceMotionPermission() {
 }
 
 async function reconstructWorkspaceState(deviceStates = null) {
+    deleteAllNodes();
     try {
         document.getElementById('infoDiv').style.display = 'none';
     } catch (error) {}
@@ -2986,10 +3051,16 @@ async function reconstructWorkspaceState(deviceStates = null) {
     let hasMotionDevice = false;
     if (deviceStates) {
         for (let deviceState of deviceStates) {
-            let deviceName = deviceState.id.split('-')[0];
-            if (deviceName === 'motion') {
-                hasMotionDevice = true;
-                break;
+            if (deviceState.isLocked !== undefined) {
+                setLockState(!deviceState.isLocked);
+                continue;
+            }
+            else {
+                let deviceName = deviceState.id.split('-')[0];
+                if (deviceName === 'motion') {
+                    hasMotionDevice = true;
+                    break;
+                }
             }
         }
     }
@@ -3123,6 +3194,9 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
     let idMap = {};
 
     for (let deviceState of deviceStates) {
+        if (deviceState.isLocked !== undefined) {
+            continue;
+        }
         // generate a unique ID for the new device
         let originalId = deviceState.id;
         deviceState.id = newIds ? `${deviceState.id}${Date.now()}` : deviceState.id;
@@ -3414,7 +3488,7 @@ async function getDefaultValues() {
 
 function resetConnectionStyle(connection) {
     try {
-        connection.setPaintStyle({ stroke: "white", strokeWidth: 12, fill: "transparent" });
+        connection.setPaintStyle({ stroke: 'rgba(112, 132, 145, 1)', strokeWidth: 12, fill: "transparent" });
         connection.endpoints.forEach(endpoint => {
             endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
         });

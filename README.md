@@ -75,7 +75,7 @@ Press the `save` button to save the system state as a zip file, including all au
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
 # Locking the workspace
-Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices.
+Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices. Whether a workspace is locked is stored as part of the system state which is shareable as a URL or zip file.
 
 # Device reference
 
