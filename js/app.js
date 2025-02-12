@@ -588,6 +588,7 @@ workspaceElement.addEventListener('mouseup', (event) => {
     if (startPoint) {
         // clear the previous selection
         selectedConnections = [];
+        jsPlumb.clearDragSelection();
 
         // check which elements are within the selection div
         let nodes = document.querySelectorAll('.node');
@@ -660,6 +661,17 @@ document.addEventListener('mouseup', (event) => {
         if ( selectedNodes.length == 1 ) {
             jsPlumb.clearDragSelection();
         }
+    }
+    if (isNode && !isDraggingDevice) {
+        let nodeElement = event.target.closest('.node');
+        let nodes = document.querySelectorAll('.node');
+        nodes.forEach((node) => {
+            if (node === nodeElement) return;
+            if (node.classList.contains('selectedNode')) {
+                node.classList.remove('selectedNode');
+            }
+        });
+        jsPlumb.clearDragSelection();
     }
 });
 
@@ -1622,6 +1634,148 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const device = await createMicrophoneDevice();
             deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
         }
+        else if (filename === "midicc") {
+            const ccSource = context.createConstantSource();
+            ccSource.offset.value = 0;
+            ccSource.start();
+        
+            // create the device
+            const device = {
+                node: ccSource,
+                source: ccSource,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "midicc", false);
+        
+            // create label for CC number input
+            const ccNumberLabel = document.createElement('label');
+            ccNumberLabel.for = 'ccNumber';
+            ccNumberLabel.textContent = 'CC #';
+            ccNumberLabel.className = 'deviceInportLabel';
+            ccNumberLabel.style.display = 'inline-block';
+            ccNumberLabel.style.width = '48px';
+        
+            // create input for CC number
+            const ccNumberInput = document.createElement('input');
+            ccNumberInput.type = 'number';
+            ccNumberInput.value = 1; // default CC number
+            ccNumberInput.id = 'ccNumber';
+            ccNumberInput.className = 'ccNumber';
+            ccNumberInput.min = 0;
+            ccNumberInput.max = 127;
+        
+            // append the CC number label and input to the device div
+            deviceDiv.appendChild(ccNumberLabel);
+            deviceDiv.appendChild(ccNumberInput);
+        
+            // request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(midiAccess => {
+                    midiAccess.inputs.forEach(input => {
+                        input.addEventListener('midimessage', event => {
+                            const [status, ccNumber, value] = event.data;
+                            // check if the message is a CC message
+                            if ((status & 0xF0) === 176) { // CC message
+                                const selectedCCNumber = parseInt(ccNumberInput.value, 10);
+                                if (ccNumber === selectedCCNumber) {
+                                    const normalizedValue = value / 127; // normalize value to range [0, 1]
+                                    // transmit the CC value as a signal
+                                    ccSource.offset.setValueAtTime(normalizedValue, context.currentTime);
+                                }
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Failed to get MIDI access', err);
+                });
+            } else {
+                console.error('MIDI not supported in this browser.');
+            }
+        }
+        else if (filename === "midinote") {
+            // create a ConstantSourceNode to transmit the frequency
+            const frequencySource = context.createConstantSource();
+            frequencySource.offset.value = 0; // start with no frequency
+            frequencySource.start();
+        
+            // create the device
+            const device = {
+                node: frequencySource,
+                source: frequencySource,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "midinote", false);
+        
+            // create label for the MIDI channel input
+            const midiChannelLabel = document.createElement('label');
+            midiChannelLabel.for = 'midiChannel';
+            midiChannelLabel.textContent = 'MIDI Channel';
+            midiChannelLabel.className = 'deviceInportLabel';
+            midiChannelLabel.style.display = 'inline-block';
+            midiChannelLabel.style.width = '90px';
+        
+            // create number input for the MIDI channel
+            const midiChannelInput = document.createElement('input');
+            midiChannelInput.type = 'number';
+            midiChannelInput.id = 'midiChannel';
+            midiChannelInput.className = 'midiChannel';
+            midiChannelInput.min = 1;
+            midiChannelInput.max = 16;
+            midiChannelInput.value = 1; // Default to channel 1
+            midiChannelInput.addEventListener('change', (event) => {
+                midiChannel = parseInt(event.target.value, 10);
+            });
+        
+            // append the MIDI channel label and input to the device div
+            deviceDiv.appendChild(midiChannelLabel);
+            deviceDiv.appendChild(midiChannelInput);
+        
+            // function to convert MIDI note to frequency
+            function midiToFrequency(midiNote) {
+                return 440 * Math.pow(2, (midiNote - 69) / 12);
+            }
+        
+            // request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(midiAccess => {
+                    midiAccess.inputs.forEach(input => {
+                        input.addEventListener('midimessage', event => {
+                            const [status, note, velocity] = event.data;
+                            const channel = (status & 0x0F) + 1; // extract channel number (1-16)
+                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+        
+                            // check if the message is a note on or note off and matches the selected channel
+                            if (channel === selectedChannel) {
+                                if ((status & 0xF0) === 144 && velocity > 0) { // note on
+                                    const frequency = midiToFrequency(note);
+                                    // transmit the frequency as a signal
+                                    frequencySource.offset.setTargetAtTime(frequency, context.currentTime, 0.001);
+                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // note off
+                                    // transmit zero frequency as a signal with linear ramping
+                                    frequencySource.offset.setTargetAtTime(0, context.currentTime, 0.001);
+                                }
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Failed to get MIDI access', err);
+                });
+            } else {
+                console.error('MIDI not supported in this browser.');
+            }
+        }
         else if (filename === "toggle") {
             const silenceGenerator = context.createConstantSource();
             silenceGenerator.offset.value = 0;
@@ -2323,6 +2477,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.width = '450px';
             deviceDiv.style.height = '170px';
         }
+        if (filename == 'midinote') {
+            deviceDiv.style.width = '192px';
+        }
         return deviceDiv;
     }
     catch (error) {
@@ -2818,11 +2975,19 @@ function removeSelectedNodeClass(event) {
 }
 
 function handleDeviceMouseDown (event) {
-    removeSelectedNodeClass(event);
+    // if the device was not selected before, remove all selected node classes
     let nodeElement = event.target.closest('.node');
     if (nodeElement) {
+        if (!nodeElement.classList.contains('selectedNode')) {
+            removeSelectedNodeClass(event);
+            jsPlumb.clearDragSelection();
+        }
         nodeElement.classList.add('selectedNode');
     }
+    selectedConnections.forEach(connection => {
+        resetConnectionStyle(connection);
+    });
+    selectedConnections = [];
 }
 
 function deselectAllNodes () {
