@@ -128,6 +128,18 @@ var wasmDeviceURLs = [
         "displayName": "lowpass"
     },
     {
+        "fileName": "midicc",
+        "displayName": "MIDI cc"
+    },
+    {
+        "fileName": "midinote",
+        "displayName": "MIDI note"
+    },
+    {
+        "fileName": "midipitchbend",
+        "displayName": "MIDI pitchbend"
+    },
+    {
         "fileName": "mix",
         "displayName": "mix"
     },

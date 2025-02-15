@@ -75,7 +75,7 @@ Press the `save` button to save the system state as a zip file, including all au
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
 # Locking the workspace
-Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices.
+Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices. Whether a workspace is locked is stored as part of the system state which is shareable as a URL or zip file.
 
 # Device reference
 
@@ -198,6 +198,19 @@ Applies a peak-limiter to `input 1`.
 Applies a low-pass filter to `input`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff.
+
+## midicc
+Receives MIDI Control Change (CC) messages at the specified CC# on the specified channel. CC values are automatically scaled between 0 and 1.
+
+## midinote
+Receives MIDI Note messages on the specified channel. Note values are transmitted at the corresponding frequency in Hz; e.g., a MIDI note of 69 produces a 440.
+
+The `midinote` device supports up to 8 voices. When a new note is received, it will be assigned to the first unoccupied voice. If all voices are occupied, the device will steal the first voice (voice 1) and assign the new note to it. This ensures that new notes are always played, even if it means interrupting an existing note.
+
+Each voice has a corresponding `gate` outlet, which transmits a 1 when the note is on (sustained) and a value of 0 when the note is off.
+
+## midipitchbend
+Receives MIDI Pitch Bend messages on the specified channel. Pitch bend values are automatically scaled between -1 and 1.
 
 ## mix
 Mixes `input 1` and `input 2` together using a `crossfade` parameter between 0 and 1. A `crossfade` value of 0.5 will mix the signals together equally, and a `crossfade` value of 0 or 1 will return only the signal at that input.

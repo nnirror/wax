@@ -48,15 +48,22 @@ async function handleLoadButtonClick() {
 
 function handleLockButtonClick() {
     toggleDragging();
+    updateLockButton();
+}
+
+function setLockState(desiredState) {
+    isLocked = desiredState;
+    toggleDragging();
+    updateLockButton();
+}
+
+function updateLockButton() {
     if (isLocked) {
         document.getElementsByClassName('lockButton')[0].textContent = 'Unlock';
         document.getElementsByClassName('mobileMenuLockButton')[0].textContent = 'Unlock';
-        document.getElementById('mobileLockButton').textContent = 'Unlock';
-    }
-    else {
+    } else {
         document.getElementsByClassName('lockButton')[0].textContent = 'Lock';
         document.getElementsByClassName('mobileMenuLockButton')[0].textContent = 'Lock';
-        document.getElementById('mobileLockButton').textContent = 'Lock';
     }
 }
 
@@ -215,7 +222,7 @@ window.onload = async function() {
     link.textContent = "documentation";
     link.target = "_blank"; // to open the link in a new tab
 
-    infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to a 'speaker' object to hear the output. For more information, see the full ";
+    infoDiv.innerHTML = "<b>Wax</b> is a browser-based audio synthesis environment inspired by Max and other data-flow programming systems. Double-click or press 'n' to add devices to the workspace. Connect to an 'output' device to play sound. For more information, see the full ";
     infoDiv.appendChild(link);
 
     var period = document.createTextNode(".");
@@ -429,6 +436,7 @@ let sourceButtonId = null;
 let sourceOutputIndex = null;
 let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
+let zIndexCounter = 1;
 let selectedConnections = [];
 let executedTextPatterns = {};
 let selectionDiv = null;
@@ -480,7 +488,14 @@ jsPlumb.bind("click", function(connection, originalEvent) {
     selectedConnections = [connection];
 
     // update the style for the clicked connection
-    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
+    connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+
+    const connectorElement = connection.connector.canvas;
+    if (connectorElement) {
+        zIndexCounter += 1;
+        connectorElement.style.zIndex = zIndexCounter;
+    }
+
     connection.endpoints.forEach(endpoint => {
         endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
     });
@@ -573,6 +588,7 @@ workspaceElement.addEventListener('mouseup', (event) => {
     if (startPoint) {
         // clear the previous selection
         selectedConnections = [];
+        jsPlumb.clearDragSelection();
 
         // check which elements are within the selection div
         let nodes = document.querySelectorAll('.node');
@@ -600,7 +616,12 @@ workspaceElement.addEventListener('mouseup', (event) => {
                 selectedConnections.push(connection);
                 // add a special CSS class to the selected connection
                 connection.canvas.classList.add('selectedConnection');
-                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 4 });
+                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+                const connectorElement = connection.connector.canvas;
+                if (connectorElement) {
+                    zIndexCounter += 1;
+                    connectorElement.style.zIndex = zIndexCounter;
+                }
             } else {
                 if (event.target.id == 'workspace') {
                     // remove the special class from the connection if it's not selected
@@ -611,13 +632,47 @@ workspaceElement.addEventListener('mouseup', (event) => {
 
         // remove the selection div and reset the start point
         workspaceElement.removeChild(selectionDiv);
-        selectionDiv = null;
+        setTimeout(() => {
+            selectionDiv = null;
+        }, 100);
         startPoint = null;
     }
 });
 
-workspaceElement.addEventListener('mouseup', (event) => {
-    if (event.target !== workspaceElement) {
+document.addEventListener('mouseup', (event) => {
+    // check if the event target is a child or instance of device .node
+    let target = event.target;
+    let isNode = false;
+
+    while (target) {
+        if (target.classList && target.classList.contains('node')) {
+            isNode = true;
+            break;
+        }
+        target = target.parentElement;
+    }
+
+    // check if there are any elements with the class 'selectedNode'
+    const selectedNodes = document.getElementsByClassName('selectedNode');
+
+    // clear the drag selection if the target is not a .node and there are no selected nodes
+    if (!isNode && selectedNodes.length == 0) {
+        jsPlumb.clearDragSelection();
+    }
+    else {
+        if ( selectedNodes.length == 1 ) {
+            jsPlumb.clearDragSelection();
+        }
+    }
+    if (isNode && !isDraggingDevice && selectionDiv === null) {
+        let nodeElement = event.target.closest('.node');
+        let nodes = document.querySelectorAll('.node');
+        nodes.forEach((node) => {
+            if (node === nodeElement) return;
+            if (node.classList.contains('selectedNode')) {
+                node.classList.remove('selectedNode');
+            }
+        });
         jsPlumb.clearDragSelection();
     }
 });
@@ -625,8 +680,16 @@ workspaceElement.addEventListener('mouseup', (event) => {
 document.addEventListener('DOMContentLoaded', function() {
     const workspace = document.getElementById('workspace');
     let lastTap = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    let touchTimeout;
 
     function handleDoubleClick(event) {
+        if (isMobileOrTablet) {
+            return;
+        }
         let target = event.target;
 
         // traverse up the DOM tree to find the element with the 'jtk-connector' class
@@ -645,6 +708,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleDoubleTap(event) {
+        if (isMobileOrTablet) {
+            return;
+        }
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTap;
         if (tapLength < 500 && tapLength > 0) {
@@ -653,8 +719,95 @@ document.addEventListener('DOMContentLoaded', function() {
         lastTap = currentTime;
     }
 
+    function handleTouchStart(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector')) {
+            touchStartX = event.changedTouches[0].screenX;
+            touchStartY = event.changedTouches[0].screenY;
+            target.dataset.swipeTarget = true; // mark the target for swipe detection
+
+            // prevent scrolling
+            event.preventDefault();
+
+            // find the connection associated with the target
+            const connection = jsPlumb.getConnections().find(conn => conn.connector.canvas === target);
+            if (connection) {
+                // reset styles for all connections
+                jsPlumb.getAllConnections().forEach(conn => {
+                    resetConnectionStyle(conn);
+                });
+
+                // deselect all nodes
+                deselectAllNodes();
+
+                selectedConnections = [connection];
+
+                // update the style for the touched connection
+                connection.setPaintStyle({ stroke: 'rgb(255,0,94)', strokeWidth: 12 });
+                const connectorElement = connection.connector.canvas;
+                if (connectorElement) {
+                    zIndexCounter += 1;
+                    connectorElement.style.zIndex = zIndexCounter;
+                }
+                connection.endpoints.forEach(endpoint => {
+                    endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
+                });
+            }
+        }
+    }
+
+    function handleTouchMove(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector') && target.dataset.swipeTarget) {
+            // Prevent scrolling
+            event.preventDefault();
+        }
+    }
+
+    function handleTouchEnd(event) {
+        let target = event.target;
+
+        // traverse up the DOM tree to find the element with the 'jtk-connector' class
+        while (target && !target.classList.contains('jtk-connector')) {
+            target = target.parentElement;
+        }
+
+        if (target && target.classList.contains('jtk-connector') && target.dataset.swipeTarget) {
+            touchEndX = event.changedTouches[0].screenX;
+            touchEndY = event.changedTouches[0].screenY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // check for a vertical swipe
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                const connection = jsPlumb.getConnections().find(conn => conn.connector.canvas === target);
+                if (connection && !isLocked) {
+                    jsPlumb.deleteConnection(connection);
+                }
+            }
+
+            delete target.dataset.swipeTarget; // clean up the marker
+        }
+    }
+
     workspace.addEventListener('dblclick', handleDoubleClick);
     workspace.addEventListener('touchend', handleDoubleTap);
+    workspace.addEventListener('touchstart', handleTouchStart);
+    workspace.addEventListener('touchmove', handleTouchMove);
+    workspace.addEventListener('touchend', handleTouchEnd);
 });
 
 // listen for keydown events on the document
@@ -1277,7 +1430,22 @@ document.addEventListener('mouseup', (event) => {
                         finishConnection(endDeviceId, outputChannel);
                     }
                 }
-            } else {
+            }
+            else if (startDeviceId.includes('output')) {
+                // special handling for the output node
+                const outputChannelInput = document.querySelector(`#${startDeviceId} #output_channel`);
+                const outputChannel = outputChannelInput.value - 1;
+                if (startIsInputButton !== endIsInputButton) {
+                    if (startIsInputButton) {
+                        startConnection(endDeviceId, endIndex);
+                        finishConnection(startDeviceId, outputChannel);
+                    } else {
+                        startConnection(startDeviceId, outputChannel);
+                        finishConnection(endDeviceId, endIndex);
+                    }
+                }
+            }
+            else {
                 if (startIsInputButton !== endIsInputButton) {
                     if (startIsInputButton) {
                         startConnection(endDeviceId, endIndex);
@@ -1351,7 +1519,7 @@ function finishConnection(deviceId, inputIndex) {
             const sourceButton = document.getElementById(sourceButtonId);
             const targetButton = document.getElementById(targetButtonId);
             const verticalOffset = 40;
-            const horizontalOffset = 12;
+            const horizontalOffset = 0;
             let sourcePosition, targetPosition;
             let initialSourceHeight, initialTargetHeight;
             
@@ -1400,19 +1568,12 @@ function finishConnection(deviceId, inputIndex) {
             devices[sourceDeviceId].connections = devices[sourceDeviceId].connections || [];
             devices[sourceDeviceId].splitter = splitter;
 
-            let targetDeviceInputName;
-            if (deviceId.startsWith('output')) {
-                targetDeviceInputName = `speaker channel`;
-            } else {
-                targetDeviceInputName = devices[deviceId].device.it.T.inlets[inputIndex].comment;
-            }
-
             // visualize the connection
             const jsPlumbConnection = jsPlumb.connect({
                 source: sourceDeviceId,
                 target: deviceId,
                 anchors: [sourcePosition, targetPosition],
-                paintStyle: { stroke: "white", strokeWidth: 4, fill: "transparent" },
+                paintStyle: { stroke: 'rgba(112, 132, 145, 1)', strokeWidth: 12, fill: "transparent" },
                 endpointStyle: { fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2 },
                 endpoints: [
                     ["Dot", { radius: 12, cssClass: "endpointCircle sourceEndpoint" }],
@@ -1474,6 +1635,302 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             }
             const device = await createMicrophoneDevice();
             deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
+        }
+        else if (filename === "midipitchbend") {
+            const pitchBendSource = context.createConstantSource();
+            pitchBendSource.offset.value = 0;
+            pitchBendSource.start();
+        
+            // create the device
+            const device = {
+                node: pitchBendSource,
+                source: pitchBendSource,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
+        
+            // create label for the MIDI channel input
+            const midiChannelLabel = document.createElement('label');
+            midiChannelLabel.for = 'midiChannel';
+            midiChannelLabel.textContent = 'MIDI Channel';
+            midiChannelLabel.className = 'deviceInportLabel';
+            midiChannelLabel.style.display = 'inline-block';
+        
+            // create number input for the MIDI channel
+            const midiChannelInput = document.createElement('input');
+            midiChannelInput.type = 'number';
+            midiChannelInput.id = 'midiChannel';
+            midiChannelInput.className = 'midiChannel';
+            midiChannelInput.min = 1;
+            midiChannelInput.max = 16;
+            midiChannelInput.value = 1;
+            midiChannelInput.style.width = '40px';
+            midiChannelInput.addEventListener('change', (event) => {
+                midiChannel = parseInt(event.target.value, 10);
+            });
+        
+            // append the MIDI channel label and input to the device div
+            deviceDiv.appendChild(midiChannelLabel);
+            deviceDiv.appendChild(midiChannelInput);
+        
+            // request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(midiAccess => {
+                    midiAccess.inputs.forEach(input => {
+                        input.addEventListener('midimessage', event => {
+                            const [status, lsb, msb] = event.data;
+                            const channel = (status & 0x0F) + 1; // extract channel number (1-16)
+                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+        
+                            // check if the message is a pitch bend message and matches the selected channel
+                            if ((status & 0xF0) === 224 && channel === selectedChannel) { // pitch bend message
+                                const pitchBendValue = (msb << 7) | lsb; // combine MSB and LSB to create a 14-bit value
+                                const normalizedValue = (pitchBendValue - 8192) / 8192; // normalize value to range [-1, 1]
+                                // transmit the pitch bend value as a signal
+                                pitchBendSource.offset.setValueAtTime(normalizedValue, context.currentTime);
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Failed to get MIDI access', err);
+                });
+            } else {
+                console.error('MIDI not supported in this browser.');
+            }
+        }
+        else if (filename === "midicc") {
+            const ccSource = context.createConstantSource();
+            ccSource.offset.value = 0;
+            ccSource.start();
+        
+            // create the device
+            const device = {
+                node: ccSource,
+                source: ccSource,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "midicc", false);
+        
+            // create label for the MIDI channel input
+            const midiChannelLabel = document.createElement('label');
+            midiChannelLabel.for = 'midiChannel';
+            midiChannelLabel.textContent = 'MIDI Channel';
+            midiChannelLabel.className = 'deviceInportLabel';
+            midiChannelLabel.style.display = 'inline-block';
+        
+            // create number input for the MIDI channel
+            const midiChannelInput = document.createElement('input');
+            midiChannelInput.type = 'number';
+            midiChannelInput.id = 'midiChannel';
+            midiChannelInput.className = 'midiChannel';
+            midiChannelInput.min = 1;
+            midiChannelInput.max = 16;
+            midiChannelInput.value = 1; 
+            midiChannelInput.style.width = '40px';
+            midiChannelInput.addEventListener('change', (event) => {
+                midiChannel = parseInt(event.target.value, 10);
+            });
+        
+            // append the MIDI channel label and input to the device div
+            deviceDiv.appendChild(midiChannelLabel);
+            deviceDiv.appendChild(midiChannelInput);
+            deviceDiv.appendChild(document.createElement('br'));
+        
+            // create label for CC number input
+            const ccNumberLabel = document.createElement('label');
+            ccNumberLabel.for = 'ccNumber';
+            ccNumberLabel.textContent = 'CC #';
+            ccNumberLabel.className = 'deviceInportLabel';
+            ccNumberLabel.style.display = 'inline-block';
+        
+            // create input for CC number
+            const ccNumberInput = document.createElement('input');
+            ccNumberInput.type = 'number';
+            ccNumberInput.value = 1; // default CC number
+            ccNumberInput.id = 'ccNumber';
+            ccNumberInput.className = 'ccNumber';
+            ccNumberInput.min = 0;
+            ccNumberInput.max = 127;
+            ccNumberInput.style.width = '40px';
+        
+            // append the CC number label and input to the device div
+            deviceDiv.appendChild(ccNumberLabel);
+            deviceDiv.appendChild(ccNumberInput);
+        
+            // request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(midiAccess => {
+                    midiAccess.inputs.forEach(input => {
+                        input.addEventListener('midimessage', event => {
+                            const [status, ccNumber, value] = event.data;
+                            const channel = (status & 0x0F) + 1; // channel number (1-16)
+                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+        
+                            // check if the message is a CC message and matches the selected channel
+                            if ((status & 0xF0) === 176 && channel === selectedChannel) { // CC message
+                                const selectedCCNumber = parseInt(ccNumberInput.value, 10);
+                                if (ccNumber === selectedCCNumber) {
+                                    const normalizedValue = value / 127; // normalize value to range [0, 1]
+                                    // transmit the CC value as a signal
+                                    ccSource.offset.setValueAtTime(normalizedValue, context.currentTime);
+                                }
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Failed to get MIDI access', err);
+                });
+            } else {
+                console.error('MIDI not supported in this browser.');
+            }
+        }
+        else if (filename === "midinote") {
+            const voiceSources = [];
+            const gateSources = [];
+            for (let i = 0; i < 8; i++) {
+                const frequencySource = context.createConstantSource();
+                frequencySource.offset.value = 0; // start with no frequency
+                frequencySource.start();
+                voiceSources.push(frequencySource);
+        
+                const gateSource = context.createConstantSource();
+                gateSource.offset.value = 0; // start with gate off
+                gateSource.start();
+                gateSources.push(gateSource);
+            }
+        
+            const merger = context.createChannelMerger(16);
+            voiceSources.forEach((source, index) => {
+                source.connect(merger, 0, index);
+            });
+            gateSources.forEach((source, index) => {
+                source.connect(merger, 0, index + 8);
+            });
+        
+            // create the device
+            const device = {
+                node: merger,
+                sources: voiceSources,
+                gates: gateSources,
+                numOutputChannels: 16,
+                it: {
+                    T: {
+                        outlets: [
+                            { comment: 'voice 1' },
+                            { comment: 'voice 2' },
+                            { comment: 'voice 3' },
+                            { comment: 'voice 4' },
+                            { comment: 'voice 5' },
+                            { comment: 'voice 6' },
+                            { comment: 'voice 7' },
+                            { comment: 'voice 8' },
+                            { comment: 'gate 1' },
+                            { comment: 'gate 2' },
+                            { comment: 'gate 3' },
+                            { comment: 'gate 4' },
+                            { comment: 'gate 5' },
+                            { comment: 'gate 6' },
+                            { comment: 'gate 7' },
+                            { comment: 'gate 8' }
+                        ],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "midinote", false);
+        
+            // create label for the MIDI channel input
+            const midiChannelLabel = document.createElement('label');
+            midiChannelLabel.for = 'midiChannel';
+            midiChannelLabel.textContent = 'MIDI Channel';
+            midiChannelLabel.className = 'deviceInportLabel';
+            midiChannelLabel.style.display = 'inline-block';
+        
+            // create number input for the MIDI channel
+            const midiChannelInput = document.createElement('input');
+            midiChannelInput.type = 'number';
+            midiChannelInput.id = 'midiChannel';
+            midiChannelInput.className = 'midiChannel';
+            midiChannelInput.min = 1;
+            midiChannelInput.max = 16;
+            midiChannelInput.value = 1;
+            midiChannelInput.style.width = '40px';
+            midiChannelInput.addEventListener('change', (event) => {
+                midiChannel = parseInt(event.target.value, 10);
+            });
+        
+            // append the MIDI channel label and input to the device div
+            deviceDiv.appendChild(midiChannelLabel);
+            deviceDiv.appendChild(midiChannelInput);
+        
+            function midiToFrequency(midiNote) {
+                return 440 * Math.pow(2, (midiNote - 69) / 12);
+            }
+        
+            let heldNotes = [];
+            let voiceAssignments = new Array(8).fill(null); // track which notes are assigned to which voices
+        
+            // request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(midiAccess => {
+                    midiAccess.inputs.forEach(input => {
+                        input.addEventListener('midimessage', event => {
+                            const [status, note, velocity] = event.data;
+                            const channel = (status & 0x0F) + 1; // extract channel number (1-16)
+                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+        
+                            // check if the message is a note on or note off and matches the selected channel
+                            if (channel === selectedChannel) {
+                                if ((status & 0xF0) === 144 && velocity > 0) { // note on
+                                    const frequency = midiToFrequency(note);
+                                    let voiceIndex = voiceAssignments.indexOf(null); // find an unoccupied voice
+        
+                                    if (voiceIndex === -1) {
+                                        // if no unoccupied voice, steal the first one
+                                        voiceIndex = 0;
+                                    }
+        
+                                    voiceAssignments[voiceIndex] = note;
+                                    heldNotes.push(note);
+                                    // transmit the frequency as a signal with linear ramping
+                                    voiceSources[voiceIndex].offset.setTargetAtTime(frequency, context.currentTime, 0.01);
+                                    // set the gate to 1
+                                    gateSources[voiceIndex].offset.setTargetAtTime(1, context.currentTime, 0.01);
+                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // Note off
+                                    const noteIndex = heldNotes.indexOf(note);
+                                    if (noteIndex !== -1) {
+                                        heldNotes.splice(noteIndex, 1);
+                                    }
+        
+                                    const voiceIndex = voiceAssignments.indexOf(note);
+                                    if (voiceIndex !== -1) {
+                                        voiceAssignments[voiceIndex] = null;
+                                        // set the gate to 0
+                                        gateSources[voiceIndex].offset.setTargetAtTime(0, context.currentTime, 0.01);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Failed to get MIDI access', err);
+                });
+            } else {
+                console.error('MIDI not supported in this browser.');
+            }
         }
         else if (filename === "toggle") {
             const silenceGenerator = context.createConstantSource();
@@ -2176,6 +2633,13 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.width = '450px';
             deviceDiv.style.height = '170px';
         }
+        if (filename == 'midinote') {
+            deviceDiv.style.width = '202px';
+        }
+        if (filename == 'midicc') {
+            deviceDiv.style.width = '202px';
+            deviceDiv.style.height = '78px';
+        }
         return deviceDiv;
     }
     catch (error) {
@@ -2486,8 +2950,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         stop: function(event) {
             if (isLocked) return false;
             isDraggingDevice = false;
-        },
-        containment: true
+        }
     });
 
     if (deviceType === 'pattern') {
@@ -2666,16 +3129,24 @@ function removeSelectedNodeClass(event) {
         if (node === event.target) return;
         if (node.classList.contains('selectedNode')) {
             node.classList.remove('selectedNode');
-        }``
+        }
     });
 }
 
 function handleDeviceMouseDown (event) {
-    removeSelectedNodeClass(event);
+    // if the device was not selected before, remove all selected node classes
     let nodeElement = event.target.closest('.node');
     if (nodeElement) {
+        if (!nodeElement.classList.contains('selectedNode')) {
+            removeSelectedNodeClass(event);
+            jsPlumb.clearDragSelection();
+        }
         nodeElement.classList.add('selectedNode');
     }
+    selectedConnections.forEach(connection => {
+        resetConnectionStyle(connection);
+    });
+    selectedConnections = [];
 }
 
 function deselectAllNodes () {
@@ -2759,6 +3230,9 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
 
         workspaceState.push(deviceState);
     }
+
+    // include locked status in the workspace state
+    workspaceState.push({ isLocked: isLocked });
 
     if (createShareLink == true) {
         let encodedState = LZString.compressToEncodedURIComponent(JSON.stringify(workspaceState));
@@ -2893,6 +3367,7 @@ async function checkDeviceMotionPermission() {
 }
 
 async function reconstructWorkspaceState(deviceStates = null) {
+    deleteAllNodes();
     try {
         document.getElementById('infoDiv').style.display = 'none';
     } catch (error) {}
@@ -2900,10 +3375,16 @@ async function reconstructWorkspaceState(deviceStates = null) {
     let hasMotionDevice = false;
     if (deviceStates) {
         for (let deviceState of deviceStates) {
-            let deviceName = deviceState.id.split('-')[0];
-            if (deviceName === 'motion') {
-                hasMotionDevice = true;
-                break;
+            if (deviceState.isLocked !== undefined) {
+                setLockState(!deviceState.isLocked);
+                continue;
+            }
+            else {
+                let deviceName = deviceState.id.split('-')[0];
+                if (deviceName === 'motion') {
+                    hasMotionDevice = true;
+                    break;
+                }
             }
         }
     }
@@ -3037,6 +3518,9 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
     let idMap = {};
 
     for (let deviceState of deviceStates) {
+        if (deviceState.isLocked !== undefined) {
+            continue;
+        }
         // generate a unique ID for the new device
         let originalId = deviceState.id;
         deviceState.id = newIds ? `${deviceState.id}${Date.now()}` : deviceState.id;
@@ -3328,7 +3812,7 @@ async function getDefaultValues() {
 
 function resetConnectionStyle(connection) {
     try {
-        connection.setPaintStyle({ stroke: "white", strokeWidth: 4, fill: "transparent" });
+        connection.setPaintStyle({ stroke: 'rgba(112, 132, 145, 1)', strokeWidth: 12, fill: "transparent" });
         connection.endpoints.forEach(endpoint => {
             endpoint.setPaintStyle({ fill: "rgba(127,127,127,0.5)", outlineStroke: "black", outlineWidth: 2, cssClass: "endpointClass" });
         });
