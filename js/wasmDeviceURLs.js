@@ -129,11 +129,15 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "midicc",
-        "displayName": "midi cc"
+        "displayName": "MIDI cc"
     },
     {
         "fileName": "midinote",
-        "displayName": "midi note"
+        "displayName": "MIDI note"
+    },
+    {
+        "fileName": "midipitchbend",
+        "displayName": "MIDI pitchbend"
     },
     {
         "fileName": "mix",

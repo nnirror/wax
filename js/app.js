@@ -632,7 +632,9 @@ workspaceElement.addEventListener('mouseup', (event) => {
 
         // remove the selection div and reset the start point
         workspaceElement.removeChild(selectionDiv);
-        selectionDiv = null;
+        setTimeout(() => {
+            selectionDiv = null;
+        }, 100);
         startPoint = null;
     }
 });
@@ -662,7 +664,7 @@ document.addEventListener('mouseup', (event) => {
             jsPlumb.clearDragSelection();
         }
     }
-    if (isNode && !isDraggingDevice) {
+    if (isNode && !isDraggingDevice && selectionDiv === null) {
         let nodeElement = event.target.closest('.node');
         let nodes = document.querySelectorAll('.node');
         nodes.forEach((node) => {
@@ -1634,6 +1636,74 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const device = await createMicrophoneDevice();
             deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
         }
+        else if (filename === "midipitchbend") {
+            const pitchBendSource = context.createConstantSource();
+            pitchBendSource.offset.value = 0;
+            pitchBendSource.start();
+        
+            // create the device
+            const device = {
+                node: pitchBendSource,
+                source: pitchBendSource,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: []
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
+        
+            // create label for the MIDI channel input
+            const midiChannelLabel = document.createElement('label');
+            midiChannelLabel.for = 'midiChannel';
+            midiChannelLabel.textContent = 'MIDI Channel';
+            midiChannelLabel.className = 'deviceInportLabel';
+            midiChannelLabel.style.display = 'inline-block';
+        
+            // create number input for the MIDI channel
+            const midiChannelInput = document.createElement('input');
+            midiChannelInput.type = 'number';
+            midiChannelInput.id = 'midiChannel';
+            midiChannelInput.className = 'midiChannel';
+            midiChannelInput.min = 1;
+            midiChannelInput.max = 16;
+            midiChannelInput.value = 1;
+            midiChannelInput.style.width = '40px';
+            midiChannelInput.addEventListener('change', (event) => {
+                midiChannel = parseInt(event.target.value, 10);
+            });
+        
+            // append the MIDI channel label and input to the device div
+            deviceDiv.appendChild(midiChannelLabel);
+            deviceDiv.appendChild(midiChannelInput);
+        
+            // request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(midiAccess => {
+                    midiAccess.inputs.forEach(input => {
+                        input.addEventListener('midimessage', event => {
+                            const [status, lsb, msb] = event.data;
+                            const channel = (status & 0x0F) + 1; // extract channel number (1-16)
+                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+        
+                            // check if the message is a pitch bend message and matches the selected channel
+                            if ((status & 0xF0) === 224 && channel === selectedChannel) { // pitch bend message
+                                const pitchBendValue = (msb << 7) | lsb; // combine MSB and LSB to create a 14-bit value
+                                const normalizedValue = (pitchBendValue - 8192) / 8192; // normalize value to range [-1, 1]
+                                // transmit the pitch bend value as a signal
+                                pitchBendSource.offset.setValueAtTime(normalizedValue, context.currentTime);
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Failed to get MIDI access', err);
+                });
+            } else {
+                console.error('MIDI not supported in this browser.');
+            }
+        }
         else if (filename === "midicc") {
             const ccSource = context.createConstantSource();
             ccSource.offset.value = 0;
@@ -1653,13 +1723,37 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             deviceDiv = addDeviceToWorkspace(device, "midicc", false);
         
+            // create label for the MIDI channel input
+            const midiChannelLabel = document.createElement('label');
+            midiChannelLabel.for = 'midiChannel';
+            midiChannelLabel.textContent = 'MIDI Channel';
+            midiChannelLabel.className = 'deviceInportLabel';
+            midiChannelLabel.style.display = 'inline-block';
+        
+            // create number input for the MIDI channel
+            const midiChannelInput = document.createElement('input');
+            midiChannelInput.type = 'number';
+            midiChannelInput.id = 'midiChannel';
+            midiChannelInput.className = 'midiChannel';
+            midiChannelInput.min = 1;
+            midiChannelInput.max = 16;
+            midiChannelInput.value = 1; 
+            midiChannelInput.style.width = '40px';
+            midiChannelInput.addEventListener('change', (event) => {
+                midiChannel = parseInt(event.target.value, 10);
+            });
+        
+            // append the MIDI channel label and input to the device div
+            deviceDiv.appendChild(midiChannelLabel);
+            deviceDiv.appendChild(midiChannelInput);
+            deviceDiv.appendChild(document.createElement('br'));
+        
             // create label for CC number input
             const ccNumberLabel = document.createElement('label');
             ccNumberLabel.for = 'ccNumber';
             ccNumberLabel.textContent = 'CC #';
             ccNumberLabel.className = 'deviceInportLabel';
             ccNumberLabel.style.display = 'inline-block';
-            ccNumberLabel.style.width = '48px';
         
             // create input for CC number
             const ccNumberInput = document.createElement('input');
@@ -1669,6 +1763,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             ccNumberInput.className = 'ccNumber';
             ccNumberInput.min = 0;
             ccNumberInput.max = 127;
+            ccNumberInput.style.width = '40px';
         
             // append the CC number label and input to the device div
             deviceDiv.appendChild(ccNumberLabel);
@@ -1680,8 +1775,11 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     midiAccess.inputs.forEach(input => {
                         input.addEventListener('midimessage', event => {
                             const [status, ccNumber, value] = event.data;
-                            // check if the message is a CC message
-                            if ((status & 0xF0) === 176) { // CC message
+                            const channel = (status & 0x0F) + 1; // channel number (1-16)
+                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+        
+                            // check if the message is a CC message and matches the selected channel
+                            if ((status & 0xF0) === 176 && channel === selectedChannel) { // CC message
                                 const selectedCCNumber = parseInt(ccNumberInput.value, 10);
                                 if (ccNumber === selectedCCNumber) {
                                     const normalizedValue = value / 127; // normalize value to range [0, 1]
@@ -1699,18 +1797,54 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             }
         }
         else if (filename === "midinote") {
-            // create a ConstantSourceNode to transmit the frequency
-            const frequencySource = context.createConstantSource();
-            frequencySource.offset.value = 0; // start with no frequency
-            frequencySource.start();
+            const voiceSources = [];
+            const gateSources = [];
+            for (let i = 0; i < 8; i++) {
+                const frequencySource = context.createConstantSource();
+                frequencySource.offset.value = 0; // start with no frequency
+                frequencySource.start();
+                voiceSources.push(frequencySource);
+        
+                const gateSource = context.createConstantSource();
+                gateSource.offset.value = 0; // start with gate off
+                gateSource.start();
+                gateSources.push(gateSource);
+            }
+        
+            const merger = context.createChannelMerger(16);
+            voiceSources.forEach((source, index) => {
+                source.connect(merger, 0, index);
+            });
+            gateSources.forEach((source, index) => {
+                source.connect(merger, 0, index + 8);
+            });
         
             // create the device
             const device = {
-                node: frequencySource,
-                source: frequencySource,
+                node: merger,
+                sources: voiceSources,
+                gates: gateSources,
+                numOutputChannels: 16,
                 it: {
                     T: {
-                        outlets: [{ comment: 'output' }],
+                        outlets: [
+                            { comment: 'voice 1' },
+                            { comment: 'voice 2' },
+                            { comment: 'voice 3' },
+                            { comment: 'voice 4' },
+                            { comment: 'voice 5' },
+                            { comment: 'voice 6' },
+                            { comment: 'voice 7' },
+                            { comment: 'voice 8' },
+                            { comment: 'gate 1' },
+                            { comment: 'gate 2' },
+                            { comment: 'gate 3' },
+                            { comment: 'gate 4' },
+                            { comment: 'gate 5' },
+                            { comment: 'gate 6' },
+                            { comment: 'gate 7' },
+                            { comment: 'gate 8' }
+                        ],
                         inlets: []
                     }
                 }
@@ -1724,7 +1858,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             midiChannelLabel.textContent = 'MIDI Channel';
             midiChannelLabel.className = 'deviceInportLabel';
             midiChannelLabel.style.display = 'inline-block';
-            midiChannelLabel.style.width = '90px';
         
             // create number input for the MIDI channel
             const midiChannelInput = document.createElement('input');
@@ -1733,7 +1866,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             midiChannelInput.className = 'midiChannel';
             midiChannelInput.min = 1;
             midiChannelInput.max = 16;
-            midiChannelInput.value = 1; // Default to channel 1
+            midiChannelInput.value = 1;
+            midiChannelInput.style.width = '40px';
             midiChannelInput.addEventListener('change', (event) => {
                 midiChannel = parseInt(event.target.value, 10);
             });
@@ -1742,10 +1876,12 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.appendChild(midiChannelLabel);
             deviceDiv.appendChild(midiChannelInput);
         
-            // function to convert MIDI note to frequency
             function midiToFrequency(midiNote) {
                 return 440 * Math.pow(2, (midiNote - 69) / 12);
             }
+        
+            let heldNotes = [];
+            let voiceAssignments = new Array(8).fill(null); // track which notes are assigned to which voices
         
             // request MIDI access
             if (navigator.requestMIDIAccess) {
@@ -1760,11 +1896,31 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                             if (channel === selectedChannel) {
                                 if ((status & 0xF0) === 144 && velocity > 0) { // note on
                                     const frequency = midiToFrequency(note);
-                                    // transmit the frequency as a signal
-                                    frequencySource.offset.setTargetAtTime(frequency, context.currentTime, 0.001);
-                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // note off
-                                    // transmit zero frequency as a signal with linear ramping
-                                    frequencySource.offset.setTargetAtTime(0, context.currentTime, 0.001);
+                                    let voiceIndex = voiceAssignments.indexOf(null); // find an unoccupied voice
+        
+                                    if (voiceIndex === -1) {
+                                        // if no unoccupied voice, steal the first one
+                                        voiceIndex = 0;
+                                    }
+        
+                                    voiceAssignments[voiceIndex] = note;
+                                    heldNotes.push(note);
+                                    // transmit the frequency as a signal with linear ramping
+                                    voiceSources[voiceIndex].offset.setTargetAtTime(frequency, context.currentTime, 0.01);
+                                    // set the gate to 1
+                                    gateSources[voiceIndex].offset.setTargetAtTime(1, context.currentTime, 0.01);
+                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // Note off
+                                    const noteIndex = heldNotes.indexOf(note);
+                                    if (noteIndex !== -1) {
+                                        heldNotes.splice(noteIndex, 1);
+                                    }
+        
+                                    const voiceIndex = voiceAssignments.indexOf(note);
+                                    if (voiceIndex !== -1) {
+                                        voiceAssignments[voiceIndex] = null;
+                                        // set the gate to 0
+                                        gateSources[voiceIndex].offset.setTargetAtTime(0, context.currentTime, 0.01);
+                                    }
                                 }
                             }
                         });
@@ -2478,7 +2634,11 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv.style.height = '170px';
         }
         if (filename == 'midinote') {
-            deviceDiv.style.width = '192px';
+            deviceDiv.style.width = '202px';
+        }
+        if (filename == 'midicc') {
+            deviceDiv.style.width = '202px';
+            deviceDiv.style.height = '78px';
         }
         return deviceDiv;
     }
@@ -2790,8 +2950,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         stop: function(event) {
             if (isLocked) return false;
             isDraggingDevice = false;
-        },
-        containment: true
+        }
     });
 
     if (deviceType === 'pattern') {
