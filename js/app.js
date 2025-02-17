@@ -1088,17 +1088,7 @@ async function createMicrophoneDevice() {
     const source = context.createMediaStreamSource(stream);
 
     // create a wrapper object for the source
-    const device = {
-        node: source,
-        stream: stream,
-        source: source,
-        it: {
-            T: {
-                outlets: [{ comment: 'output 1' },{ comment: 'output 2' }], // these need to exist so they work like the other WASM modules built with RNBO
-                inlets: []
-            }
-        }
-    };
+    const device = createMockRNBODevice(context, source, source, [{ comment: 'output 1' },{ comment: 'output 2' }], [], 2, []);
     return device;
 }
 
@@ -1126,19 +1116,7 @@ async function createMotionDevice(context) {
             gammaNode.connect(merger, 0, 1);
 
             // create a wrapper object for the device
-            const device = {
-                node: merger,
-                source: merger,
-                it: {
-                    T: {
-                        outlets: [
-                            { comment: 'pitch' },
-                            { comment: 'roll' }
-                        ], 
-                        inlets: []
-                    }
-                }
-            };
+            const device = createMockRNBODevice(context, merger, merger, [{ comment: 'pitch' },{ comment: 'roll' }], [], 2);
             return device;
         } else {
             showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
@@ -1644,19 +1622,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             let bufferLength = analyser.fftSize;
             let dataArray = new Uint8Array(bufferLength);
             const gainNode = context.createGain();
-        
-            // create the device
-            const device = {
-                node: gainNode,
-                source: gainNode,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: [{ comment: 'input' }]
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, gainNode, gainNode, [{ comment: 'output' }], [{ comment: 'input' }]);
             deviceDiv = addDeviceToWorkspace(device, "scope", false);
         
             // create label for the scope minimum input
@@ -1798,19 +1764,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             let bufferLength = analyser.frequencyBinCount;
             let dataArray = new Uint8Array(bufferLength);
             const gainNode = context.createGain();
-        
-            // create the device
-            const device = {
-                node: gainNode,
-                source: gainNode,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: [{ comment: 'input' }]
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, gainNode, gainNode, [{ comment: 'output' }], [{ comment: 'input' }]);
             deviceDiv = addDeviceToWorkspace(device, "spectrogram", false);
         
             // create label for the block size input
@@ -1902,19 +1856,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const pitchBendSource = context.createConstantSource();
             pitchBendSource.offset.value = 0;
             pitchBendSource.start();
-        
-            // create the device
-            const device = {
-                node: pitchBendSource,
-                source: pitchBendSource,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: []
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, pitchBendSource, pitchBendSource, [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
         
             // create label for the MIDI channel input
@@ -1970,19 +1912,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const ccSource = context.createConstantSource();
             ccSource.offset.value = 0;
             ccSource.start();
-        
-            // create the device
-            const device = {
-                node: ccSource,
-                source: ccSource,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: []
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, ccSource, ccSource, [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "midicc", false);
         
             // create label for the MIDI channel input
@@ -2080,37 +2010,22 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             gateSources.forEach((source, index) => {
                 source.connect(merger, 0, index + 8);
             });
-        
+            
             // create the device
-            const device = {
-                node: merger,
-                sources: voiceSources,
-                gates: gateSources,
-                numOutputChannels: 16,
-                it: {
-                    T: {
-                        outlets: [
-                            { comment: 'voice 1' },
-                            { comment: 'voice 2' },
-                            { comment: 'voice 3' },
-                            { comment: 'voice 4' },
-                            { comment: 'voice 5' },
-                            { comment: 'voice 6' },
-                            { comment: 'voice 7' },
-                            { comment: 'voice 8' },
-                            { comment: 'gate 1' },
-                            { comment: 'gate 2' },
-                            { comment: 'gate 3' },
-                            { comment: 'gate 4' },
-                            { comment: 'gate 5' },
-                            { comment: 'gate 6' },
-                            { comment: 'gate 7' },
-                            { comment: 'gate 8' }
-                        ],
-                        inlets: []
-                    }
-                }
-            };
+            const device = createMockRNBODevice(
+                context,
+                merger,
+                voiceSources,
+                [
+                    { comment: 'voice 1' }, { comment: 'voice 2' }, { comment: 'voice 3' }, { comment: 'voice 4' },
+                    { comment: 'voice 5' }, { comment: 'voice 6' }, { comment: 'voice 7' }, { comment: 'voice 8' },
+                    { comment: 'gate 1' }, { comment: 'gate 2' }, { comment: 'gate 3' }, { comment: 'gate 4' },
+                    { comment: 'gate 5' }, { comment: 'gate 6' }, { comment: 'gate 7' }, { comment: 'gate 8' }
+                ],
+                [],
+                16,
+                gateSources
+            );
         
             deviceDiv = addDeviceToWorkspace(device, "midinote", false);
         
@@ -2198,18 +2113,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const silenceGenerator = context.createConstantSource();
             silenceGenerator.offset.value = 0;
             silenceGenerator.start();
-        
             // create the device
-            const device = {
-                node: silenceGenerator,
-                source: silenceGenerator,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: []
-                    }
-                }
-            };
+            const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
         
             deviceDiv = addDeviceToWorkspace(device, "toggle", false);
         
@@ -2274,17 +2179,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             triggerSource.connect(merger, 0, 1);
         
             // create the device
-            const device = {
-                node: merger,
-                source: merger,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'frequency' }, { comment: 'trigger' }],
-                        inlets: []
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, merger, merger, [{ comment: 'frequency' }, { comment: 'trigger' }], []);
             deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
         
             // create a div to hold the piano keyboard
@@ -2386,26 +2281,28 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 keyDiv.dataset.note = key.note;
                 keyDiv.dataset.value = rootNote + index;
                 keyDiv.dataset.color = key.color;
-        
-                keyDiv.addEventListener('mousedown', () => {
+            
+                keyDiv.addEventListener('mousedown', (event) => {
+                    event.stopPropagation();
                     isMouseDown = true;
                     highlightKey(keyDiv);
                 });
-        
+            
                 keyDiv.addEventListener('mouseover', () => handleMouseOver(keyDiv));
-        
+            
                 keyDiv.addEventListener('mouseup', () => isMouseDown = false);
-        
+            
                 keyDiv.addEventListener('touchstart', (event) => {
+                    event.stopPropagation();
                     event.preventDefault();
                     highlightKey(keyDiv);
                 }, { passive: false });
-        
+            
                 keyDiv.addEventListener('touchmove', (event) => {
                     event.preventDefault();
                     handleTouchMove(event);
                 }, { passive: false });
-        
+            
                 keyboardDiv.appendChild(keyDiv);
             });
         
@@ -2450,19 +2347,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const silenceGenerator = context.createConstantSource();
             silenceGenerator.offset.value = 0;
             silenceGenerator.start();
-        
             // create the device
-            const device = {
-                node: silenceGenerator,
-                source: silenceGenerator,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: []
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "slider", false);
         
             // create a slider
@@ -2560,18 +2446,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             silenceGeneratorY.connect(mergerNode, 0, 1); // Connect to input 1
         
             // create the device
-            const device = {
-                node: mergerNode,
-                stream: mergerNode,
-                source: mergerNode,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output x' }, { comment: 'output y' }],
-                        inlets: []
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], []);
             deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
         
             // create a touchpad
@@ -2710,17 +2585,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             silenceGenerator.start();
         
             // create the device
-            const device = {
-                node: silenceGenerator,
-                source: silenceGenerator,
-                it: {
-                    T: {
-                        outlets: [{ comment: 'output' }],
-                        inlets: []
-                    }
-                }
-            };
-        
+            const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "button", false);
         
             // create a button
@@ -2920,6 +2785,23 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
         }
     }
+}
+
+function createMockRNBODevice(context, node, sources, outlets, inlets, numOutputChannels = 1, gates = []) {
+    const device = {
+        node: node,
+        sources: sources || [],
+        gates: gates,
+        numOutputChannels: numOutputChannels,
+        it: {
+            T: {
+                outlets: outlets,
+                inlets: inlets || []
+            }
+        }
+    };
+
+    return device;
 }
 
 function showGrowlNotification(message) {
