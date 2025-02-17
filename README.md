@@ -346,6 +346,9 @@ Smooths `input` by ramping from its previous value to its new value, ramping up 
 ## snapshot
 Slows `input` down so it only changes once for every `interval (ms)` that passes.
 
+## spectrogram
+Displays the input signal in the frequency domain as a spectrogram. `block size` controls the frequency resolution of the spectrogram, and it must be a power of 2 between 32 and 32768.
+
 ## squareroot
 Computes the square root of `input 1`.
 

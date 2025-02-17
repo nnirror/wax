@@ -1792,6 +1792,112 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
 
             draw();
         }
+        else if (filename === "spectrogram") {
+            const analyser = context.createAnalyser();
+            analyser.fftSize = 2048;
+            let bufferLength = analyser.frequencyBinCount;
+            let dataArray = new Uint8Array(bufferLength);
+            const gainNode = context.createGain();
+        
+            // create the device
+            const device = {
+                node: gainNode,
+                source: gainNode,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: [{ comment: 'input' }]
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "spectrogram", false);
+        
+            // create label for the block size input
+            const blockSizeLabel = document.createElement('label');
+            blockSizeLabel.for = 'blockSize';
+            blockSizeLabel.textContent = 'block size';
+            blockSizeLabel.className = 'deviceInportLabel';
+            blockSizeLabel.style.display = 'inline-block';
+        
+            // create number input for the block size
+            const blockSizeInput = document.createElement('input');
+            blockSizeInput.type = 'number';
+            blockSizeInput.id = 'blockSize';
+            blockSizeInput.className = 'blockSize';
+            blockSizeInput.value = 2048;
+            blockSizeInput.style.width = '50px';
+            blockSizeInput.style.marginLeft = '-20px';
+            blockSizeInput.style.marginRight = '20px';
+        
+            // create the canvas element for the spectrogram
+            const canvas = document.createElement('canvas');
+            canvas.width = 300;
+            canvas.height = 150;
+            canvas.style.height = '360px';
+            canvas.style.width = '100%';
+            canvas.className = 'spectrogramCanvas';
+            deviceDiv.appendChild(canvas);
+        
+            // append the block size label and input to the device div
+            deviceDiv.appendChild(blockSizeLabel);
+            deviceDiv.appendChild(blockSizeInput);
+        
+            const canvasCtx = canvas.getContext('2d');
+        
+            // connect the nodes
+            gainNode.connect(analyser);
+        
+            // function to check if a number is a power of 2
+            function isPowerOf2(value) {
+                return (value & (value - 1)) === 0;
+            }
+        
+            // function to update the block size
+            function updateBlockSize() {
+                const newBlockSize = parseInt(blockSizeInput.value, 10);
+                if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
+                    analyser.fftSize = newBlockSize;
+                    bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+                } else {
+                    showGrowlNotification('Error: Block size must be a power of 2 between 32 and 32768.');
+                }
+            }
+        
+            // add event listener to update block size when the input changes
+            blockSizeInput.addEventListener('change', updateBlockSize);
+        
+            // function to get color based on value
+            function getColor(value) {
+                const hue = (1.0 - value) * 240; // hue from blue (240) to red (0)
+                const lightness = value * 50; // lightness from 0% (black) to 50%
+                return `hsl(${hue}, 100%, ${lightness}%)`;
+            }
+        
+            // draw the spectrogram
+            function draw() {
+                requestAnimationFrame(draw);
+        
+                analyser.getByteFrequencyData(dataArray);
+        
+                // shift the existing image left
+                const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
+                canvasCtx.putImageData(imageData, -1, 0);
+        
+                // draw the new frequency data on the right
+                for (let i = 0; i < bufferLength; i++) {
+                    const value = dataArray[i] / 255; // normalize to range [0, 1]
+                    const x = canvas.width - 1;
+                    const y = canvas.height - (i / bufferLength) * canvas.height; // flip the y coordinate
+                    const color = getColor(value);
+                    canvasCtx.fillStyle = color;
+                    canvasCtx.fillRect(x, y, 1, canvas.height / bufferLength);
+                }
+            }
+        
+            draw();
+        }
         else if (filename === "midipitchbend") {
             const pitchBendSource = context.createConstantSource();
             pitchBendSource.offset.value = 0;
@@ -2799,6 +2905,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'scope') {
             deviceDiv.style.width = '308px';
             deviceDiv.style.paddingBottom = '10px';
+        }
+        if (filename == 'spectrogram') {
+            deviceDiv.style.paddingBottom = '10px';
+            deviceDiv.style.width = '250px';
         }
         return deviceDiv;
     }

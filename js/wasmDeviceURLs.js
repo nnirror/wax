@@ -276,6 +276,10 @@ var wasmDeviceURLs = [
         "displayName": "smooth"
     },
     {
+        "fileName": "spectrogram",
+        "displayName": "spectrogram"
+    },
+    {
         "fileName": "speedlim",
         "displayName": "snapshot"
     },
