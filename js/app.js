@@ -594,16 +594,18 @@ workspaceElement.addEventListener('mouseup', (event) => {
         let nodes = document.querySelectorAll('.node');
         nodes.forEach((node) => {
             let rect = node.getBoundingClientRect();
-            let selRect = selectionDiv.getBoundingClientRect();
-            if (rect.right > selRect.left && rect.left < selRect.right &&
-                rect.bottom > selRect.top && rect.top < selRect.bottom) {
-                jsPlumb.addToDragSelection(node);
-                // add a special CSS class to the selected node
-                node.classList.add('selectedNode');
-            } else {
-                if (event.target.id == 'workspace') {
-                    // remove the special class from the node if it's not selected
-                    node.classList.remove('selectedNode'); 
+            if (selectionDiv) {
+                let selRect = selectionDiv.getBoundingClientRect();
+                if (rect.right > selRect.left && rect.left < selRect.right &&
+                    rect.bottom > selRect.top && rect.top < selRect.bottom) {
+                    jsPlumb.addToDragSelection(node);
+                    // add a special CSS class to the selected node
+                    node.classList.add('selectedNode');
+                } else {
+                    if (event.target.id == 'workspace') {
+                        // remove the special class from the node if it's not selected
+                        node.classList.remove('selectedNode'); 
+                    }
                 }
             }
         });
@@ -1636,6 +1638,160 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const device = await createMicrophoneDevice();
             deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
         }
+        else if (filename === "scope") {
+            const analyser = context.createAnalyser();
+            analyser.fftSize = 2048;
+            let bufferLength = analyser.fftSize;
+            let dataArray = new Uint8Array(bufferLength);
+            const gainNode = context.createGain();
+        
+            // create the device
+            const device = {
+                node: gainNode,
+                source: gainNode,
+                it: {
+                    T: {
+                        outlets: [{ comment: 'output' }],
+                        inlets: [{ comment: 'input' }]
+                    }
+                }
+            };
+        
+            deviceDiv = addDeviceToWorkspace(device, "scope", false);
+        
+            // create label for the scope minimum input
+            const scopeMinLabel = document.createElement('label');
+            scopeMinLabel.for = 'scopeMin';
+            scopeMinLabel.textContent = 'scope min';
+            scopeMinLabel.className = 'deviceInportLabel';
+            scopeMinLabel.style.display = 'inline-block';
+        
+            // create number input for the scope minimum
+            const scopeMinInput = document.createElement('input');
+            scopeMinInput.type = 'number';
+            scopeMinInput.id = 'scopeMin';
+            scopeMinInput.className = 'scopeMin';
+            scopeMinInput.value = -1; // default minimum value
+            scopeMinInput.style.width = '50px';
+            scopeMinInput.style.marginLeft = '-20px';
+            scopeMinInput.style.marginRight = '20px';
+        
+            // create label for the scope maximum input
+            const scopeMaxLabel = document.createElement('label');
+            scopeMaxLabel.for = 'scopeMax';
+            scopeMaxLabel.textContent = 'scope max';
+            scopeMaxLabel.className = 'deviceInportLabel';
+            scopeMaxLabel.style.display = 'inline-block';
+        
+            // create number input for the scope maximum
+            const scopeMaxInput = document.createElement('input');
+            scopeMaxInput.type = 'number';
+            scopeMaxInput.id = 'scopeMax';
+            scopeMaxInput.className = 'scopeMax';
+            scopeMaxInput.value = 1;
+            scopeMaxInput.style.width = '50px';
+            scopeMaxInput.style.marginLeft = '-20px';
+            scopeMaxInput.style.marginRight = '20px';
+        
+            // create label for the block size input
+            const blockSizeLabel = document.createElement('label');
+            blockSizeLabel.for = 'blockSize';
+            blockSizeLabel.textContent = 'block size';
+            blockSizeLabel.className = 'deviceInportLabel';
+            blockSizeLabel.style.display = 'inline-block';
+        
+            // create number input for the block size
+            const blockSizeInput = document.createElement('input');
+            blockSizeInput.type = 'number';
+            blockSizeInput.id = 'blockSize';
+            blockSizeInput.className = 'blockSize';
+            blockSizeInput.value = 2048;
+            blockSizeInput.style.width = '50px';
+            blockSizeInput.style.marginLeft = '-20px';
+            blockSizeInput.style.marginRight = '20px';
+        
+            // create the canvas element for the oscilloscope
+            const canvas = document.createElement('canvas');
+            canvas.width = 300;
+            canvas.height = 150;
+            canvas.style.height = '115px';
+            canvas.style.width = '100%';
+            canvas.className = 'oscilloscopeCanvas';
+            deviceDiv.appendChild(canvas);
+        
+            // append the scope min, max, and block size labels and inputs to the device div
+            deviceDiv.appendChild(scopeMinLabel);
+            deviceDiv.appendChild(scopeMinInput);
+            deviceDiv.appendChild(scopeMaxLabel);
+            deviceDiv.appendChild(scopeMaxInput);
+            deviceDiv.appendChild(blockSizeLabel);
+            deviceDiv.appendChild(blockSizeInput);
+        
+            const canvasCtx = canvas.getContext('2d');
+        
+            // connect the nodes
+            gainNode.connect(analyser);
+        
+            // function to check if a number is a power of 2
+            function isPowerOf2(value) {
+                return (value & (value - 1)) === 0;
+            }
+        
+            // function to update the block size
+            function updateBlockSize() {
+                const newBlockSize = parseInt(blockSizeInput.value, 10);
+                if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
+                    analyser.fftSize = newBlockSize;
+                    bufferLength = analyser.fftSize;
+                    dataArray = new Uint8Array(bufferLength);
+                } else {
+                    showGrowlNotification('Error: Block size must be a power of 2 between 32 and 32768.');
+                }
+            }
+        
+            // add event listener to update block size when the input changes
+            blockSizeInput.addEventListener('change', updateBlockSize);
+        
+            // draw the oscilloscope
+            function draw() {
+                requestAnimationFrame(draw);
+        
+                analyser.getByteTimeDomainData(dataArray);
+        
+                const scopeMin = parseFloat(scopeMinInput.value);
+                const scopeMax = parseFloat(scopeMaxInput.value);
+                const scopeRange = scopeMax - scopeMin;
+        
+                canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+        
+                canvasCtx.beginPath();
+        
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+        
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = (dataArray[i] / 128.0) - 1; // normalize to range [-1, 1]
+                    const y = canvas.height - ((v - scopeMin) / scopeRange) * canvas.height; // flip the y coordinate
+        
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+        
+                    x += sliceWidth;
+                }
+        
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+            }
+
+            draw();
+        }
         else if (filename === "midipitchbend") {
             const pitchBendSource = context.createConstantSource();
             pitchBendSource.offset.value = 0;
@@ -2639,6 +2795,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         if (filename == 'midicc') {
             deviceDiv.style.width = '202px';
             deviceDiv.style.height = '78px';
+        }
+        if (filename == 'scope') {
+            deviceDiv.style.width = '308px';
+            deviceDiv.style.paddingBottom = '10px';
         }
         return deviceDiv;
     }

@@ -260,6 +260,10 @@ var wasmDeviceURLs = [
         "displayName": "sine"
     },
     {
+        "fileName": "scope",
+        "displayName": "scope"
+    },
+    {
         "fileName": "skipper",
         "displayName": "skipper"
     },
