@@ -3992,6 +3992,29 @@ function displayAllDevices() {
         event.stopPropagation();
     });
 
+    // create an arrow indicator
+    var arrowIndicator = document.createElement('div');
+    arrowIndicator.className = 'scrollArrowIndicator';
+    arrowIndicator.innerHTML = '▼'; // or use an arrow icon
+    modal.appendChild(arrowIndicator);
+
+    // check scroll position in menu and toggle arrow visibility if there's more to see
+    function checkScrollPosition() {
+        if (content.scrollHeight > content.clientHeight) {
+            if (content.scrollTop + content.clientHeight >= content.scrollHeight - 1) {
+                arrowIndicator.style.display = 'none';
+            } else {
+                arrowIndicator.style.display = 'block';
+            }
+        } else {
+            arrowIndicator.style.display = 'none';
+        }
+    }
+    
+    content.addEventListener('scroll', checkScrollPosition);
+    // call the function initially to set the correct state
+    setTimeout(checkScrollPosition, 0);
+
     return modal;
 }
 

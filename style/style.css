@@ -281,7 +281,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
         left: calc(36px + 8em * 2);
     }
     body .deviceListModal {
-        left: calc(57px + 8em * 2);
+        left: calc(13px + 8em * 2);
         top: calc(14px + 80px);
     }
     body .exampleFilesButton {
@@ -289,7 +289,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
         left: calc(36px + 8em * 3);
     }
     body #exampleFiles {
-        left: calc(4px + 8em * 3);
+        left: calc(-33px + 8em * 3);
         top: calc(14px + 80px);
     }
     body .helpButton {
@@ -492,7 +492,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
 #exampleFiles {
     position: fixed;
     top: calc(14px + 40px);
-    left: calc(0.1em + 8em * 7);
+    left: calc(-32px + 8em * 7);
     z-index: 1010;
     background: white;
     padding: 2em;
@@ -505,7 +505,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
 }
 .deviceListModal {
     position: fixed;
-    left: calc(55px + 8em * 6);
+    left: calc(12px + 8em * 6);
     top: calc(14px + 40px);
     border: 1px solid black;
     z-index: 1010;
@@ -836,4 +836,15 @@ body .CodeMirror {
 }
 .jtk-connector {
     cursor: pointer;
+}
+
+.scrollArrowIndicator {
+    position: absolute;
+    bottom: 10px;
+    right: 0;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: rgb(8, 56, 78);
+    display: none;
+    pointer-events: none;
 }
