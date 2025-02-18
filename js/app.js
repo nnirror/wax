@@ -3017,8 +3017,16 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             });
     
             // add touchstart event listener to focus the editor and the underlying textarea
-            editor.getWrapperElement().addEventListener('touchstart', function() {
+            editor.getWrapperElement().addEventListener('touchstart', function(event) {
+                event.stopPropagation();
+                event.preventDefault();
                 editor.focus();
+            });
+
+            // prevent dragging when focused on editor
+            editor.getWrapperElement().addEventListener('touchmove', function(event) {
+                event.stopPropagation();
+                event.preventDefault();
             });
     
             editor.on('keydown', function(instance, event) {
