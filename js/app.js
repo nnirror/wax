@@ -1622,78 +1622,40 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             let bufferLength = analyser.fftSize;
             let dataArray = new Uint8Array(bufferLength);
             const gainNode = context.createGain();
-            const device = createMockRNBODevice(context, gainNode, gainNode, [{ comment: 'output' }], [{ comment: 'input' }]);
+            const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
             deviceDiv = addDeviceToWorkspace(device, "scope", false);
         
-            // create label for the scope minimum input
-            const scopeMinLabel = document.createElement('label');
-            scopeMinLabel.for = 'scopeMin';
-            scopeMinLabel.textContent = 'scope min';
-            scopeMinLabel.className = 'deviceInportLabel';
-            scopeMinLabel.style.display = 'inline-block';
-        
-            // create number input for the scope minimum
-            const scopeMinInput = document.createElement('input');
-            scopeMinInput.type = 'number';
-            scopeMinInput.id = 'scopeMin';
-            scopeMinInput.className = 'scopeMin';
-            scopeMinInput.value = -1; // default minimum value
-            scopeMinInput.style.width = '50px';
-            scopeMinInput.style.marginLeft = '-20px';
-            scopeMinInput.style.marginRight = '20px';
-        
-            // create label for the scope maximum input
-            const scopeMaxLabel = document.createElement('label');
-            scopeMaxLabel.for = 'scopeMax';
-            scopeMaxLabel.textContent = 'scope max';
-            scopeMaxLabel.className = 'deviceInportLabel';
-            scopeMaxLabel.style.display = 'inline-block';
-        
-            // create number input for the scope maximum
-            const scopeMaxInput = document.createElement('input');
-            scopeMaxInput.type = 'number';
-            scopeMaxInput.id = 'scopeMax';
-            scopeMaxInput.className = 'scopeMax';
-            scopeMaxInput.value = 1;
-            scopeMaxInput.style.width = '50px';
-            scopeMaxInput.style.marginLeft = '-20px';
-            scopeMaxInput.style.marginRight = '20px';
-        
-            // create label for the block size input
-            const blockSizeLabel = document.createElement('label');
-            blockSizeLabel.for = 'blockSize';
-            blockSizeLabel.textContent = 'block size';
-            blockSizeLabel.className = 'deviceInportLabel';
-            blockSizeLabel.style.display = 'inline-block';
-        
-            // create number input for the block size
-            const blockSizeInput = document.createElement('input');
-            blockSizeInput.type = 'number';
-            blockSizeInput.id = 'blockSize';
-            blockSizeInput.className = 'blockSize';
-            blockSizeInput.value = 2048;
-            blockSizeInput.style.width = '50px';
-            blockSizeInput.style.marginLeft = '-20px';
-            blockSizeInput.style.marginRight = '20px';
-        
-            // create the canvas element for the oscilloscope
+            // Create the canvas element for the oscilloscope
             const canvas = document.createElement('canvas');
+            const canvasCtx = canvas.getContext('2d');
             canvas.width = 300;
             canvas.height = 150;
             canvas.style.height = '115px';
             canvas.style.width = '100%';
             canvas.className = 'oscilloscopeCanvas';
             deviceDiv.appendChild(canvas);
+
+             // create inputs
+             const scopeMin = createLabeledInput('scope min', 'scopeMin', 'scopeMin', -1, {
+                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+            });
         
-            // append the scope min, max, and block size labels and inputs to the device div
-            deviceDiv.appendChild(scopeMinLabel);
-            deviceDiv.appendChild(scopeMinInput);
-            deviceDiv.appendChild(scopeMaxLabel);
-            deviceDiv.appendChild(scopeMaxInput);
-            deviceDiv.appendChild(blockSizeLabel);
-            deviceDiv.appendChild(blockSizeInput);
+            const scopeMax = createLabeledInput('scope max', 'scopeMax', 'scopeMax', 1, {
+                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+            });
         
-            const canvasCtx = canvas.getContext('2d');
+            const blockSize = createLabeledInput('block size', 'blockSize', 'blockSize', 2048, {
+                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+            });
+        
+            // Append the inputs to the device div
+            deviceDiv.appendChild(scopeMin.label);
+            deviceDiv.appendChild(scopeMin.input);
+            deviceDiv.appendChild(scopeMax.label);
+            deviceDiv.appendChild(scopeMax.input);
+            deviceDiv.appendChild(blockSize.label);
+            deviceDiv.appendChild(blockSize.input);
+    
         
             // connect the nodes
             gainNode.connect(analyser);
@@ -1705,7 +1667,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             // function to update the block size
             function updateBlockSize() {
-                const newBlockSize = parseInt(blockSizeInput.value, 10);
+                const newBlockSize = parseInt(blockSize.input.value, 10);
                 if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
                     analyser.fftSize = newBlockSize;
                     bufferLength = analyser.fftSize;
@@ -1716,7 +1678,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             }
         
             // add event listener to update block size when the input changes
-            blockSizeInput.addEventListener('change', updateBlockSize);
+            blockSize.input.addEventListener('change', updateBlockSize);
         
             // draw the oscilloscope
             function draw() {
@@ -1724,9 +1686,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
                 analyser.getByteTimeDomainData(dataArray);
         
-                const scopeMin = parseFloat(scopeMinInput.value);
-                const scopeMax = parseFloat(scopeMaxInput.value);
-                const scopeRange = scopeMax - scopeMin;
+                const scopeMinValue = parseFloat(scopeMin.input.value);
+                const scopeMaxValue = parseFloat(scopeMax.input.value);
+                const scopeRange = scopeMaxValue - scopeMinValue;
         
                 canvasCtx.fillStyle = 'rgb(200, 200, 200)';
                 canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1741,7 +1703,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
                 for (let i = 0; i < bufferLength; i++) {
                     const v = (dataArray[i] / 128.0) - 1; // normalize to range [-1, 1]
-                    const y = canvas.height - ((v - scopeMin) / scopeRange) * canvas.height; // flip the y coordinate
+                    const y = canvas.height - ((v - scopeMinValue) / scopeRange) * canvas.height; // flip the y coordinate
         
                     if (i === 0) {
                         canvasCtx.moveTo(x, y);
@@ -1755,7 +1717,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 canvasCtx.lineTo(canvas.width, canvas.height / 2);
                 canvasCtx.stroke();
             }
-
+        
             draw();
         }
         else if (filename === "spectrogram") {
@@ -1764,25 +1726,8 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             let bufferLength = analyser.frequencyBinCount;
             let dataArray = new Uint8Array(bufferLength);
             const gainNode = context.createGain();
-            const device = createMockRNBODevice(context, gainNode, gainNode, [{ comment: 'output' }], [{ comment: 'input' }]);
+            const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
             deviceDiv = addDeviceToWorkspace(device, "spectrogram", false);
-        
-            // create label for the block size input
-            const blockSizeLabel = document.createElement('label');
-            blockSizeLabel.for = 'blockSize';
-            blockSizeLabel.textContent = 'block size';
-            blockSizeLabel.className = 'deviceInportLabel';
-            blockSizeLabel.style.display = 'inline-block';
-        
-            // create number input for the block size
-            const blockSizeInput = document.createElement('input');
-            blockSizeInput.type = 'number';
-            blockSizeInput.id = 'blockSize';
-            blockSizeInput.className = 'blockSize';
-            blockSizeInput.value = 2048;
-            blockSizeInput.style.width = '50px';
-            blockSizeInput.style.marginLeft = '-20px';
-            blockSizeInput.style.marginRight = '20px';
         
             // create the canvas element for the spectrogram
             const canvas = document.createElement('canvas');
@@ -1793,11 +1738,16 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             canvas.className = 'spectrogramCanvas';
             deviceDiv.appendChild(canvas);
         
-            // append the block size label and input to the device div
-            deviceDiv.appendChild(blockSizeLabel);
-            deviceDiv.appendChild(blockSizeInput);
-        
             const canvasCtx = canvas.getContext('2d');
+        
+            // create labeled input
+            const blockSize = createLabeledInput('block size', 'blockSize', 'blockSize', 2048, {
+                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+            });
+        
+            // append the labeled input to the device div
+            deviceDiv.appendChild(blockSize.label);
+            deviceDiv.appendChild(blockSize.input);
         
             // connect the nodes
             gainNode.connect(analyser);
@@ -1809,7 +1759,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             // function to update the block size
             function updateBlockSize() {
-                const newBlockSize = parseInt(blockSizeInput.value, 10);
+                const newBlockSize = parseInt(blockSize.input.value, 10);
                 if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
                     analyser.fftSize = newBlockSize;
                     bufferLength = analyser.frequencyBinCount;
@@ -1820,7 +1770,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             }
         
             // add event listener to update block size when the input changes
-            blockSizeInput.addEventListener('change', updateBlockSize);
+            blockSize.input.addEventListener('change', updateBlockSize);
         
             // function to get color based on value
             function getColor(value) {
@@ -1856,32 +1806,17 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const pitchBendSource = context.createConstantSource();
             pitchBendSource.offset.value = 0;
             pitchBendSource.start();
-            const device = createMockRNBODevice(context, pitchBendSource, pitchBendSource, [{ comment: 'output' }], []);
+            const device = createMockRNBODevice(context, pitchBendSource, [pitchBendSource], [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
         
-            // create label for the MIDI channel input
-            const midiChannelLabel = document.createElement('label');
-            midiChannelLabel.for = 'midiChannel';
-            midiChannelLabel.textContent = 'MIDI Channel';
-            midiChannelLabel.className = 'deviceInportLabel';
-            midiChannelLabel.style.display = 'inline-block';
-        
-            // create number input for the MIDI channel
-            const midiChannelInput = document.createElement('input');
-            midiChannelInput.type = 'number';
-            midiChannelInput.id = 'midiChannel';
-            midiChannelInput.className = 'midiChannel';
-            midiChannelInput.min = 1;
-            midiChannelInput.max = 16;
-            midiChannelInput.value = 1;
-            midiChannelInput.style.width = '40px';
-            midiChannelInput.addEventListener('change', (event) => {
-                midiChannel = parseInt(event.target.value, 10);
+            // create labeled input
+            const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
+                input: { width: '40px' }
             });
         
-            // append the MIDI channel label and input to the device div
-            deviceDiv.appendChild(midiChannelLabel);
-            deviceDiv.appendChild(midiChannelInput);
+            // append labels and inputs to the device div
+            deviceDiv.appendChild(midiChannel.label);
+            deviceDiv.appendChild(midiChannel.input);
         
             // request MIDI access
             if (navigator.requestMIDIAccess) {
@@ -1890,7 +1825,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                         input.addEventListener('midimessage', event => {
                             const [status, lsb, msb] = event.data;
                             const channel = (status & 0x0F) + 1; // extract channel number (1-16)
-                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+                            const selectedChannel = parseInt(midiChannel.input.value, 10);
         
                             // check if the message is a pitch bend message and matches the selected channel
                             if ((status & 0xF0) === 224 && channel === selectedChannel) { // pitch bend message
@@ -1912,68 +1847,39 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             const ccSource = context.createConstantSource();
             ccSource.offset.value = 0;
             ccSource.start();
-            const device = createMockRNBODevice(context, ccSource, ccSource, [{ comment: 'output' }], []);
+            const device = createMockRNBODevice(context, ccSource, [ccSource], [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "midicc", false);
         
-            // create label for the MIDI channel input
-            const midiChannelLabel = document.createElement('label');
-            midiChannelLabel.for = 'midiChannel';
-            midiChannelLabel.textContent = 'MIDI Channel';
-            midiChannelLabel.className = 'deviceInportLabel';
-            midiChannelLabel.style.display = 'inline-block';
-        
-            // create number input for the MIDI channel
-            const midiChannelInput = document.createElement('input');
-            midiChannelInput.type = 'number';
-            midiChannelInput.id = 'midiChannel';
-            midiChannelInput.className = 'midiChannel';
-            midiChannelInput.min = 1;
-            midiChannelInput.max = 16;
-            midiChannelInput.value = 1; 
-            midiChannelInput.style.width = '40px';
-            midiChannelInput.addEventListener('change', (event) => {
-                midiChannel = parseInt(event.target.value, 10);
+            // create labeled input for the MIDI channel
+            const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
+                input: { width: '40px' }
             });
         
-            // append the MIDI channel label and input to the device div
-            deviceDiv.appendChild(midiChannelLabel);
-            deviceDiv.appendChild(midiChannelInput);
+            // create labeled input for the CC number
+            const ccNumber = createLabeledInput('CC #', 'ccNumber', 'ccNumber', 1, {
+                input: { width: '40px' }
+            });
+        
+            // append the labels and inputs to the device div
+            deviceDiv.appendChild(midiChannel.label);
+            deviceDiv.appendChild(midiChannel.input);
             deviceDiv.appendChild(document.createElement('br'));
-        
-            // create label for CC number input
-            const ccNumberLabel = document.createElement('label');
-            ccNumberLabel.for = 'ccNumber';
-            ccNumberLabel.textContent = 'CC #';
-            ccNumberLabel.className = 'deviceInportLabel';
-            ccNumberLabel.style.display = 'inline-block';
-        
-            // create input for CC number
-            const ccNumberInput = document.createElement('input');
-            ccNumberInput.type = 'number';
-            ccNumberInput.value = 1; // default CC number
-            ccNumberInput.id = 'ccNumber';
-            ccNumberInput.className = 'ccNumber';
-            ccNumberInput.min = 0;
-            ccNumberInput.max = 127;
-            ccNumberInput.style.width = '40px';
-        
-            // append the CC number label and input to the device div
-            deviceDiv.appendChild(ccNumberLabel);
-            deviceDiv.appendChild(ccNumberInput);
+            deviceDiv.appendChild(ccNumber.label);
+            deviceDiv.appendChild(ccNumber.input);
         
             // request MIDI access
             if (navigator.requestMIDIAccess) {
                 navigator.requestMIDIAccess().then(midiAccess => {
                     midiAccess.inputs.forEach(input => {
                         input.addEventListener('midimessage', event => {
-                            const [status, ccNumber, value] = event.data;
+                            const [status, ccNumberValue, value] = event.data;
                             const channel = (status & 0x0F) + 1; // channel number (1-16)
-                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+                            const selectedChannel = parseInt(midiChannel.input.value, 10);
         
                             // check if the message is a CC message and matches the selected channel
                             if ((status & 0xF0) === 176 && channel === selectedChannel) { // CC message
-                                const selectedCCNumber = parseInt(ccNumberInput.value, 10);
-                                if (ccNumber === selectedCCNumber) {
+                                const selectedCCNumber = parseInt(ccNumber.input.value, 10);
+                                if (ccNumberValue === selectedCCNumber) {
                                     const normalizedValue = value / 127; // normalize value to range [0, 1]
                                     // transmit the CC value as a signal
                                     ccSource.offset.setValueAtTime(normalizedValue, context.currentTime);
@@ -2010,7 +1916,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             gateSources.forEach((source, index) => {
                 source.connect(merger, 0, index + 8);
             });
-            
+        
             // create the device
             const device = createMockRNBODevice(
                 context,
@@ -2029,29 +1935,14 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         
             deviceDiv = addDeviceToWorkspace(device, "midinote", false);
         
-            // create label for the MIDI channel input
-            const midiChannelLabel = document.createElement('label');
-            midiChannelLabel.for = 'midiChannel';
-            midiChannelLabel.textContent = 'MIDI Channel';
-            midiChannelLabel.className = 'deviceInportLabel';
-            midiChannelLabel.style.display = 'inline-block';
-        
-            // create number input for the MIDI channel
-            const midiChannelInput = document.createElement('input');
-            midiChannelInput.type = 'number';
-            midiChannelInput.id = 'midiChannel';
-            midiChannelInput.className = 'midiChannel';
-            midiChannelInput.min = 1;
-            midiChannelInput.max = 16;
-            midiChannelInput.value = 1;
-            midiChannelInput.style.width = '40px';
-            midiChannelInput.addEventListener('change', (event) => {
-                midiChannel = parseInt(event.target.value, 10);
+            // create labeled input for the MIDI channel
+            const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
+                input: { width: '40px' }
             });
         
-            // append the MIDI channel label and input to the device div
-            deviceDiv.appendChild(midiChannelLabel);
-            deviceDiv.appendChild(midiChannelInput);
+            // append the label and input to the device div
+            deviceDiv.appendChild(midiChannel.label);
+            deviceDiv.appendChild(midiChannel.input);
         
             function midiToFrequency(midiNote) {
                 return 440 * Math.pow(2, (midiNote - 69) / 12);
@@ -2067,7 +1958,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                         input.addEventListener('midimessage', event => {
                             const [status, note, velocity] = event.data;
                             const channel = (status & 0x0F) + 1; // extract channel number (1-16)
-                            const selectedChannel = parseInt(midiChannelInput.value, 10);
+                            const selectedChannel = parseInt(midiChannel.input.value, 10);
         
                             // check if the message is a note on or note off and matches the selected channel
                             if (channel === selectedChannel) {
@@ -2086,7 +1977,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                                     voiceSources[voiceIndex].offset.setTargetAtTime(frequency, context.currentTime, 0.01);
                                     // set the gate to 1
                                     gateSources[voiceIndex].offset.setTargetAtTime(1, context.currentTime, 0.01);
-                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // Note off
+                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // note off
                                     const noteIndex = heldNotes.indexOf(note);
                                     if (noteIndex !== -1) {
                                         heldNotes.splice(noteIndex, 1);
@@ -2179,37 +2070,21 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             triggerSource.connect(merger, 0, 1);
         
             // create the device
-            const device = createMockRNBODevice(context, merger, merger, [{ comment: 'frequency' }, { comment: 'trigger' }], []);
+            const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], []);
             deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
         
             // create a div to hold the piano keyboard
             const keyboardDiv = document.createElement('div');
             keyboardDiv.className = 'pianoKeyboard';
             keyboardDiv.style.position = 'relative';
-            keyboardDiv.style.width = '392px';
             keyboardDiv.style.marginBottom = '9px';
-            keyboardDiv.style.height = '100px';
-            keyboardDiv.style.border = '1px solid black';
-        
-            // create keys
-            const keys = [
-                { note: 'C', color: 'white' },
-                { note: 'C#', color: 'black' },
-                { note: 'D', color: 'white' },
-                { note: 'D#', color: 'black' },
-                { note: 'E', color: 'white' },
-                { note: 'F', color: 'white' },
-                { note: 'F#', color: 'black' },
-                { note: 'G', color: 'white' },
-                { note: 'G#', color: 'black' },
-                { note: 'A', color: 'white' },
-                { note: 'A#', color: 'black' },
-                { note: 'B', color: 'white' },
-                { note: 'C', color: 'white' }
-            ];
-        
+            keyboardDiv.style.marginRight = '50px';
+            keyboardDiv.style.marginTop = '5px';
+            keyboardDiv.style.height = '120px';
+            keyboardDiv.style.border = '1px solid black';    
             let isMouseDown = false;
             let rootNote = 60; // default middle C
+            let octaves = 1; // default 1 octave
             let previousKeyDiv = null;
         
             const midiToFrequency = (midiNote) => {
@@ -2224,7 +2099,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 const freq = midiToFrequency(parseInt(keyDiv.dataset.value));
                 silenceGenerator.offset.value = freq;
                 triggerSource.offset.setValueAtTime(1, context.currentTime);
-                triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // Briefly output 1
+                triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // briefly output 1
                 previousKeyDiv = keyDiv;
             };
         
@@ -2269,86 +2144,125 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 }
             });
         
-            keys.forEach((key, index) => {
-                const keyDiv = document.createElement('div');
-                keyDiv.className = `pianoKey ${key.color}`;
-                keyDiv.style.position = 'absolute';
-                keyDiv.style.width = '30px';
-                keyDiv.style.height = '100px';
-                keyDiv.style.left = `${index * 30}px`;
-                keyDiv.style.backgroundColor = key.color === 'white' ? 'white' : 'black';
-                keyDiv.style.border = '1px solid black';
-                keyDiv.dataset.note = key.note;
-                keyDiv.dataset.value = rootNote + index;
-                keyDiv.dataset.color = key.color;
-            
-                keyDiv.addEventListener('mousedown', (event) => {
-                    event.stopPropagation();
-                    isMouseDown = true;
-                    highlightKey(keyDiv);
-                });
-            
-                keyDiv.addEventListener('mouseover', () => handleMouseOver(keyDiv));
-            
-                keyDiv.addEventListener('mouseup', () => isMouseDown = false);
-            
-                keyDiv.addEventListener('touchstart', (event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    highlightKey(keyDiv);
-                }, { passive: false });
-            
-                keyDiv.addEventListener('touchmove', (event) => {
-                    event.preventDefault();
-                    handleTouchMove(event);
-                }, { passive: false });
-            
-                keyboardDiv.appendChild(keyDiv);
-            });
+            const createKeys = () => {
+                const keys = [
+                    { note: 'C', color: 'white' },
+                    { note: 'C#', color: 'black' },
+                    { note: 'D', color: 'white' },
+                    { note: 'D#', color: 'black' },
+                    { note: 'E', color: 'white' },
+                    { note: 'F', color: 'white' },
+                    { note: 'F#', color: 'black' },
+                    { note: 'G', color: 'white' },
+                    { note: 'G#', color: 'black' },
+                    { note: 'A', color: 'white' },
+                    { note: 'A#', color: 'black' },
+                    { note: 'B', color: 'white' }
+                ];
+        
+                keyboardDiv.innerHTML = ''; // clear existing keys
+                for (let octave = 0; octave < octaves; octave++) {
+                    keys.forEach((key, index) => {
+                        const keyContainer = document.createElement('div');
+                        keyContainer.style.position = 'absolute';
+                        keyContainer.style.display = 'inline-block';
+                        keyContainer.style.width = '30px';
+                        keyContainer.style.left = `${(octave * 12 + index) * 30}px`;
+        
+                        const keyDiv = document.createElement('div');
+                        keyDiv.className = `pianoKey ${key.color}`;
+                        keyDiv.style.position = 'absolute';
+                        keyDiv.style.width = '30px';
+                        keyDiv.style.height = '120px';
+                        keyDiv.style.left = '0';
+                        keyDiv.style.backgroundColor = key.color === 'white' ? 'white' : 'black';
+                        keyDiv.style.border = '1px solid black';
+                        keyDiv.dataset.note = key.note;
+                        keyDiv.dataset.value = rootNote + index + (octave * 12);
+                        keyDiv.dataset.color = key.color;
+        
+                        keyDiv.addEventListener('mousedown', (event) => {
+                            event.stopPropagation();
+                            isMouseDown = true;
+                            highlightKey(keyDiv);
+                        });
+        
+                        keyDiv.addEventListener('mouseover', () => {
+                            handleMouseOver(keyDiv);
+                        });
+        
+                        keyDiv.addEventListener('mouseup', () => isMouseDown = false);
+        
+                        keyDiv.addEventListener('touchstart', (event) => {
+                            event.stopPropagation();
+                            event.preventDefault();
+                            highlightKey(keyDiv);
+                        }, { passive: false });
+        
+                        keyDiv.addEventListener('touchmove', (event) => {
+                            event.preventDefault();
+                            handleTouchMove(event);
+                        }, { passive: false });
+        
+                        keyContainer.appendChild(keyDiv);
+                        keyboardDiv.appendChild(keyContainer);
+                    });
+                }
+                keyboardDiv.style.width = `${30 * 12 * octaves}px`;
+            };
+        
+            createKeys();
         
             // append the keyboard to the device div
             deviceDiv.appendChild(keyboardDiv);
         
-            // create label for the root note input
-            const rootNoteLabel = document.createElement('label');
-            rootNoteLabel.for = 'rootNote';
-            rootNoteLabel.textContent = 'Root Note';
-            rootNoteLabel.className = 'deviceInportLabel';
-            rootNoteLabel.style.display = 'inline-block';
-            rootNoteLabel.style.width = '70px';
-            
-            // create input for the root note
-            const rootNoteInput = document.createElement('input');
-            rootNoteInput.type = 'text';
-            rootNoteInput.value = rootNote;
-            rootNoteInput.id = 'rootNote';
-            rootNoteInput.className = 'rootNote';
-            rootNoteInput.addEventListener('input', (event) => {
-                rootNote = parseInt(event.target.value, 10);
-                keys.forEach((key, index) => {
-                    const keyDiv = keyboardDiv.children[index];
-                    keyDiv.dataset.value = rootNote + index;
-                });
+            // create labeled input for the root note
+            const rootNoteInput = createLabeledInput('Root Note', 'rootNote', 'rootNote', rootNote, {
+                input: { width: '3em' }
             });
         
-            rootNoteInput.addEventListener('change', (event) => {
+            // append the label and input to the device div
+            deviceDiv.appendChild(rootNoteInput.label);
+            deviceDiv.appendChild(rootNoteInput.input);
+        
+            rootNoteInput.input.addEventListener('input', (event) => {
                 rootNote = parseInt(event.target.value, 10);
-                keys.forEach((key, index) => {
-                    const keyDiv = keyboardDiv.children[index];
-                    keyDiv.dataset.value = rootNote + index;
-                });
+                createKeys();
             });
         
-            // append the root note label and input to the device div
-            deviceDiv.appendChild(rootNoteLabel);
-            deviceDiv.appendChild(rootNoteInput);
+            rootNoteInput.input.addEventListener('change', (event) => {
+                rootNote = parseInt(event.target.value, 10);
+                createKeys();
+            });
+        
+            // create labeled input for the octaves
+            const octavesInput = createLabeledInput('Octaves', 'octaves', 'octaves', octaves, {
+                input: { width: '3em' }
+            }, {
+                min: '1',
+                max: '4'
+            });
+        
+            // append the label and input to the device div
+            deviceDiv.appendChild(octavesInput.label);
+            deviceDiv.appendChild(octavesInput.input);
+        
+            octavesInput.input.addEventListener('input', (event) => {
+                octaves = parseInt(event.target.value, 10);
+                createKeys();
+            });
+        
+            octavesInput.input.addEventListener('change', (event) => {
+                octaves = parseInt(event.target.value, 10);
+                createKeys();
+            });
         }
         else if (filename === "slider") {
             const silenceGenerator = context.createConstantSource();
             silenceGenerator.offset.value = 0;
             silenceGenerator.start();
             // create the device
-            const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
+            const device = createMockRNBODevice(context, silenceGenerator, [silenceGenerator], [{ comment: 'output' }], []);
             deviceDiv = addDeviceToWorkspace(device, "slider", false);
         
             // create a slider
@@ -2359,67 +2273,49 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             slider.step = '0.001';
             slider.value = '0';
             slider.id = 'slider';
-
+        
             // find the existing form in the device
             const form = deviceDiv.querySelector('form');
-
+        
             // create a div to hold the labels and inputs
             const div = document.createElement('div');
             div.className = 'labelAndInputContainer';
             div.style.left = '16px';
             div.style.top = '34px';
-
+        
             div.appendChild(slider);
-
+        
             // create min input and its label
-            const minInput = document.createElement('input');
-            minInput.type = 'text';
-            minInput.value = slider.min;
-            minInput.id = 'min';
-            minInput.className = 'deviceInport sliderMin';
-            minInput.style.float = 'none';
-
-            const minInputLabel = document.createElement('label');
-            minInputLabel.for = 'min';
-            minInputLabel.textContent = 'min';
-            minInputLabel.className = 'deviceInportLabel';
-            minInputLabel.style.display = 'inline-block';
-            minInputLabel.style.width = '22px';
-
+            const minInput = createLabeledInput('min', 'min', 'deviceInport sliderMin', slider.min, {
+                input: { float: 'none' },
+                label: { width: '20px' }
+            });
+        
             // create max input and its label
-            const maxInput = document.createElement('input');
-            maxInput.type = 'text';
-            maxInput.value = slider.max;
-            maxInput.id = 'max';
-            maxInput.className = 'deviceInport sliderMax';
-            maxInput.style.float = 'none';
-
-            const maxInputLabel = document.createElement('label');
-            maxInputLabel.for = 'max';
-            maxInputLabel.textContent = 'max';
-            maxInputLabel.className = 'deviceInportLabel';
-            maxInputLabel.style.display = 'inline-block';
-            maxInputLabel.style.width = '22px';
-
-            // append labels and inputs to the div
-            div.appendChild(minInputLabel);
-            div.appendChild(minInput);
-            div.appendChild(maxInputLabel);
-            div.appendChild(maxInput);
+            const maxInput = createLabeledInput('max', 'max', 'deviceInport sliderMax', slider.max, {
+                input: { float: 'none' },
+                label: { width: '20px' }
+            });
+        
+            // append the labels and inputs to the div
+            div.appendChild(minInput.label);
+            div.appendChild(minInput.input);
+            div.appendChild(maxInput.label);
+            div.appendChild(maxInput.input);
             div.appendChild(document.createElement('br'));
-
+        
             // append the div to the form
             form.appendChild(div);
-
+        
             // add event listeners to the min and max inputs
-            minInput.addEventListener('change', () => {
-                slider.min = minInput.value;
+            minInput.input.addEventListener('change', () => {
+                slider.min = minInput.input.value;
             });
-
-            maxInput.addEventListener('change', () => {
-                slider.max = maxInput.value;
+        
+            maxInput.input.addEventListener('change', () => {
+                slider.max = maxInput.input.value;
             });
-
+        
             // add event listeners to the slider
             slider.addEventListener('input', () => {
                 // update the silenceGenerator offset value
@@ -2633,7 +2529,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             // add event listeners to the button
             button.addEventListener('mousedown', handleButtonDown);
             button.addEventListener('touchstart', handleButtonDown);
-        
             button.addEventListener('mouseup', handleButtonUp);
             button.addEventListener('touchend', handleButtonUp);
         }
@@ -2641,6 +2536,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             deviceDiv  = addDeviceToWorkspace(null, 'output', true);
         }
         else {
+            // is a RNBO-generated device
             if (filename == "*" ) {
                 filename = "times";
             }
@@ -2688,93 +2584,15 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 }
             }
         }
+        // attach the same event handlers to every device div
         deviceDiv.onmousedown = handleDeviceMouseDown;
         deviceDiv.ontouchstart = handleDeviceMouseDown;
         if ( devicePosition ) {
             deviceDiv.style.left = devicePosition.left + 'px';
             deviceDiv.style.top = devicePosition.top + 'px';
         }
-        if (filename == 'pattern') {
-            deviceDiv.style.width = '32em';
-            deviceDiv.style.height = '120px';
-        }
-        if (filename == 'number') {
-            deviceDiv.style.height = '80px';
-        }
-        if ( filename == 'play' ) {
-            deviceDiv.style.height = '216px';
-        }
-        if ( filename == 'wave' ) {
-            deviceDiv.style.width = '14em';
-        }
-        if ( filename == 'granular' ) {
-            deviceDiv.style.height = '160px';
-        }
-        if (filename == 'comment') {
-            deviceDiv.style.width = '10em';
-            deviceDiv.style.height = '80px';
-        }
-        if (filename == 'buffer') {
-            deviceDiv.style.width = '12em';
-        }
-        if (filename == 'declick') {
-            deviceDiv.style.width = '9em';
-        }
-        if (filename == 'print') {
-            deviceDiv.style.width = '8em';
-        }
-        if (filename == 'record') {
-            deviceDiv.style.width = '104px';
-            deviceDiv.style.minWidth = '104px';
-        }
-        if (filename == 'slider') {
-            deviceDiv.style.width = '200px';
-            deviceDiv.style.height = '110px';
-        }
-        if (filename == 'touchpad') {
-            deviceDiv.style.width = '260px';
-            deviceDiv.style.height = '250px';
-        }
-        if (filename == 'button' || filename == 'toggle') {
-            deviceDiv.style.height = '138px';
-        }
-        if (filename == 'output' ) {
-            deviceDiv.style.width = '140px';
-        }
-        if (filename == 'abs') {
-            deviceDiv.style.width = '7em';
-        }
-        if (filename == 'and') {
-            deviceDiv.style.width = '7em';
-        }
-        if (filename == 'hztosamps' || filename == 'mstosamps' || filename == 'sampstohz' || filename == 'sampstoms' || filename == 'sqrt') {
-            deviceDiv.style.width = '9em';
-        }
-        if (filename == 'downsamp') {
-            deviceDiv.style.width = '10em';
-        }
-        if (filename == 'motion') {
-            deviceDiv.style.width = '7em';
-        }
-        if (filename == 'keyboard') {
-            deviceDiv.style.width = '450px';
-            deviceDiv.style.height = '170px';
-        }
-        if (filename == 'midinote') {
-            deviceDiv.style.width = '202px';
-        }
-        if (filename == 'midicc') {
-            deviceDiv.style.width = '202px';
-            deviceDiv.style.height = '78px';
-        }
-        if (filename == 'scope') {
-            deviceDiv.style.width = '308px';
-            deviceDiv.style.paddingBottom = '10px';
-        }
-        if (filename == 'spectrogram') {
-            deviceDiv.style.paddingBottom = '10px';
-            deviceDiv.style.width = '250px';
-        }
+        // apply device-specific styles to the div
+        applyDeviceStyles(deviceDiv, filename);
         return deviceDiv;
     }
     catch (error) {
@@ -2785,6 +2603,78 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             showGrowlNotification(`Error creating device. Does "${filename.replace('.json','')}" match an available device?`);
         }
     }
+}
+
+function applyDeviceStyles(deviceDiv, filename) {
+    const styles = {
+        pattern: { width: '32em', height: '120px' },
+        number: { height: '80px' },
+        play: { height: '216px' },
+        wave: { width: '14em' },
+        granular: { height: '160px' },
+        comment: { width: '10em', height: '80px' },
+        buffer: { width: '12em' },
+        declick: { width: '9em' },
+        print: { width: '8em' },
+        record: { width: '104px', minWidth: '104px' },
+        slider: { width: '200px', height: '110px' },
+        touchpad: { width: '260px', height: '250px' },
+        button: { height: '138px' },
+        toggle: { height: '138px' },
+        output: { width: '140px' },
+        abs: { width: '7em' },
+        and: { width: '7em' },
+        hztosamps: { width: '9em' },
+        mstosamps: { width: '9em' },
+        sampstohz: { width: '9em' },
+        sampstoms: { width: '9em' },
+        sqrt: { width: '9em' },
+        downsamp: { width: '10em' },
+        motion: { width: '7em' },
+        keyboard: { width: '410px', height: '186px' },
+        midinote: { width: '202px' },
+        midicc: { width: '202px', height: '78px' },
+        scope: { width: '308px', paddingBottom: '10px' },
+        spectrogram: { width: '250px', paddingBottom: '10px' }
+    };
+
+    const style = styles[filename];
+    if (style) {
+        Object.assign(deviceDiv.style, style);
+    }
+}
+
+function createLabeledInput(labelText, inputId, inputClass, defaultValue, additionalStyles = {}, additionalAttributes = {}) {
+    // create label element
+    const label = document.createElement('label');
+    label.for = inputId;
+    label.textContent = labelText;
+    label.className = 'deviceInportLabel';
+    label.style.display = 'inline-block';
+
+    // apply additional styles to the label
+    for (const [key, value] of Object.entries(additionalStyles.label || {})) {
+        label.style[key] = value;
+    }
+
+    // create input element
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.id = inputId;
+    input.className = inputClass;
+    input.value = defaultValue;
+
+    // apply additional styles to the input
+    for (const [key, value] of Object.entries(additionalStyles.input || {})) {
+        input.style[key] = value;
+    }
+
+    // apply additional attributes to the input
+    for (const [key, value] of Object.entries(additionalAttributes)) {
+        input.setAttribute(key, value);
+    }
+
+    return { label, input };
 }
 
 function createMockRNBODevice(context, node, sources, outlets, inlets, numOutputChannels = 1, gates = []) {
@@ -3355,7 +3245,11 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
         // save the values of the input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
-            deviceState.inputs[input.id] = input.value;
+            if (input.type === 'checkbox') {
+                deviceState.inputs[input.id] = input.checked;
+            } else {
+                deviceState.inputs[input.id] = input.value;
+            }
         }
 
         // save the values of the textarea elements
