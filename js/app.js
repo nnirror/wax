@@ -1287,6 +1287,10 @@ function addInputsForDevice(device, deviceType, deviceId) {
                     inportText.dispatchEvent(new Event('change'));
                 }
             }
+
+            if (deviceType == 'sequencer') {
+                inportContainer.style.display = 'none';
+            }
         });
     
         inportForm.appendChild(inportContainer);
@@ -2070,7 +2074,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             triggerSource.connect(merger, 0, 1);
         
             // create the device
-            const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], []);
+            const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], [], 2);
             deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
         
             // create a div to hold the piano keyboard
@@ -2634,6 +2638,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         keyboard: { width: '410px', height: '186px' },
         midinote: { width: '202px' },
         midicc: { width: '202px', height: '78px' },
+        sequencer: { height: '365px', width: '300px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' }
     };
@@ -2960,6 +2965,12 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         }
         else {
             deviceWidth = 15;
+        }
+
+        if (deviceType === 'sequencer') {
+            // sequencer has a somewhat complex interaction between its UI and the underlying RNBO device
+            // which has been abstracted into its own function
+            createSequencerUI(deviceDiv);
         }
 
         deviceDiv.style.height = `${Math.max(device.it.T.inlets.length+1,device.it.T.outlets.length+1) * 28}px`;
@@ -3615,8 +3626,14 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         // set the values of its input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
-            if (deviceState.inputs[input.id]) {
-                input.value = deviceState.inputs[input.id];
+            if (typeof deviceState.inputs[input.id] != 'undefined') {
+                const inputElement = document.getElementById(input.id);
+                if (inputElement.type == 'checkbox') {
+                    input.checked = deviceState.inputs[input.id];
+                }
+                else {
+                    input.value = deviceState.inputs[input.id];
+                }
                 input.dispatchEvent(new Event('change'));
             }
 
@@ -3999,7 +4016,7 @@ function toggleDragging() {
 
 async function loadAllJsonFiles() {
     const cacheName = 'json-files-cache';
-    const fileUrl = 'wasm/wax_devices.zip';
+    const fileUrl = 'wasm/wax_devices-v0.0.1.zip';
     const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
     let response;
@@ -4072,5 +4089,54 @@ async function loadAllJsonFiles() {
     } catch (error) {
         console.error('Error loading JSON files:', error);
     }
+}
+
+function createSequencerUI(deviceDiv) {
+    const sliderContainer = document.createElement('div');
+    sliderContainer.className = 'slider-container';
+    sliderContainer.style.paddingTop = '30px';
+
+    for (let i = 0; i < 8; i++) {
+        const sliderLabel = document.createElement('label');
+        sliderLabel.textContent = `Slider ${i + 1}`;
+        sliderLabel.htmlFor = `slider-${i}`;
+        sliderLabel.style.position = 'relative';
+        sliderLabel.style.top = '-8px';
+        sliderContainer.appendChild(sliderLabel);
+
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.id = `slider-${i}`;
+        slider.className = 'sequencer-slider';
+        slider.min = 0;
+        slider.max = 1;
+        slider.step = 0.01;
+        slider.value = 0.5;
+        sliderContainer.appendChild(slider);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `checkbox-${i}`;
+        checkbox.className = 'sequencer-checkbox';
+        checkbox.checked = true;
+        sliderContainer.appendChild(checkbox);
+
+        sliderContainer.appendChild(document.createElement('br'));
+
+        const updateSequencerData = () => {
+            const nodeParent = slider.closest('.node');
+            const sequencerDataInput = nodeParent.querySelector('#sequencer_data');
+            const sliderValues = Array.from(nodeParent.querySelectorAll('.device-slider')).map((slider, index) => {
+                const checkbox = nodeParent.querySelector(`#checkbox-${index}`);
+                return checkbox.checked ? slider.value : null;
+            }).filter(value => value !== null);
+            sequencerDataInput.value = sliderValues.join(' ');
+            sequencerDataInput.dispatchEvent(new Event('change'));
+        };
+
+        slider.addEventListener('input', updateSequencerData);
+        checkbox.addEventListener('change', updateSequencerData);
+    }
+    deviceDiv.appendChild(sliderContainer);
 }
 /* END functions */

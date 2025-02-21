@@ -333,6 +333,9 @@ Translates `input` into a different number range.
 ## scope
 Displays the input signal as a waveform in an oscilloscope. `scope min` and `scope max` control the amplitude range of the oscilloscope. `block size` controls the number of samples in the total history of the oscilloscope, and it must be a power of 2 between 32 and 32768.
 
+## sequencer
+Advances to the next step in a 8-step sequence every time a signal connected to the `advance` inlet goes above 0.5. The `output` signal produces the value for the current step, with slider ranges between 0 - 1. The `hit maximum` outlet produces a short 1 signal when the sequencer hits its maximum and wraps back around to its first value, and otherwise outputs a 0. The `step` outlet produces the number of the current step. Steps are zero-based, so the first step = step 0.
+
 ## sine
 Generates a sine wave between -1 and 1, oscillating at `frequency`. The phase of the sine wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.
 

@@ -264,6 +264,10 @@ var wasmDeviceURLs = [
         "displayName": "scope"
     },
     {
+        "fileName": "sequencer",
+        "displayName": "sequencer"
+    },
+    {
         "fileName": "skipper",
         "displayName": "skipper"
     },
