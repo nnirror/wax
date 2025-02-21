@@ -4126,7 +4126,7 @@ function createSequencerUI(deviceDiv) {
         const updateSequencerData = () => {
             const nodeParent = slider.closest('.node');
             const sequencerDataInput = nodeParent.querySelector('#sequencer_data');
-            const sliderValues = Array.from(nodeParent.querySelectorAll('.device-slider')).map((slider, index) => {
+            const sliderValues = Array.from(nodeParent.querySelectorAll('.sequencer-slider')).map((slider, index) => {
                 const checkbox = nodeParent.querySelector(`#checkbox-${index}`);
                 return checkbox.checked ? slider.value : null;
             }).filter(value => value !== null);
