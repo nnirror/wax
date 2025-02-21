@@ -2638,7 +2638,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         keyboard: { width: '410px', height: '186px' },
         midinote: { width: '202px' },
         midicc: { width: '202px', height: '78px' },
-        sequencer: { height: '365px', width: '300px' },
+        sequencer: { height: '365px', width: '303px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' }
     };
@@ -3393,7 +3393,11 @@ async function getStateForDeviceIds(deviceIds) {
         // save the values of the input elements
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
-            deviceState.inputs[input.id] = input.value;
+            if (input.type === 'checkbox') {
+                deviceState.inputs[input.id] = input.checked;
+            } else {
+                deviceState.inputs[input.id] = input.value;
+            }
         }
 
         // save the values of the textarea elements
@@ -4098,10 +4102,11 @@ function createSequencerUI(deviceDiv) {
 
     for (let i = 0; i < 8; i++) {
         const sliderLabel = document.createElement('label');
-        sliderLabel.textContent = `Slider ${i + 1}`;
+        sliderLabel.textContent = `slider ${i + 1}`;
         sliderLabel.htmlFor = `slider-${i}`;
         sliderLabel.style.position = 'relative';
         sliderLabel.style.top = '-8px';
+        sliderLabel.style.paddingRight = '8px';
         sliderContainer.appendChild(sliderLabel);
 
         const slider = document.createElement('input');
