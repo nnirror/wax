@@ -2638,7 +2638,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         keyboard: { width: '410px', height: '186px' },
         midinote: { width: '202px' },
         midicc: { width: '202px', height: '78px' },
-        sequencer: { height: '365px', width: '303px' },
+        sequencer: { height: '390px', width: '303px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' }
     };
@@ -4020,7 +4020,7 @@ function toggleDragging() {
 
 async function loadAllJsonFiles() {
     const cacheName = 'json-files-cache';
-    const fileUrl = 'wasm/wax_devices-v0.0.1.zip';
+    const fileUrl = 'wasm/wax_devices-v0.0.2.zip';
     const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
     let response;
@@ -4098,7 +4098,7 @@ async function loadAllJsonFiles() {
 function createSequencerUI(deviceDiv) {
     const sliderContainer = document.createElement('div');
     sliderContainer.className = 'slider-container';
-    sliderContainer.style.paddingTop = '30px';
+    sliderContainer.style.paddingTop = '50px';
 
     for (let i = 0; i < 8; i++) {
         const sliderLabel = document.createElement('label');
