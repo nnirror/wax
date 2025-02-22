@@ -4020,7 +4020,7 @@ function toggleDragging() {
 
 async function loadAllJsonFiles() {
     const cacheName = 'json-files-cache';
-    const fileUrl = 'wasm/wax_devices-ofghqtx0.zip';
+    const fileUrl = 'wasm/wax_devices-0f05u817.zip';
     const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
     let response;
@@ -4060,7 +4060,7 @@ async function loadAllJsonFiles() {
 
         // this is the number of bytes of the wax_devices file - hard-coded for now
         // while i figure out how to configure the content-length header on the server
-        const contentLength = 12540345;
+        const contentLength = 12712710;
         const total = parseInt(contentLength, 10);
         let loaded = 0;
 

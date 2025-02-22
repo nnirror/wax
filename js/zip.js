@@ -9,6 +9,14 @@ async function zipWasmFiles() {
     const zipFileName = `wax_devices-${hash}.zip`;
     const zipFilePath = path.join(wasmDir, zipFileName);
 
+    // remove any existing zip files in the wasm directory
+    const existingFiles = fs.readdirSync(wasmDir);
+    for (const file of existingFiles) {
+        if (file.endsWith('.zip')) {
+            fs.unlinkSync(path.join(wasmDir, file));
+        }
+    }
+
     // Read all files in the wasm directory
     const files = fs.readdirSync(wasmDir);
 
@@ -27,7 +35,9 @@ async function zipWasmFiles() {
     // Write the zip file to the wasm directory
     fs.writeFileSync(zipFilePath, zipContent);
 
+    const zipFileSize = fs.statSync(zipFilePath).size;
     console.log(`Zipped files into: ${zipFileName}`);
+    console.log(`Zip file size: ${zipFileSize} bytes`);
 }
 
 zipWasmFiles().catch(err => {
