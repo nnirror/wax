@@ -4042,6 +4042,14 @@ async function loadAllJsonFiles() {
                 }
                 cache.put(fileUrl, response.clone());
             }
+
+            // delete old files from the cache that do not match the current file name
+            const cacheKeys = await cache.keys();
+            for (const request of cacheKeys) {
+                if (request.url !== new URL(fileUrl, location.href).href) {
+                    await cache.delete(request);
+                }
+            }
         } else {
             // fetch the file directly if caches API is not available
             response = await fetch(fileUrl);
