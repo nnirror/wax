@@ -4,7 +4,7 @@
   "description": "This example shows you how to add dynamic audio to a webpage, using the web export feature of RNBO, part of [Max 8](https://cycling74.com/products/max) made by [Cycling '74](https://cycling74.com).",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "zip": "node js/zip.js"
   },
   "repository": {
     "type": "git",

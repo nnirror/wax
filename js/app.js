@@ -4020,7 +4020,7 @@ function toggleDragging() {
 
 async function loadAllJsonFiles() {
     const cacheName = 'json-files-cache';
-    const fileUrl = 'wasm/wax_devices-v0.0.2.zip';
+    const fileUrl = 'wasm/wax_devices-2cz7sii4.zip';
     const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
     let response;

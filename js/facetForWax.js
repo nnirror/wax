@@ -2898,7 +2898,7 @@ markov(states) {
     }
     let maxFrameSize;
     if (this.data.length == 0 ) {
-      maxFrameSize = this.getWholeNoteNumSamples();
+      maxFrameSize = SAMPLE_RATE;
     }
     else {
       maxFrameSize = this.data.length;
