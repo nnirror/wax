@@ -850,16 +850,29 @@ body .CodeMirror {
 }
 .sequencer-checkbox {
     height: 30px;
+    padding: 0;
+    margin: 0;
     width: 30px;
+    position: relative;
+    left: 5px;
+    top: -2px;
 }
 
 .sequencer-slider {
-    width: 146px;
+    width: 200px;
     position: relative;
     -webkit-appearance: none;
     appearance: none;
-    height: 30px;
+    height: 35px;
+    margin: 0;
+    padding: 0;
     background: #ddd;
+    display: inline-block;
+    border: 1px solid rgb(203,203,203);
+    /* prevent mobile touches that don't end up moving 
+    the slider thumb from causing any other events 
+    in the workspace */
+    touch-action: none;
 }
 
 .sequencer-slider::-webkit-slider-thumb {
@@ -886,4 +899,11 @@ body .CodeMirror {
     height: 30px;
     cursor: pointer;
     border-radius: 50%;
+}
+
+.sequencer-container {
+    width: 249px;
+    position: relative;
+    left: 46px;
+    line-height: 0;
 }

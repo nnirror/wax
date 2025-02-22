@@ -2638,7 +2638,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         keyboard: { width: '410px', height: '186px' },
         midinote: { width: '202px' },
         midicc: { width: '202px', height: '78px' },
-        sequencer: { height: '390px', width: '303px' },
+        sequencer: { height: '331px', width: '331px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' }
     };
@@ -4097,16 +4097,11 @@ async function loadAllJsonFiles() {
 
 function createSequencerUI(deviceDiv) {
     const sliderContainer = document.createElement('div');
-    sliderContainer.className = 'slider-container';
-    sliderContainer.style.paddingTop = '50px';
-
+    sliderContainer.className = 'sequencer-container';
     for (let i = 0; i < 8; i++) {
         const sliderLabel = document.createElement('label');
-        sliderLabel.textContent = `slider ${i + 1}`;
+        sliderLabel.textContent = ``;
         sliderLabel.htmlFor = `slider-${i}`;
-        sliderLabel.style.position = 'relative';
-        sliderLabel.style.top = '-8px';
-        sliderLabel.style.paddingRight = '8px';
         sliderContainer.appendChild(sliderLabel);
 
         const slider = document.createElement('input');
@@ -4125,8 +4120,6 @@ function createSequencerUI(deviceDiv) {
         checkbox.className = 'sequencer-checkbox';
         checkbox.checked = true;
         sliderContainer.appendChild(checkbox);
-
-        sliderContainer.appendChild(document.createElement('br'));
 
         const updateSequencerData = () => {
             const nodeParent = slider.closest('.node');
