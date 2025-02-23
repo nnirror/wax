@@ -1288,7 +1288,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
                 }
             }
 
-            if (deviceType == 'sequencer') {
+            if (deviceType == 'sequencer' || deviceType == 'quantizer' ) {
                 inportContainer.style.display = 'none';
             }
         });
@@ -2640,7 +2640,9 @@ function applyDeviceStyles(deviceDiv, filename) {
         midicc: { width: '202px', height: '78px' },
         sequencer: { height: '331px', width: '331px' },
         scope: { width: '308px', paddingBottom: '10px' },
-        spectrogram: { width: '250px', paddingBottom: '10px' }
+        spectrogram: { width: '250px', paddingBottom: '10px' },
+        quantizer: { width: '549px' }
+        
     };
 
     const style = styles[filename];
@@ -2971,6 +2973,9 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             // sequencer has a somewhat complex interaction between its UI and the underlying RNBO device
             // which has been abstracted into its own function
             createSequencerUI(deviceDiv);
+        }
+        if (deviceType === 'quantizer') {
+            createQuantizerUI(deviceDiv);
         }
 
         deviceDiv.style.height = `${Math.max(device.it.T.inlets.length+1,device.it.T.outlets.length+1) * 28}px`;
@@ -4020,7 +4025,7 @@ function toggleDragging() {
 
 async function loadAllJsonFiles() {
     const cacheName = 'json-files-cache';
-    const fileUrl = 'wasm/wax_devices-0f05u817.zip';
+    const fileUrl = CONFIG.FILE_URL;
     const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
     let response;
@@ -4144,5 +4149,75 @@ function createSequencerUI(deviceDiv) {
         checkbox.addEventListener('change', updateSequencerData);
     }
     deviceDiv.appendChild(sliderContainer);
+}
+
+function createQuantizerUI(deviceDiv) {
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const noteValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    const quantizerContainer = document.createElement('div');
+    quantizerContainer.className = 'quantizer-container';
+    quantizerContainer.style.paddingLeft = '49px';
+    quantizerContainer.style.paddingBottom = '10px';
+
+    noteNames.forEach((note, index) => {
+        const noteContainer = document.createElement('div');
+        noteContainer.style.display = 'inline-block';
+        noteContainer.style.textAlign = 'center';
+        noteContainer.style.margin = '0 5px';
+
+        const noteRectangle = document.createElement('div');
+        noteRectangle.style.width = '20px';
+        noteRectangle.style.height = '40px';
+        noteRectangle.style.backgroundColor = note.includes('#') ? 'black' : 'white';
+        noteRectangle.style.border = '1px solid black';
+        noteRectangle.style.marginBottom = '5px';
+        noteRectangle.style.color = 'grey';
+        noteRectangle.style.display = 'flex';
+        noteRectangle.style.alignItems = 'center';
+        noteRectangle.style.justifyContent = 'center';
+        noteRectangle.textContent = note;
+        noteContainer.appendChild(noteRectangle);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `checkbox-${note}`;
+        checkbox.className = 'quantizer-checkbox';
+        checkbox.style.width = '20px';
+        checkbox.style.height = '20px';
+        checkbox.style.position = 'relative';
+        checkbox.style.left = '-3px';
+        checkbox.checked = false;
+        noteContainer.appendChild(checkbox);
+
+        const updateQuantizerData = () => {
+            const nodeParent = checkbox.closest('.node');
+            const scaleDataInput = nodeParent.querySelector('#scale_data');
+            const selectedNotes = Array.from(nodeParent.querySelectorAll('.quantizer-checkbox'))
+                .map((checkbox, index) => checkbox.checked ? noteValues[index] : null)
+                .filter(value => value !== null);
+
+            const fullScale = noteValues.map((note, index) => {
+                if (selectedNotes.includes(note)) {
+                    return note;
+                } else {
+                    let closestNote = selectedNotes.reduce((prev, curr) => {
+                        const distancePrev = Math.min(Math.abs(prev - note), 12 - Math.abs(prev - note));
+                        const distanceCurr = Math.min(Math.abs(curr - note), 12 - Math.abs(curr - note));
+                        return distanceCurr < distancePrev ? curr : prev;
+                    });
+                    return closestNote;
+                }
+            });
+
+            scaleDataInput.value = fullScale.join(' ');
+            scaleDataInput.dispatchEvent(new Event('change'));
+        };
+
+        checkbox.addEventListener('change', updateQuantizerData);
+
+        quantizerContainer.appendChild(noteContainer);
+    });
+
+    deviceDiv.appendChild(quantizerContainer);
 }
 /* END functions */

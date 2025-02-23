@@ -17,10 +17,10 @@ async function zipWasmFiles() {
         }
     }
 
-    // Read all files in the wasm directory
+    // read all files in the wasm directory
     const files = fs.readdirSync(wasmDir);
 
-    // Add all JSON files to the zip with compression
+    // add all JSON files to the zip with compression
     for (const file of files) {
         if (file.endsWith('.json')) {
             const filePath = path.join(wasmDir, file);
@@ -29,11 +29,18 @@ async function zipWasmFiles() {
         }
     }
 
-    // Generate the zip file with compression
+    // generate the zip file with compression
     const zipContent = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 
-    // Write the zip file to the wasm directory
+    // write the zip file to the wasm directory
     fs.writeFileSync(zipFilePath, zipContent);
+
+    // update the config.js file
+    const configFilePath = path.join(__dirname, 'config.js');
+    const configContent = `const CONFIG = {
+    FILE_URL: 'wasm/${zipFileName}'
+};`;
+    fs.writeFileSync(configFilePath, configContent);
 
     const zipFileSize = fs.statSync(zipFilePath).size;
     console.log(`Zipped files into: ${zipFileName}`);

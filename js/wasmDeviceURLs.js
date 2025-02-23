@@ -92,6 +92,10 @@ var wasmDeviceURLs = [
         "displayName": "fold"
     },
     {
+        "fileName": "ftom",
+        "displayName": "ftom"
+    },
+    {
         "fileName": "granular",
         "displayName": "granular"
     },
@@ -210,6 +214,10 @@ var wasmDeviceURLs = [
     {
         "fileName": "print",
         "displayName": "print"
+    },
+    {
+        "fileName": "quantizer",
+        "displayName": "quantizer"
     },
     {
         "fileName": "random",

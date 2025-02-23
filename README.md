@@ -161,6 +161,9 @@ Applies a FFT-based bin threshold gate to `input`, passing only FFT bin frequenc
 ## fold
 Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`.
 
+## ftom
+Converts an input value of frequency in `hz` to its corresponding MIDI note number.
+
 ## granular
 Generates grains lasting `size (ms)` from a loaded audio file, starting at the `position` point, which expects a float between 0 - 1. A new grain will generate every time `trigger` goes above 0.5.
 
@@ -285,6 +288,9 @@ Generates a synthetic string pluck at `frequency` Hz using Karplus-Strong synthe
 
 ## print
 Displays the current value of `input` every 100ms. Helpful for debugging.
+
+## quantizer
+Scales an incoming signal of MIDI note numbers (0-127) onto the the scale defined in the user interface.
 
 ## random
 Returns a random number between `minimum` and `maximum`, every time `trigger` goes above 0.5.
