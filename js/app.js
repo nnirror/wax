@@ -1171,16 +1171,16 @@ async function attachOutports(device,deviceDiv) {
         }
         else if (outports[0].tag == 'value to print') {
             let hr = deviceDiv.querySelector('.device-hr');
-            let span = deviceDiv.querySelector('.printvalue');
+            let valueDiv = deviceDiv.querySelector('.printvalue');
             let canvas = deviceDiv.querySelector('.waterfallCanvas');
             let canvasCtx;
             let scopeMin = deviceDiv.querySelector('.scopeMin');
             let scopeMax = deviceDiv.querySelector('.scopeMax');
         
-            if (!span) {
-                span = document.createElement('span');
-                span.className = 'printvalue';
-                deviceDiv.insertBefore(span, hr);
+            if (!valueDiv) {
+                valueDiv = document.createElement('div');
+                valueDiv.className = 'printvalue';
+                deviceDiv.insertBefore(valueDiv, hr);
             }
         
             if (!canvas) {
@@ -1213,9 +1213,9 @@ async function attachOutports(device,deviceDiv) {
         
             // update the print span's value
             if (typeof ev.payload === 'number' && ev.payload % 1 !== 0) {
-                span.textContent = ev.payload.toFixed(2);
+                valueDiv.textContent = ev.payload.toFixed(2);
             } else {
-                span.textContent = ev.payload;
+                valueDiv.textContent = ev.payload;
             }
         
             // draw the waterfall display
@@ -2677,7 +2677,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         comment: { width: '10em', height: '80px' },
         buffer: { width: '12em' },
         declick: { width: '9em' },
-        print: { width: '308px', paddingBottom: '10px' },
+        print: { width: '333px', paddingBottom: '10px', height: '236px' },
         record: { width: '104px', minWidth: '104px' },
         slider: { width: '200px', height: '110px' },
         touchpad: { width: '260px', height: '250px' },

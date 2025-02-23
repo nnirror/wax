@@ -779,8 +779,11 @@ body .CodeMirror {
 
 .printvalue {
     position: relative;
-    top: 2px;
-    left: 47px;
+    top: -31px;
+    display: inline-block;
+    font-size: 1em;
+    text-align: center;
+    width: 100%;
 }
 .audioFileLoaderButton {
     margin-top: 10px;
