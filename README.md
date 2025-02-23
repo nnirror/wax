@@ -287,7 +287,7 @@ Plays a loaded audio file at `rate` every time `trigger` goes above 0.5.
 Generates a synthetic string pluck at `frequency` Hz using Karplus-Strong synthesis. `damping` controls how long the string resonates and expects values between 0 and 1.
 
 ## print
-Displays the current value of `input` every 100ms. Helpful for debugging.
+Displays the current value of `input` every 10ms, along with a side-scrolling representation of values over the last few seconds. `scope min` and `scope max` control the range of the visualation.
 
 ## quantizer
 Scales an incoming signal of MIDI note numbers (0-127) onto the the scale defined in the user interface.

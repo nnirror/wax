@@ -1169,23 +1169,81 @@ async function attachOutports(device,deviceDiv) {
             await stopAudio();
             await startAudio(); 
         }
-        else if ( outports[0].tag == 'value to print' ) {
+        else if (outports[0].tag == 'value to print') {
             let hr = deviceDiv.querySelector('.device-hr');
             let span = deviceDiv.querySelector('.printvalue');
-
-            // if the span for printing values doesn't exist yet, create it
+            let canvas = deviceDiv.querySelector('.waterfallCanvas');
+            let canvasCtx;
+            let scopeMin = deviceDiv.querySelector('.scopeMin');
+            let scopeMax = deviceDiv.querySelector('.scopeMax');
+        
             if (!span) {
                 span = document.createElement('span');
                 span.className = 'printvalue';
                 deviceDiv.insertBefore(span, hr);
             }
-
+        
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                canvas.width = 300;
+                canvas.height = 150;
+                canvas.className = 'waterfallCanvas';
+                deviceDiv.insertBefore(canvas, hr);
+            }
+        
+            canvasCtx = canvas.getContext('2d', { willReadFrequently: true });
+        
+            if (!scopeMin) {
+                const scopeMinInput = createLabeledInput('scope min', 'scopeMin', 'scopeMin', -1, {
+                    input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+                });
+                scopeMin = scopeMinInput.input;
+                deviceDiv.insertBefore(scopeMinInput.label, hr);
+                deviceDiv.insertBefore(scopeMinInput.input, hr);
+            }
+        
+            if (!scopeMax) {
+                const scopeMaxInput = createLabeledInput('scope max', 'scopeMax', 'scopeMax', 1, {
+                    input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+                });
+                scopeMax = scopeMaxInput.input;
+                deviceDiv.insertBefore(scopeMaxInput.label, hr);
+                deviceDiv.insertBefore(scopeMaxInput.input, hr);
+            }
+        
             // update the print span's value
             if (typeof ev.payload === 'number' && ev.payload % 1 !== 0) {
                 span.textContent = ev.payload.toFixed(2);
             } else {
                 span.textContent = ev.payload;
             }
+        
+            // draw the waterfall display
+            function drawWaterfall() {
+                const scopeMinValue = parseFloat(scopeMin.value);
+                const scopeMaxValue = parseFloat(scopeMax.value);
+                const scopeRange = scopeMaxValue - scopeMinValue;
+        
+                // shift the existing image to the left
+                const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
+                canvasCtx.putImageData(imageData, -1, 0);
+        
+                // clear the rightmost column
+                canvasCtx.fillStyle = 'rgb(203, 203, 203)';
+                canvasCtx.fillRect(canvas.width - 1, 0, 1, canvas.height);
+        
+                // draw the new value as a line segment
+                const normalizedValue = (ev.payload - scopeMinValue) / scopeRange;
+                const y = canvas.height - (normalizedValue * canvas.height); // flip the y coordinate
+        
+                canvasCtx.strokeStyle = 'black';
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(canvas.width - 1, y);
+                canvasCtx.lineTo(canvas.width - 1, canvas.height);
+                canvasCtx.stroke();
+            }
+        
+            drawWaterfall();
         }
     });
 }
@@ -2619,7 +2677,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         comment: { width: '10em', height: '80px' },
         buffer: { width: '12em' },
         declick: { width: '9em' },
-        print: { width: '8em' },
+        print: { width: '308px', paddingBottom: '10px' },
         record: { width: '104px', minWidth: '104px' },
         slider: { width: '200px', height: '110px' },
         touchpad: { width: '260px', height: '250px' },
@@ -3626,6 +3684,15 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                 deviceElement = await createDeviceByName('mic', null, devicePosition);
             } else {
                 deviceElement = await createDeviceByName(deviceName, null, devicePosition);
+                if ( deviceName == 'print' ) {
+                    // special handling neede because print UI elements are created after the device is created.
+                    // the device needs to send data via outports to the UI elements, so that any number can be 
+                    // visualized. this fix is needed when loading a saved state.
+                    setTimeout(() => {
+                        deviceElement.querySelector('#scopeMin').value = deviceState.inputs['scopeMin'];
+                        deviceElement.querySelector('#scopeMax').value = deviceState.inputs['scopeMax'];
+                    }, 100)
+                }
             }
         }
 
