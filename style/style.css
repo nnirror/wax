@@ -784,6 +784,7 @@ body .CodeMirror {
     font-size: 1em;
     text-align: center;
     width: 100%;
+    z-index: -1;
 }
 .audioFileLoaderButton {
     margin-top: 10px;
