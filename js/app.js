@@ -3094,7 +3094,11 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                 inputStyle: 'textarea',
                 lineWrapping: true,
                 matchBrackets: true,
-                lint: {options: {esversion: 2021, asi: true}}
+                lint: {options: {esversion: 2021, asi: true}},
+                extraKeys: {
+                    "Cmd-D": false, // disable Cmd-D to prevent interference with wax device duplication key combo
+                    "Ctrl-D": false // disable Ctrl-D to prevent interference with wax device duplication key combo
+                }
             });
             adjustCodeMirrorHeight(editor);
             
