@@ -58,7 +58,7 @@
         "q": 0.1
     },
     "mix": {
-        "crossfade": 0.5
+        "crossfade": 0
     },
     "overdrive": {
         "amount": 0.5
