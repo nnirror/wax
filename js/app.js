@@ -1321,6 +1321,15 @@ function addInputsForDevice(device, deviceType, deviceId) {
                     scheduleDeviceEvent(device, inport, this.value, deviceId, false);
                 }
             });
+
+            if (inport.tag == 'length (seconds)') {
+                inportText.addEventListener('keydown', function(event) {
+                    // prevent saving audio files when pressing enter on the record device length input
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                    }
+                });
+            }
     
             // create a label for the input
             const inportLabel = document.createElement('label');
@@ -2404,7 +2413,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             silenceGeneratorY.connect(mergerNode, 0, 1); // Connect to input 1
         
             // create the device
-            const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], []);
+            const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], [], 2);
             deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
         
             // create a touchpad
@@ -2978,6 +2987,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                         const startStopCheckbox = document.createElement('input');
                         startStopCheckbox.type = 'checkbox';
                         startStopCheckbox.className = 'inport-checkbox';
+                        startStopCheckbox.id = 'inport-checkbox';
                         deviceForm.appendChild(startStopCheckbox);
                         const offsetNode = context.createConstantSource();
                         offsetNode.start();
@@ -3703,7 +3713,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
             if (typeof deviceState.inputs[input.id] != 'undefined') {
-                const inputElement = document.getElementById(input.id);
+                const inputElement = document.getElementById(input.id);                
                 if (inputElement.type == 'checkbox') {
                     input.checked = deviceState.inputs[input.id];
                 }
