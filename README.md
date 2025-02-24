@@ -296,7 +296,7 @@ Scales an incoming signal of MIDI note numbers (0-127) onto the the scale define
 Returns a random number between `minimum` and `maximum`, every time `trigger` goes above 0.5.
 
 ## record
-Records `input 1` and `input 2` to a stereo audio buffer for `length (ms)` milliseconds.
+Records `input 1` and `input 2` to a stereo audio buffer for `length (seconds)` seconds.
 - A signal that rises above 0.5 in `start/stop` will start the recording, and a signal that falls below 0.5 will stop it. You can use a `toggle` UI element to control `start/stop`.
 - To export the last recording, send a signal that rises above 0.5 to `save`. You can use a `button` UI element to control `save`.
 

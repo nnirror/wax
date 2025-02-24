@@ -839,7 +839,11 @@ document.addEventListener('keydown', (event) => {
         if (selectedConnections.length > 0) {
             if (!isLocked) {
                 selectedConnections.forEach(connection => {
-                    jsPlumb.deleteConnection(connection);
+                    try {
+                        jsPlumb.deleteConnection(connection);
+                    } catch (error) {
+                        // do nothing - connection already deleted
+                    }
                 });
                 selectedConnections = [];
             }

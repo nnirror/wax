@@ -751,7 +751,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 681.77780818939209, 284.912728309631348, 54.0, 23.0 ],
 									"rnbo_classname" : "set",
-									"rnbo_serial" : 1,
+									"rnbo_serial" : 5,
 									"rnbo_uniqueid" : "set_obj-51",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
