@@ -340,9 +340,13 @@ Translates `input` into a different number range.
 Displays the input signal as a waveform in an oscilloscope. `scope min` and `scope max` control the amplitude range of the oscilloscope. `block size` controls the number of samples in the total history of the oscilloscope, and it must be a power of 2 between 32 and 32768.
 
 ## sequencer
-Advances to the next step in a 8-step sequence every time a signal connected to the `advance` inlet goes above 0.5. When a signal connected to the `reset` inlet goes above 0.5, the sequence will immediately move to the first step. The `output (step)` signal produces the slider value for the current step, with slider ranges between 0 - 1. The `step` outlet outputs the current step number. Steps are zero-based, so the first step = step 0.
+Advances to the next step in a sequence of sliders every time a signal connected to the `advance` inlet goes above 0.5. When a signal connected to the `reset` inlet goes above 0.5, the sequence will immediately reset to the first step. The `output (step)` signal produces the slider value for the current step, with slider ranges between 0 - 1. The `step` outlet outputs the current step number. Steps are zero-based, so the first step = step 0.
 
-The `phase` inlet expects a signal between 0 and 1 and outputs the slider value in that relative position via the `output (phase)` outlet. In other words, a 0 outputs the first slider's value; a 0.5 outputs the fifth slider; a 1 outputs the eighth slider; etc.
+The `phase` inlet expects a signal between 0 and 1 and outputs the slider value in that relative position via the `output (phase)` outlet. In other words, a 0 outputs the first slider's value; a 0.5 outputs the middle slider; a 1 outputs the last slider; etc.
+
+The `steps` control changes the number of steps in the sequence.
+
+The `drift` inlet controls a slider randomization process that can also be run manually via the `drift` button. `% drift` controls the percentage of sliders that will randomize. `% intensity` controls the intensity of randomization.
 
 ## sine
 Generates a sine wave between -1 and 1, oscillating at `frequency`. The phase of the sine wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.

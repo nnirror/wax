@@ -725,6 +725,11 @@ body .toggle-on {
 .jtk-hover path {
     cursor: pointer;
 }
+
+.jtk-group-collapsed > .node {
+    display:none;
+} 
+
 .endpointCircle {
     background: rgba(0,0,0,0);
 }

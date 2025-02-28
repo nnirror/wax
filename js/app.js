@@ -1148,6 +1148,11 @@ async function attachOutports(device,deviceDiv) {
                 inputElement.dispatchEvent(event);
             });
         }
+        else if (outports[0].tag == 'drift') {
+            if (deviceDiv.applyDrift) {
+                deviceDiv.applyDrift();
+            }
+        }
         else if ( outports[0].tag == 'save_recording' ) {
             const dataBuffer = await device.releaseDataBuffer('buf');
             let audioBuffer = dataBuffer.getAsAudioBuffer(context);
@@ -2709,7 +2714,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         keyboard: { width: '410px', height: '186px' },
         midinote: { width: '202px' },
         midicc: { width: '202px', height: '78px' },
-        sequencer: { height: '331px', width: '331px' },
+        sequencer: { width: '331px', paddingBottom: '14px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' },
         quantizer: { width: '549px' }
@@ -4196,44 +4201,173 @@ async function loadAllJsonFiles() {
 function createSequencerUI(deviceDiv) {
     const sliderContainer = document.createElement('div');
     sliderContainer.className = 'sequencer-container';
-    for (let i = 0; i < 8; i++) {
-        const sliderLabel = document.createElement('label');
-        sliderLabel.textContent = ``;
-        sliderLabel.htmlFor = `slider-${i}`;
-        sliderContainer.appendChild(sliderLabel);
 
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.id = `slider-${i}`;
-        slider.className = 'sequencer-slider';
-        slider.min = 0;
-        slider.max = 1;
-        slider.step = 0.01;
-        slider.value = 0.5;
-        sliderContainer.appendChild(slider);
+    const sliderCountInputLabel = document.createElement('label');
+    sliderCountInputLabel.textContent = '   steps';
+    sliderCountInputLabel.htmlFor = 'slider-count';
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `checkbox-${i}`;
-        checkbox.className = 'sequencer-checkbox';
-        checkbox.checked = true;
-        sliderContainer.appendChild(checkbox);
+    const sliderCountInput = document.createElement('input');
+    sliderCountInput.type = 'number';
+    sliderCountInput.id = 'slider-count';
+    sliderCountInput.min = 2;
+    sliderCountInput.max = 32;
+    sliderCountInput.value = 8;
+    sliderCountInput.style.marginBottom = '6px';
+    sliderCountInput.style.width = '3em';
+    sliderContainer.appendChild(sliderCountInput);
+    sliderContainer.appendChild(sliderCountInputLabel);
+    sliderContainer.appendChild(document.createElement('br'));
 
-        const updateSequencerData = () => {
-            const nodeParent = slider.closest('.node');
-            const sequencerDataInput = nodeParent.querySelector('#sequencer_data');
-            const sliderValues = Array.from(nodeParent.querySelectorAll('.sequencer-slider')).map((slider, index) => {
-                const checkbox = nodeParent.querySelector(`#checkbox-${index}`);
-                return checkbox.checked ? slider.value : null;
-            }).filter(value => value !== null);
-            sequencerDataInput.value = sliderValues.join(' ');
-            sequencerDataInput.dispatchEvent(new Event('change'));
-        };
+    const driftPercentageLabel = document.createElement('label');
+    driftPercentageLabel.textContent = '   % drift';
+    driftPercentageLabel.htmlFor = 'drift-percentage';
 
-        slider.addEventListener('input', updateSequencerData);
-        checkbox.addEventListener('change', updateSequencerData);
-    }
+    const driftPercentageInput = document.createElement('input');
+    driftPercentageInput.type = 'number';
+    driftPercentageInput.id = 'drift-percentage';
+    driftPercentageInput.min = 0;
+    driftPercentageInput.max = 100;
+    driftPercentageInput.value = 50;
+    driftPercentageInput.style.marginBottom = '6px';
+    sliderContainer.appendChild(driftPercentageInput);
+    sliderContainer.appendChild(driftPercentageLabel);
+    sliderContainer.appendChild(document.createElement('br'));
+
+    const driftIntensityLabel = document.createElement('label');
+    driftIntensityLabel.textContent = '   % intensity';
+    driftIntensityLabel.htmlFor = 'drift-intensity';
+
+    const driftIntensityInput = document.createElement('input');
+    driftIntensityInput.type = 'number';
+    driftIntensityInput.id = 'drift-intensity';
+    driftIntensityInput.min = 0;
+    driftIntensityInput.max = 100;
+    driftIntensityInput.value = 50;
+    driftIntensityInput.style.marginBottom = '6px';
+    sliderContainer.appendChild(driftIntensityInput);
+    sliderContainer.appendChild(driftIntensityLabel);
+    sliderContainer.appendChild(document.createElement('br'));
+
+    const driftButton = document.createElement('button');
+    driftButton.textContent = 'drift';
+    driftButton.style.position = 'absolute';
+    driftButton.style.right = '22px';
+    driftButton.style.top = '1px';
+    driftButton.style.width = '87px';
+    driftButton.style.height = '69px';
+    driftButton.style.background = 'grey';
+
+    sliderContainer.appendChild(driftButton);
+
+    const slidersDiv = document.createElement('div');
+    slidersDiv.className = 'sliders-div';
+    sliderContainer.appendChild(slidersDiv);
+
+    const sequencerDataInput = document.createElement('input');
+    sequencerDataInput.type = 'hidden';
+    sequencerDataInput.id = 'sequencer_data';
+    sliderContainer.appendChild(sequencerDataInput);
+
+    const skipDataInput = document.createElement('input');
+    skipDataInput.type = 'hidden';
+    skipDataInput.id = 'skip_data';
+    sliderContainer.appendChild(skipDataInput);
+
+    let previousSliderCount = parseInt(sliderCountInput.value, 10);
+
+    const createSliders = (count) => {
+        const existingValues = Array.from(slidersDiv.querySelectorAll('.sequencer-slider')).map(slider => slider.value);
+        const existingCheckboxes = Array.from(slidersDiv.querySelectorAll('.sequencer-checkbox')).map(checkbox => checkbox.checked);
+        slidersDiv.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const sliderLabel = document.createElement('label');
+            sliderLabel.textContent = ``;
+            sliderLabel.htmlFor = `slider-${i}`;
+            slidersDiv.appendChild(sliderLabel);
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.id = `slider-${i}`;
+            slider.className = 'sequencer-slider';
+            slider.min = 0;
+            slider.max = 1;
+            slider.step = 0.01;
+            slider.value = existingValues[i] !== undefined ? existingValues[i] : 0.5;
+            slidersDiv.appendChild(slider);
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `checkbox-${i}`;
+            checkbox.className = 'sequencer-checkbox';
+            checkbox.checked = existingCheckboxes[i] !== undefined ? existingCheckboxes[i] : true;
+            slidersDiv.appendChild(checkbox);
+
+            const updateSequencerData = () => {
+                const nodeParent = slider.closest('.node');
+                const sequencerDataInput = nodeParent.querySelector('#sequencer_data');
+                const skipDataInput = nodeParent.querySelector('#skip_data');
+                const sliders = Array.from(nodeParent.querySelectorAll('.sequencer-slider'));
+                const checkboxes = Array.from(nodeParent.querySelectorAll('.sequencer-checkbox'));
+                let lastCheckedValue = sliders[0].value;
+                const sliderValues = sliders.map((slider, index) => {
+                    const checkbox = checkboxes[index];
+                    if (checkbox.checked) {
+                        lastCheckedValue = slider.value;
+                        return slider.value;
+                    } else {
+                        return lastCheckedValue;
+                    }
+                });
+                sequencerDataInput.value = sliderValues.join(' ');
+                sequencerDataInput.dispatchEvent(new Event('change'));
+
+                const checkboxValues = checkboxes.map(checkbox => checkbox.checked ? 1 : 0);
+                skipDataInput.value = checkboxValues.join(' ');
+                skipDataInput.dispatchEvent(new Event('change'));
+            };
+
+            slider.addEventListener('input', updateSequencerData);
+            checkbox.addEventListener('change', updateSequencerData);
+        }
+    };
+
+    const applyDrift = () => {
+        const driftPercentage = parseInt(driftPercentageInput.value, 10) / 100;
+        const driftIntensity = parseInt(driftIntensityInput.value, 10) / 100;
+        const sliders = Array.from(slidersDiv.querySelectorAll('.sequencer-slider'));
+    
+        sliders.forEach((slider, index) => {
+            if (Math.random() < driftPercentage) {
+                const currentValue = parseFloat(slider.value);
+                const randomValue = (Math.random() * 2 - 1) * driftIntensity; // generate a random value between -1 and 1, scaled by driftIntensity
+                const newValue = currentValue + randomValue;
+                slider.value = Math.max(0, Math.min(1, newValue)); // ensure the value stays within [0, 1]
+                slider.dispatchEvent(new Event('input'));
+            }
+        });
+    };
+
+    driftButton.addEventListener('click', applyDrift);
+
+    sliderCountInput.addEventListener('change', (event) => {
+        const count = parseInt(event.target.value, 10);
+        if (isNaN(count) || count < 2) {
+            sliderCountInput.value = previousSliderCount; // preserve the previous number of sliders
+        } else {
+            previousSliderCount = count;
+            createSliders(count);
+            // trigger change event on each slider to ensure sequencerDataInput is updated
+            Array.from(slidersDiv.querySelectorAll('.sequencer-slider')).forEach(slider => {
+                slider.dispatchEvent(new Event('input'));
+            });
+        }
+    });
+
+    createSliders(previousSliderCount);
     deviceDiv.appendChild(sliderContainer);
+
+    // expose the applyDrift function for external use
+    deviceDiv.applyDrift = applyDrift;
 }
 
 function createQuantizerUI(deviceDiv) {
