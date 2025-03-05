@@ -369,6 +369,15 @@ Displays the input signal in the frequency domain as a spectrogram. `block size`
 ## squareroot
 Computes the square root of `input 1`.
 
+## step trigger
+Generates a 30ms trigger impulse whenever the `step` value matches a value in the text input. Values can be entered as integers, arrays, or FacetPatterns (for more information on Facet, please see the [pattern object](https://github.com/nnirror/wax/blob/main/README.md#pattern) and [Facet](https://github.com/nnirror/facet) documentation.
+
+A value of `[1,2,7]` will generate a trigger when the `step` input receives a 1, 2, or 7 signal.
+
+A value of `4` will generate a trigger when the `step` input receives a 4 signal.
+
+A value of `_.ramp(0,8,8).shuffle().reduce(4)` will generate triggers for a random group of 4 integers between 0 and 7.
+
 ## subtract
 Subtracts `input 2` from `input 1`.
 

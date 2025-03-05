@@ -300,6 +300,10 @@ var wasmDeviceURLs = [
         "displayName": "squareroot"
     },
     {
+        "fileName": "step_trig",
+        "displayName": "step trigger"
+    },
+    {
         "fileName": "subtract",
         "displayName": "subtract (-)"
     },

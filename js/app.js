@@ -1281,9 +1281,15 @@ function addInputsForDevice(device, deviceType, deviceId) {
         // devices with inports that start 2 buttons down
         inportContainer.style.paddingTop = '52px';
     }
-    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock','granular'].includes(deviceType) == false) {
+    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock','granular','step_trig'].includes(deviceType) == false) {
         // devices with inports that start 1 button down
         inportContainer.style.paddingTop = '25px';
+    }
+    else if (['step_trig'].includes(deviceType) == true) {
+        // devices with inports that start 1 button down
+        inportContainer.style.padding = '0px';
+        inportContainer.style.marginBottom = '0px';
+        inportContainer.style.top = '25px';
     }
     else {
         // devices with inports that start at top
@@ -1310,6 +1316,9 @@ function addInputsForDevice(device, deviceType, deviceId) {
             }
             else {
                 inportText = document.createElement('input');
+            }
+            if (device.it.T.inports[0].tag == 'triggers' ) {
+                inportText.style.width = '12em';
             }
             inportText.id = inport.tag;
             inportText.className = 'deviceInport'
@@ -1418,7 +1427,27 @@ async function scheduleDeviceEvent(device, inport, value, deviceId, fromRegenBut
         }
         else {
             if (inport.tag !== 'comment') {
-                values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+                if (deviceId.includes('step_trig')) {
+                    // some special logic for the step trigger input which can transmits an array to the wasm device instead of a single number
+                    let test = eval(value);
+                    // check if it's a FacetPattern
+                    if (typeof test.data !== 'undefined') {
+                        values = test.data;
+                    }
+                    else if (typeof test.data === 'undefined') {
+                        // if it's not a FacetPattern, check if it's a number
+                        if (typeof test === 'number') {
+                            values = [test];
+                        }
+                        else {
+                            // if it's not a number or FacetPattern, assume the user defined an array
+                            values = test;
+                        }
+                    }
+                }
+                else {
+                    values = value.split(/\s+/).map(s => parseFloat(eval(s)));
+                }
             }
         }
         if (typeof values === 'number' || (Array.isArray(values) && !isNaN(values[0]))) {
@@ -2717,6 +2746,7 @@ function applyDeviceStyles(deviceDiv, filename) {
         sequencer: { width: '331px', paddingBottom: '14px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' },
+        step_trig: {width: '14em'},
         quantizer: { width: '549px' }
         
     };
