@@ -58,7 +58,7 @@
         "q": 0.1
     },
     "mix": {
-        "crossfade": 0
+        "crossfade": 0.5
     },
     "overdrive": {
         "amount": 0.5
@@ -105,8 +105,13 @@
         "down (ms)": 30,
         "exponent": 0
     },
+    "stutter": {
+        "grain (ms)": 100,
+        "memory (ms)": 500,
+        "loop": 1
+    },
     "tri": {
-        "pulsewidth": 0.5
+        "slope": 0.5
     },
     "wrap": {
         "minimum": -1,

@@ -438,6 +438,7 @@ let selectedDevice = null;
 let workspaceElement = document.getElementById('workspace');
 let zIndexCounter = 1;
 let selectedConnections = [];
+let inportsWithConnectedSignals = {};
 let executedTextPatterns = {};
 let selectionDiv = null;
 let startPoint = null;
@@ -465,9 +466,10 @@ jsPlumb.bind("connectionDetached", function(info) {
             try {
                 // disconnect the connection
                 connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
-            } catch (error) {
-                console.error('Failed to disconnect:', error);
-            }
+                // unset the signal connection state
+                unsetSignalConnectionState(connection.target, connection.input);
+                triggerChangeOnTargetDeviceInputs(connection.target);
+            } catch (error) {}
             // remove the connection from the list
             sourceDevice.connections = sourceDevice.connections.filter(conn => conn.id !== jsPlumbConnectionId);
         }
@@ -1324,19 +1326,25 @@ function addInputsForDevice(device, deviceType, deviceId) {
             inportText.className = 'deviceInport'
             inportText.addEventListener('change', function(event) {
                 if (document.activeElement !== event.target) {
-                    scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+                    if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
+                        scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+                    }
                 }
             });
-
+            
             inportText.addEventListener('regen', function(event) {
                 if (document.activeElement !== event.target) {
-                    scheduleDeviceEvent(device, inport, this.value, deviceId, true);
+                    if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
+                        scheduleDeviceEvent(device, inport, this.value, deviceId, true);
+                    }
                 }
             });
             
             inportText.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
-                    scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+                    if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
+                        scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+                    }
                 }
             });
 
@@ -1375,6 +1383,13 @@ function addInputsForDevice(device, deviceType, deviceId) {
 
             if (deviceType == 'sequencer' || deviceType == 'quantizer' ) {
                 inportContainer.style.display = 'none';
+            }
+
+            // the "trigger" inport for the stutter device gates the device when no signal is connected
+            // it needs to exist as an inport, but the user doesn't enter anything into it - this just 
+            // leverages the connection management logic that works with inports
+            if (deviceType == 'stutter' && inport.tag == 'trigger') {
+                inportText.style.visibility = 'hidden';
             }
         });
     
@@ -1702,10 +1717,57 @@ function finishConnection(deviceId, inputIndex) {
 
             sourceDeviceId = null;
             sourceOutputIndex = null;
+            setSignalConnectionState(deviceId, inputIndex);
         }
         jsPlumb.repaintEverything();
-    } catch (error) {
-        console.log('error making connection:' + error);
+    } catch (error) {}
+}
+
+function setSignalConnectionState(deviceId, inputIndex) {
+    const targetDevice = devices[deviceId].device;
+    if (!inportsWithConnectedSignals[deviceId]) {
+        inportsWithConnectedSignals[deviceId] = {};
+    }
+    const inletComment = targetDevice.it.T.inlets[inputIndex].comment;
+    if (!inportsWithConnectedSignals[deviceId][inletComment]) {
+        inportsWithConnectedSignals[deviceId][inletComment] = 0;
+    }
+    inportsWithConnectedSignals[deviceId][inletComment]++;
+
+    let inport = null;
+    for (let i = 0; i < targetDevice.it.T.inports.length; i++) {
+        if (targetDevice.it.T.inports[i].tag === inletComment) {
+            inport = targetDevice.it.T.inports[i];
+            break;
+        }
+    }
+    if (inport) {
+        scheduleDeviceEvent(targetDevice, inport, '-1123581321', deviceId, false);
+    }
+}
+
+function unsetSignalConnectionState(deviceId, inputIndex) {
+    const targetDevice = devices[deviceId].device;
+    const inletComment = targetDevice.it.T.inlets[inputIndex].comment;
+    if (inportsWithConnectedSignals[deviceId] && inportsWithConnectedSignals[deviceId][inletComment]) {
+        inportsWithConnectedSignals[deviceId][inletComment]--;
+        if (inportsWithConnectedSignals[deviceId][inletComment] === 0) {
+            delete inportsWithConnectedSignals[deviceId][inletComment];
+            if (Object.keys(inportsWithConnectedSignals[deviceId]).length === 0) {
+                delete inportsWithConnectedSignals[deviceId];
+            }
+        }
+    }
+}
+
+function triggerChangeOnTargetDeviceInputs(targetDeviceId) {
+    const targetNode = document.getElementById(targetDeviceId);
+    if (targetNode) {
+        const inputs = targetNode.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            const event = new Event('change');
+            input.dispatchEvent(event);
+        });
     }
 }
 
@@ -2723,7 +2785,6 @@ function applyDeviceStyles(deviceDiv, filename) {
         granular: { height: '160px' },
         comment: { width: '10em', height: '80px' },
         buffer: { width: '12em' },
-        declick: { width: '9em' },
         print: { width: '333px', paddingBottom: '10px', height: '236px' },
         record: { width: '104px', minWidth: '104px' },
         slider: { width: '200px', height: '110px' },
@@ -4120,6 +4181,7 @@ function handleDeleteEvent(deviceDiv, isLocked) {
             targetConnections.forEach(connection => jsPlumb.deleteConnection(connection));
             removeDeviceFromWorkspace(deviceDiv.id);
             deviceDiv.remove();
+
         }
     };
 }

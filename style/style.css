@@ -147,6 +147,7 @@ html, body {
     position: relative;
     overflow: auto;
     height: 100%;
+    width: 100%;
     touch-action: auto;
     -webkit-overflow-scrolling: touch;
     margin-top: 4em;

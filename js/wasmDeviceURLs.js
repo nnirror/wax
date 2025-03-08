@@ -301,15 +301,15 @@ var wasmDeviceURLs = [
     },
     {
         "fileName": "step_trig",
-        "displayName": "step trigger"
+        "displayName": "steptrig"
+    },
+    {
+        "fileName": "stutter",
+        "displayName": "stutter"
     },
     {
         "fileName": "subtract",
         "displayName": "subtract (-)"
-    },
-    {
-        "fileName": "swanramp",
-        "displayName": "declick"
     },
     {
         "fileName": "toggle",
