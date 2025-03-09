@@ -1771,846 +1771,880 @@ function triggerChangeOnTargetDeviceInputs(targetDeviceId) {
     }
 }
 
+async function createCustomAudioWorkletDevice(workletfile, filename) {
+    try {
+        await context.audioWorklet.addModule(`js/customWorklets/${workletfile}.js`);
+
+        // create a temporary node to get the number of inputs & number of ouputs
+        const tempNode = new AudioWorkletNode(context, `${workletfile}`);
+
+        return new Promise((resolve, reject) => {
+            tempNode.port.onmessage = (event) => {
+                if (event.data.type === 'config') {
+                    const { inputs, outputs, inputNames, outputNames } = event.data;
+                    // create the node with the correct inputs/outputs for this device
+                    const customNode = new AudioWorkletNode(context, `${workletfile}`, {
+                        numberOfInputs: inputs,
+                        numberOfOutputs: outputs,
+                        channelCount: Math.max(inputs, outputs),
+                        channelCountMode: 'explicit',
+                        channelInterpretation: 'speakers'
+                    });
+
+                    // name the inlets and outlets based on their names in the worklet
+                    const inlets = inputNames.map((name, i) => ({ comment: name }));
+                    const outlets = outputNames.map((name, i) => ({ comment: name }));
+
+                    // create the device 
+                    const device = createMockRNBODevice(context, customNode, [customNode], outlets, inlets, outputs);
+
+                    const deviceDiv = addDeviceToWorkspace(device, filename, false);
+                    applyDeviceStyles(deviceDiv, filename);
+
+                    // resolve the promise with the created device element and remove tempNode
+                    resolve(deviceDiv);
+                    tempNode.disconnect();
+                    tempNode.port.close();
+                }
+            };
+        });
+
+    } catch (error) {
+        console.error('Error creating custom AudioWorklet device:', error);
+        showGrowlNotification('Error creating custom AudioWorklet device.');
+    }
+}
+
 async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
     try {
         let deviceDiv;
-        if (filename === "motion") {
-            await showMotionPermissionButton();
-            const device = await createMotionDevice(context);
-            deviceDiv = addDeviceToWorkspace(device, "motion", false);
-        }
-        else if (filename === "mic" || filename === "microphone" || filename === "microphone-input") {
-            filename = "mic";
-            if ( !isAudioPlaying ) {
-                await startAudio();
-            }
-            const device = await createMicrophoneDevice();
-            deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
-        }
-        else if (filename === "scope") {
-            const analyser = context.createAnalyser();
-            analyser.fftSize = 2048;
-            let bufferLength = analyser.fftSize;
-            let dataArray = new Uint8Array(bufferLength);
-            const gainNode = context.createGain();
-            const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
-            deviceDiv = addDeviceToWorkspace(device, "scope", false);
-        
-            // Create the canvas element for the oscilloscope
-            const canvas = document.createElement('canvas');
-            const canvasCtx = canvas.getContext('2d');
-            canvas.width = 300;
-            canvas.height = 150;
-            canvas.style.height = '115px';
-            canvas.style.width = '100%';
-            canvas.className = 'oscilloscopeCanvas';
-            deviceDiv.appendChild(canvas);
+         // Find the device in wasmDeviceURLs that matches the supplied filename
+        const customWorklet = wasmDeviceURLs.find(device => device.fileName === filename);
 
-             // create inputs
-             const scopeMin = createLabeledInput('scope min', 'scopeMin', 'scopeMin', -1, {
-                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
-            });
-        
-            const scopeMax = createLabeledInput('scope max', 'scopeMax', 'scopeMax', 1, {
-                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
-            });
-        
-            const blockSize = createLabeledInput('block size', 'blockSize', 'blockSize', 2048, {
-                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
-            });
-        
-            // Append the inputs to the device div
-            deviceDiv.appendChild(scopeMin.label);
-            deviceDiv.appendChild(scopeMin.input);
-            deviceDiv.appendChild(scopeMax.label);
-            deviceDiv.appendChild(scopeMax.input);
-            deviceDiv.appendChild(blockSize.label);
-            deviceDiv.appendChild(blockSize.input);
+        // Check if the device has a worklet property
+        if (customWorklet && customWorklet.worklet) {
+            deviceDiv = await createCustomAudioWorkletDevice(customWorklet.worklet, filename);
+        }
+        else {
+            if (filename === "motion") {
+                await showMotionPermissionButton();
+                const device = await createMotionDevice(context);
+                deviceDiv = addDeviceToWorkspace(device, "motion", false);
+            }
+            else if (filename === "mic" || filename === "microphone" || filename === "microphone-input") {
+                filename = "mic";
+                if ( !isAudioPlaying ) {
+                    await startAudio();
+                }
+                const device = await createMicrophoneDevice();
+                deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
+            }
+            else if (filename === "scope") {
+                const analyser = context.createAnalyser();
+                analyser.fftSize = 2048;
+                let bufferLength = analyser.fftSize;
+                let dataArray = new Uint8Array(bufferLength);
+                const gainNode = context.createGain();
+                const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
+                deviceDiv = addDeviceToWorkspace(device, "scope", false);
+            
+                // Create the canvas element for the oscilloscope
+                const canvas = document.createElement('canvas');
+                const canvasCtx = canvas.getContext('2d');
+                canvas.width = 300;
+                canvas.height = 150;
+                canvas.style.height = '115px';
+                canvas.style.width = '100%';
+                canvas.className = 'oscilloscopeCanvas';
+                deviceDiv.appendChild(canvas);
     
+                 // create inputs
+                 const scopeMin = createLabeledInput('scope min', 'scopeMin', 'scopeMin', -1, {
+                    input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+                });
+            
+                const scopeMax = createLabeledInput('scope max', 'scopeMax', 'scopeMax', 1, {
+                    input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+                });
+            
+                const blockSize = createLabeledInput('block size', 'blockSize', 'blockSize', 2048, {
+                    input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
+                });
+            
+                // Append the inputs to the device div
+                deviceDiv.appendChild(scopeMin.label);
+                deviceDiv.appendChild(scopeMin.input);
+                deviceDiv.appendChild(scopeMax.label);
+                deviceDiv.appendChild(scopeMax.input);
+                deviceDiv.appendChild(blockSize.label);
+                deviceDiv.appendChild(blockSize.input);
         
-            // connect the nodes
-            gainNode.connect(analyser);
-        
-            // function to check if a number is a power of 2
-            function isPowerOf2(value) {
-                return (value & (value - 1)) === 0;
-            }
-        
-            // function to update the block size
-            function updateBlockSize() {
-                const newBlockSize = parseInt(blockSize.input.value, 10);
-                if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
-                    analyser.fftSize = newBlockSize;
-                    bufferLength = analyser.fftSize;
-                    dataArray = new Uint8Array(bufferLength);
-                } else {
-                    showGrowlNotification('Error: Block size must be a power of 2 between 32 and 32768.');
+            
+                // connect the nodes
+                gainNode.connect(analyser);
+            
+                // function to check if a number is a power of 2
+                function isPowerOf2(value) {
+                    return (value & (value - 1)) === 0;
                 }
-            }
-        
-            // add event listener to update block size when the input changes
-            blockSize.input.addEventListener('change', updateBlockSize);
-        
-            // draw the oscilloscope
-            function draw() {
-                requestAnimationFrame(draw);
-        
-                analyser.getByteTimeDomainData(dataArray);
-        
-                const scopeMinValue = parseFloat(scopeMin.input.value);
-                const scopeMaxValue = parseFloat(scopeMax.input.value);
-                const scopeRange = scopeMaxValue - scopeMinValue;
-        
-                canvasCtx.fillStyle = 'rgb(200, 200, 200)';
-                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-        
-                canvasCtx.lineWidth = 2;
-                canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
-        
-                canvasCtx.beginPath();
-        
-                const sliceWidth = canvas.width * 1.0 / bufferLength;
-                let x = 0;
-        
-                for (let i = 0; i < bufferLength; i++) {
-                    const v = (dataArray[i] / 128.0) - 1; // normalize to range [-1, 1]
-                    const y = canvas.height - ((v - scopeMinValue) / scopeRange) * canvas.height; // flip the y coordinate
-        
-                    if (i === 0) {
-                        canvasCtx.moveTo(x, y);
+            
+                // function to update the block size
+                function updateBlockSize() {
+                    const newBlockSize = parseInt(blockSize.input.value, 10);
+                    if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
+                        analyser.fftSize = newBlockSize;
+                        bufferLength = analyser.fftSize;
+                        dataArray = new Uint8Array(bufferLength);
                     } else {
-                        canvasCtx.lineTo(x, y);
+                        showGrowlNotification('Error: Block size must be a power of 2 between 32 and 32768.');
                     }
-        
-                    x += sliceWidth;
                 }
-        
-                canvasCtx.lineTo(canvas.width, canvas.height / 2);
-                canvasCtx.stroke();
-            }
-        
-            draw();
-        }
-        else if (filename === "spectrogram") {
-            const analyser = context.createAnalyser();
-            analyser.fftSize = 2048;
-            let bufferLength = analyser.frequencyBinCount;
-            let dataArray = new Uint8Array(bufferLength);
-            const gainNode = context.createGain();
-            const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
-            deviceDiv = addDeviceToWorkspace(device, "spectrogram", false);
-        
-            // create the canvas element for the spectrogram
-            const canvas = document.createElement('canvas');
-            canvas.width = 300;
-            canvas.height = 150;
-            canvas.style.height = '360px';
-            canvas.style.width = '100%';
-            canvas.className = 'spectrogramCanvas';
-            deviceDiv.appendChild(canvas);
-        
-            const canvasCtx = canvas.getContext('2d');
-        
-            // create labeled input
-            const blockSize = createLabeledInput('block size', 'blockSize', 'blockSize', 2048, {
-                input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
-            });
-        
-            // append the labeled input to the device div
-            deviceDiv.appendChild(blockSize.label);
-            deviceDiv.appendChild(blockSize.input);
-        
-            // connect the nodes
-            gainNode.connect(analyser);
-        
-            // function to check if a number is a power of 2
-            function isPowerOf2(value) {
-                return (value & (value - 1)) === 0;
-            }
-        
-            // function to update the block size
-            function updateBlockSize() {
-                const newBlockSize = parseInt(blockSize.input.value, 10);
-                if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
-                    analyser.fftSize = newBlockSize;
-                    bufferLength = analyser.frequencyBinCount;
-                    dataArray = new Uint8Array(bufferLength);
-                } else {
-                    showGrowlNotification('Error: Block size must be a power of 2 between 32 and 32768.');
+            
+                // add event listener to update block size when the input changes
+                blockSize.input.addEventListener('change', updateBlockSize);
+            
+                // draw the oscilloscope
+                function draw() {
+                    requestAnimationFrame(draw);
+            
+                    analyser.getByteTimeDomainData(dataArray);
+            
+                    const scopeMinValue = parseFloat(scopeMin.input.value);
+                    const scopeMaxValue = parseFloat(scopeMax.input.value);
+                    const scopeRange = scopeMaxValue - scopeMinValue;
+            
+                    canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+                    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            
+                    canvasCtx.lineWidth = 2;
+                    canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+            
+                    canvasCtx.beginPath();
+            
+                    const sliceWidth = canvas.width * 1.0 / bufferLength;
+                    let x = 0;
+            
+                    for (let i = 0; i < bufferLength; i++) {
+                        const v = (dataArray[i] / 128.0) - 1; // normalize to range [-1, 1]
+                        const y = canvas.height - ((v - scopeMinValue) / scopeRange) * canvas.height; // flip the y coordinate
+            
+                        if (i === 0) {
+                            canvasCtx.moveTo(x, y);
+                        } else {
+                            canvasCtx.lineTo(x, y);
+                        }
+            
+                        x += sliceWidth;
+                    }
+            
+                    canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                    canvasCtx.stroke();
                 }
+            
+                draw();
             }
-        
-            // add event listener to update block size when the input changes
-            blockSize.input.addEventListener('change', updateBlockSize);
-        
-            // function to get color based on value
-            function getColor(value) {
-                const hue = (1.0 - value) * 240; // hue from blue (240) to red (0)
-                const lightness = value * 50; // lightness from 0% (black) to 50%
-                return `hsl(${hue}, 100%, ${lightness}%)`;
-            }
-        
-            // draw the spectrogram
-            function draw() {
-                requestAnimationFrame(draw);
-        
-                analyser.getByteFrequencyData(dataArray);
-        
-                // shift the existing image left
-                const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
-                canvasCtx.putImageData(imageData, -1, 0);
-        
-                // draw the new frequency data on the right
-                for (let i = 0; i < bufferLength; i++) {
-                    const value = dataArray[i] / 255; // normalize to range [0, 1]
-                    const x = canvas.width - 1;
-                    const y = canvas.height - (i / bufferLength) * canvas.height; // flip the y coordinate
-                    const color = getColor(value);
-                    canvasCtx.fillStyle = color;
-                    canvasCtx.fillRect(x, y, 1, canvas.height / bufferLength);
-                }
-            }
-        
-            draw();
-        }
-        else if (filename === "midipitchbend") {
-            const pitchBendSource = context.createConstantSource();
-            pitchBendSource.offset.value = 0;
-            pitchBendSource.start();
-            const device = createMockRNBODevice(context, pitchBendSource, [pitchBendSource], [{ comment: 'output' }], []);
-            deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
-        
-            // create labeled input
-            const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
-                input: { width: '40px' }
-            });
-        
-            // append labels and inputs to the device div
-            deviceDiv.appendChild(midiChannel.label);
-            deviceDiv.appendChild(midiChannel.input);
-        
-            // request MIDI access
-            if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess().then(midiAccess => {
-                    midiAccess.inputs.forEach(input => {
-                        input.addEventListener('midimessage', event => {
-                            const [status, lsb, msb] = event.data;
-                            const channel = (status & 0x0F) + 1; // extract channel number (1-16)
-                            const selectedChannel = parseInt(midiChannel.input.value, 10);
-        
-                            // check if the message is a pitch bend message and matches the selected channel
-                            if ((status & 0xF0) === 224 && channel === selectedChannel) { // pitch bend message
-                                const pitchBendValue = (msb << 7) | lsb; // combine MSB and LSB to create a 14-bit value
-                                const normalizedValue = (pitchBendValue - 8192) / 8192; // normalize value to range [-1, 1]
-                                // transmit the pitch bend value as a signal
-                                pitchBendSource.offset.setValueAtTime(normalizedValue, context.currentTime);
-                            }
-                        });
-                    });
-                }).catch(err => {
-                    console.error('Failed to get MIDI access', err);
+            else if (filename === "spectrogram") {
+                const analyser = context.createAnalyser();
+                analyser.fftSize = 2048;
+                let bufferLength = analyser.frequencyBinCount;
+                let dataArray = new Uint8Array(bufferLength);
+                const gainNode = context.createGain();
+                const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
+                deviceDiv = addDeviceToWorkspace(device, "spectrogram", false);
+            
+                // create the canvas element for the spectrogram
+                const canvas = document.createElement('canvas');
+                canvas.width = 300;
+                canvas.height = 150;
+                canvas.style.height = '360px';
+                canvas.style.width = '100%';
+                canvas.className = 'spectrogramCanvas';
+                deviceDiv.appendChild(canvas);
+            
+                const canvasCtx = canvas.getContext('2d');
+            
+                // create labeled input
+                const blockSize = createLabeledInput('block size', 'blockSize', 'blockSize', 2048, {
+                    input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
                 });
-            } else {
-                console.error('MIDI not supported in this browser.');
+            
+                // append the labeled input to the device div
+                deviceDiv.appendChild(blockSize.label);
+                deviceDiv.appendChild(blockSize.input);
+            
+                // connect the nodes
+                gainNode.connect(analyser);
+            
+                // function to check if a number is a power of 2
+                function isPowerOf2(value) {
+                    return (value & (value - 1)) === 0;
+                }
+            
+                // function to update the block size
+                function updateBlockSize() {
+                    const newBlockSize = parseInt(blockSize.input.value, 10);
+                    if (isPowerOf2(newBlockSize) && newBlockSize >= 32 && newBlockSize <= 32768) {
+                        analyser.fftSize = newBlockSize;
+                        bufferLength = analyser.frequencyBinCount;
+                        dataArray = new Uint8Array(bufferLength);
+                    } else {
+                        showGrowlNotification('Error: Block size must be a power of 2 between 32 and 32768.');
+                    }
+                }
+            
+                // add event listener to update block size when the input changes
+                blockSize.input.addEventListener('change', updateBlockSize);
+            
+                // function to get color based on value
+                function getColor(value) {
+                    const hue = (1.0 - value) * 240; // hue from blue (240) to red (0)
+                    const lightness = value * 50; // lightness from 0% (black) to 50%
+                    return `hsl(${hue}, 100%, ${lightness}%)`;
+                }
+            
+                // draw the spectrogram
+                function draw() {
+                    requestAnimationFrame(draw);
+            
+                    analyser.getByteFrequencyData(dataArray);
+            
+                    // shift the existing image left
+                    const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
+                    canvasCtx.putImageData(imageData, -1, 0);
+            
+                    // draw the new frequency data on the right
+                    for (let i = 0; i < bufferLength; i++) {
+                        const value = dataArray[i] / 255; // normalize to range [0, 1]
+                        const x = canvas.width - 1;
+                        const y = canvas.height - (i / bufferLength) * canvas.height; // flip the y coordinate
+                        const color = getColor(value);
+                        canvasCtx.fillStyle = color;
+                        canvasCtx.fillRect(x, y, 1, canvas.height / bufferLength);
+                    }
+                }
+            
+                draw();
             }
-        }
-        else if (filename === "midicc") {
-            const ccSource = context.createConstantSource();
-            ccSource.offset.value = 0;
-            ccSource.start();
-            const device = createMockRNBODevice(context, ccSource, [ccSource], [{ comment: 'output' }], []);
-            deviceDiv = addDeviceToWorkspace(device, "midicc", false);
-        
-            // create labeled input for the MIDI channel
-            const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
-                input: { width: '40px' }
-            });
-        
-            // create labeled input for the CC number
-            const ccNumber = createLabeledInput('CC #', 'ccNumber', 'ccNumber', 1, {
-                input: { width: '40px' }
-            });
-        
-            // append the labels and inputs to the device div
-            deviceDiv.appendChild(midiChannel.label);
-            deviceDiv.appendChild(midiChannel.input);
-            deviceDiv.appendChild(document.createElement('br'));
-            deviceDiv.appendChild(ccNumber.label);
-            deviceDiv.appendChild(ccNumber.input);
-        
-            // request MIDI access
-            if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess().then(midiAccess => {
-                    midiAccess.inputs.forEach(input => {
-                        input.addEventListener('midimessage', event => {
-                            const [status, ccNumberValue, value] = event.data;
-                            const channel = (status & 0x0F) + 1; // channel number (1-16)
-                            const selectedChannel = parseInt(midiChannel.input.value, 10);
-        
-                            // check if the message is a CC message and matches the selected channel
-                            if ((status & 0xF0) === 176 && channel === selectedChannel) { // CC message
-                                const selectedCCNumber = parseInt(ccNumber.input.value, 10);
-                                if (ccNumberValue === selectedCCNumber) {
-                                    const normalizedValue = value / 127; // normalize value to range [0, 1]
-                                    // transmit the CC value as a signal
-                                    ccSource.offset.setValueAtTime(normalizedValue, context.currentTime);
+            else if (filename === "midipitchbend") {
+                const pitchBendSource = context.createConstantSource();
+                pitchBendSource.offset.value = 0;
+                pitchBendSource.start();
+                const device = createMockRNBODevice(context, pitchBendSource, [pitchBendSource], [{ comment: 'output' }], []);
+                deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
+            
+                // create labeled input
+                const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
+                    input: { width: '40px' }
+                });
+            
+                // append labels and inputs to the device div
+                deviceDiv.appendChild(midiChannel.label);
+                deviceDiv.appendChild(midiChannel.input);
+            
+                // request MIDI access
+                if (navigator.requestMIDIAccess) {
+                    navigator.requestMIDIAccess().then(midiAccess => {
+                        midiAccess.inputs.forEach(input => {
+                            input.addEventListener('midimessage', event => {
+                                const [status, lsb, msb] = event.data;
+                                const channel = (status & 0x0F) + 1; // extract channel number (1-16)
+                                const selectedChannel = parseInt(midiChannel.input.value, 10);
+            
+                                // check if the message is a pitch bend message and matches the selected channel
+                                if ((status & 0xF0) === 224 && channel === selectedChannel) { // pitch bend message
+                                    const pitchBendValue = (msb << 7) | lsb; // combine MSB and LSB to create a 14-bit value
+                                    const normalizedValue = (pitchBendValue - 8192) / 8192; // normalize value to range [-1, 1]
+                                    // transmit the pitch bend value as a signal
+                                    pitchBendSource.offset.setValueAtTime(normalizedValue, context.currentTime);
                                 }
-                            }
+                            });
                         });
+                    }).catch(err => {
+                        console.error('Failed to get MIDI access', err);
                     });
-                }).catch(err => {
-                    console.error('Failed to get MIDI access', err);
+                } else {
+                    console.error('MIDI not supported in this browser.');
+                }
+            }
+            else if (filename === "midicc") {
+                const ccSource = context.createConstantSource();
+                ccSource.offset.value = 0;
+                ccSource.start();
+                const device = createMockRNBODevice(context, ccSource, [ccSource], [{ comment: 'output' }], []);
+                deviceDiv = addDeviceToWorkspace(device, "midicc", false);
+            
+                // create labeled input for the MIDI channel
+                const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
+                    input: { width: '40px' }
                 });
-            } else {
-                console.error('MIDI not supported in this browser.');
-            }
-        }
-        else if (filename === "midinote") {
-            const voiceSources = [];
-            const gateSources = [];
-            for (let i = 0; i < 8; i++) {
-                const frequencySource = context.createConstantSource();
-                frequencySource.offset.value = 0; // start with no frequency
-                frequencySource.start();
-                voiceSources.push(frequencySource);
-        
-                const gateSource = context.createConstantSource();
-                gateSource.offset.value = 0; // start with gate off
-                gateSource.start();
-                gateSources.push(gateSource);
-            }
-        
-            const merger = context.createChannelMerger(16);
-            voiceSources.forEach((source, index) => {
-                source.connect(merger, 0, index);
-            });
-            gateSources.forEach((source, index) => {
-                source.connect(merger, 0, index + 8);
-            });
-        
-            // create the device
-            const device = createMockRNBODevice(
-                context,
-                merger,
-                voiceSources,
-                [
-                    { comment: 'voice 1' }, { comment: 'voice 2' }, { comment: 'voice 3' }, { comment: 'voice 4' },
-                    { comment: 'voice 5' }, { comment: 'voice 6' }, { comment: 'voice 7' }, { comment: 'voice 8' },
-                    { comment: 'gate 1' }, { comment: 'gate 2' }, { comment: 'gate 3' }, { comment: 'gate 4' },
-                    { comment: 'gate 5' }, { comment: 'gate 6' }, { comment: 'gate 7' }, { comment: 'gate 8' }
-                ],
-                [],
-                16,
-                gateSources
-            );
-        
-            deviceDiv = addDeviceToWorkspace(device, "midinote", false);
-        
-            // create labeled input for the MIDI channel
-            const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
-                input: { width: '40px' }
-            });
-        
-            // append the label and input to the device div
-            deviceDiv.appendChild(midiChannel.label);
-            deviceDiv.appendChild(midiChannel.input);
-        
-            function midiToFrequency(midiNote) {
-                return 440 * Math.pow(2, (midiNote - 69) / 12);
-            }
-        
-            let heldNotes = [];
-            let voiceAssignments = new Array(8).fill(null); // track which notes are assigned to which voices
-        
-            // request MIDI access
-            if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess().then(midiAccess => {
-                    midiAccess.inputs.forEach(input => {
-                        input.addEventListener('midimessage', event => {
-                            const [status, note, velocity] = event.data;
-                            const channel = (status & 0x0F) + 1; // extract channel number (1-16)
-                            const selectedChannel = parseInt(midiChannel.input.value, 10);
-        
-                            // check if the message is a note on or note off and matches the selected channel
-                            if (channel === selectedChannel) {
-                                if ((status & 0xF0) === 144 && velocity > 0) { // note on
-                                    const frequency = midiToFrequency(note);
-                                    let voiceIndex = voiceAssignments.indexOf(null); // find an unoccupied voice
-        
-                                    if (voiceIndex === -1) {
-                                        // if no unoccupied voice, steal the first one
-                                        voiceIndex = 0;
-                                    }
-        
-                                    voiceAssignments[voiceIndex] = note;
-                                    heldNotes.push(note);
-                                    // transmit the frequency as a signal with linear ramping
-                                    voiceSources[voiceIndex].offset.setTargetAtTime(frequency, context.currentTime, 0.01);
-                                    // set the gate to 1
-                                    gateSources[voiceIndex].offset.setTargetAtTime(1, context.currentTime, 0.01);
-                                } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // note off
-                                    const noteIndex = heldNotes.indexOf(note);
-                                    if (noteIndex !== -1) {
-                                        heldNotes.splice(noteIndex, 1);
-                                    }
-        
-                                    const voiceIndex = voiceAssignments.indexOf(note);
-                                    if (voiceIndex !== -1) {
-                                        voiceAssignments[voiceIndex] = null;
-                                        // set the gate to 0
-                                        gateSources[voiceIndex].offset.setTargetAtTime(0, context.currentTime, 0.01);
+            
+                // create labeled input for the CC number
+                const ccNumber = createLabeledInput('CC #', 'ccNumber', 'ccNumber', 1, {
+                    input: { width: '40px' }
+                });
+            
+                // append the labels and inputs to the device div
+                deviceDiv.appendChild(midiChannel.label);
+                deviceDiv.appendChild(midiChannel.input);
+                deviceDiv.appendChild(document.createElement('br'));
+                deviceDiv.appendChild(ccNumber.label);
+                deviceDiv.appendChild(ccNumber.input);
+            
+                // request MIDI access
+                if (navigator.requestMIDIAccess) {
+                    navigator.requestMIDIAccess().then(midiAccess => {
+                        midiAccess.inputs.forEach(input => {
+                            input.addEventListener('midimessage', event => {
+                                const [status, ccNumberValue, value] = event.data;
+                                const channel = (status & 0x0F) + 1; // channel number (1-16)
+                                const selectedChannel = parseInt(midiChannel.input.value, 10);
+            
+                                // check if the message is a CC message and matches the selected channel
+                                if ((status & 0xF0) === 176 && channel === selectedChannel) { // CC message
+                                    const selectedCCNumber = parseInt(ccNumber.input.value, 10);
+                                    if (ccNumberValue === selectedCCNumber) {
+                                        const normalizedValue = value / 127; // normalize value to range [0, 1]
+                                        // transmit the CC value as a signal
+                                        ccSource.offset.setValueAtTime(normalizedValue, context.currentTime);
                                     }
                                 }
-                            }
+                            });
                         });
+                    }).catch(err => {
+                        console.error('Failed to get MIDI access', err);
                     });
-                }).catch(err => {
-                    console.error('Failed to get MIDI access', err);
-                });
-            } else {
-                console.error('MIDI not supported in this browser.');
-            }
-        }
-        else if (filename === "toggle") {
-            const silenceGenerator = context.createConstantSource();
-            silenceGenerator.offset.value = 0;
-            silenceGenerator.start();
-            // create the device
-            const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
-        
-            deviceDiv = addDeviceToWorkspace(device, "toggle", false);
-        
-            // create a toggle button
-            const toggleButton = document.createElement('button');
-            toggleButton.textContent = 'off';
-            toggleButton.className = 'toggle-button toggle-off';
-        
-            // create a hidden input
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.value = '0'; 
-            hiddenInput.id = 'toggleHiddenInput';
-        
-            // find the existing form in the device
-            const form = deviceDiv.querySelector('form');
-        
-            // create a div to hold the labels and inputs
-            const div = document.createElement('div');
-            div.className = 'labelAndInputContainer';
-            div.style.left = '9px';
-            div.style.top = '0px';
-        
-            // append the toggle button and hidden input to the div
-            div.appendChild(toggleButton);
-            div.appendChild(hiddenInput);
-        
-            // append the div to the form
-            form.appendChild(div);
-        
-            // add event listener to the toggle button
-            toggleButton.addEventListener('click', () => {
-                // toggle the value between 1 and 0
-                silenceGenerator.offset.value = 1 - silenceGenerator.offset.value;
-                
-                // update the hidden input value
-                hiddenInput.value = silenceGenerator.offset.value;
-        
-                // toggle the class and text
-                if (toggleButton.className === 'toggle-button toggle-off') {
-                    toggleButton.className = 'toggle-button toggle-on';
-                    toggleButton.textContent = 'on';
                 } else {
-                    toggleButton.className = 'toggle-button toggle-off';
-                    toggleButton.textContent = 'off';
+                    console.error('MIDI not supported in this browser.');
                 }
-            });
-        }
-        else if (filename === "keyboard") {
-            const silenceGenerator = context.createConstantSource();
-            silenceGenerator.offset.value = 0;
-            silenceGenerator.start();
-        
-            const triggerSource = context.createConstantSource();
-            triggerSource.offset.value = 0;
-            triggerSource.start();
-        
-            const merger = context.createChannelMerger(2);
-        
-            // connect the generators to the merger
-            silenceGenerator.connect(merger, 0, 0);
-            triggerSource.connect(merger, 0, 1);
-        
-            // create the device
-            const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], [], 2);
-            deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
-        
-            // create a div to hold the piano keyboard
-            const keyboardDiv = document.createElement('div');
-            keyboardDiv.className = 'pianoKeyboard';
-            keyboardDiv.style.position = 'relative';
-            keyboardDiv.style.marginBottom = '9px';
-            keyboardDiv.style.marginRight = '50px';
-            keyboardDiv.style.marginTop = '5px';
-            keyboardDiv.style.height = '120px';
-            keyboardDiv.style.border = '1px solid black';    
-            let isMouseDown = false;
-            let rootNote = 60; // default middle C
-            let octaves = 1; // default 1 octave
-            let previousKeyDiv = null;
-        
-            const midiToFrequency = (midiNote) => {
-                return 440 * Math.pow(2, (midiNote - 69) / 12);
-            };
-        
-            const highlightKey = (keyDiv) => {
-                if (previousKeyDiv && previousKeyDiv !== keyDiv) {
-                    resetKey(previousKeyDiv);
+            }
+            else if (filename === "midinote") {
+                const voiceSources = [];
+                const gateSources = [];
+                for (let i = 0; i < 8; i++) {
+                    const frequencySource = context.createConstantSource();
+                    frequencySource.offset.value = 0; // start with no frequency
+                    frequencySource.start();
+                    voiceSources.push(frequencySource);
+            
+                    const gateSource = context.createConstantSource();
+                    gateSource.offset.value = 0; // start with gate off
+                    gateSource.start();
+                    gateSources.push(gateSource);
                 }
-                keyDiv.style.backgroundColor = 'yellow';
-                const freq = midiToFrequency(parseInt(keyDiv.dataset.value));
-                silenceGenerator.offset.value = freq;
-                triggerSource.offset.setValueAtTime(1, context.currentTime);
-                triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // briefly output 1
-                previousKeyDiv = keyDiv;
-            };
-        
-            const resetKey = (keyDiv) => {
-                keyDiv.style.backgroundColor = keyDiv.dataset.color === 'white' ? 'white' : 'black';
-            };
-        
-            const handleMouseOver = (keyDiv) => {
-                if (isMouseDown) {
-                    highlightKey(keyDiv);
+            
+                const merger = context.createChannelMerger(16);
+                voiceSources.forEach((source, index) => {
+                    source.connect(merger, 0, index);
+                });
+                gateSources.forEach((source, index) => {
+                    source.connect(merger, 0, index + 8);
+                });
+            
+                // create the device
+                const device = createMockRNBODevice(
+                    context,
+                    merger,
+                    voiceSources,
+                    [
+                        { comment: 'voice 1' }, { comment: 'voice 2' }, { comment: 'voice 3' }, { comment: 'voice 4' },
+                        { comment: 'voice 5' }, { comment: 'voice 6' }, { comment: 'voice 7' }, { comment: 'voice 8' },
+                        { comment: 'gate 1' }, { comment: 'gate 2' }, { comment: 'gate 3' }, { comment: 'gate 4' },
+                        { comment: 'gate 5' }, { comment: 'gate 6' }, { comment: 'gate 7' }, { comment: 'gate 8' }
+                    ],
+                    [],
+                    16,
+                    gateSources
+                );
+            
+                deviceDiv = addDeviceToWorkspace(device, "midinote", false);
+            
+                // create labeled input for the MIDI channel
+                const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
+                    input: { width: '40px' }
+                });
+            
+                // append the label and input to the device div
+                deviceDiv.appendChild(midiChannel.label);
+                deviceDiv.appendChild(midiChannel.input);
+            
+                function midiToFrequency(midiNote) {
+                    return 440 * Math.pow(2, (midiNote - 69) / 12);
                 }
-            };
-        
-            const handleTouchMove = (event) => {
-                const touch = event.touches[0];
-                const element = document.elementFromPoint(touch.clientX, touch.clientY);
-                const keyDiv = element && element.classList.contains('pianoKey') ? element : null;
-                if (keyDiv) {
-                    highlightKey(keyDiv);
-                }
-            };
-        
-            document.addEventListener('mouseup', () => {
-                isMouseDown = false;
-                if (previousKeyDiv) {
-                    resetKey(previousKeyDiv);
-                    previousKeyDiv = null;
-                }
-            });
-        
-            document.addEventListener('touchend', () => {
-                if (previousKeyDiv) {
-                    resetKey(previousKeyDiv);
-                    previousKeyDiv = null;
-                }
-            });
-        
-            document.addEventListener('touchcancel', () => {
-                if (previousKeyDiv) {
-                    resetKey(previousKeyDiv);
-                    previousKeyDiv = null;
-                }
-            });
-        
-            const createKeys = () => {
-                const keys = [
-                    { note: 'C', color: 'white' },
-                    { note: 'C#', color: 'black' },
-                    { note: 'D', color: 'white' },
-                    { note: 'D#', color: 'black' },
-                    { note: 'E', color: 'white' },
-                    { note: 'F', color: 'white' },
-                    { note: 'F#', color: 'black' },
-                    { note: 'G', color: 'white' },
-                    { note: 'G#', color: 'black' },
-                    { note: 'A', color: 'white' },
-                    { note: 'A#', color: 'black' },
-                    { note: 'B', color: 'white' }
-                ];
-        
-                keyboardDiv.innerHTML = ''; // clear existing keys
-                for (let octave = 0; octave < octaves; octave++) {
-                    keys.forEach((key, index) => {
-                        const keyContainer = document.createElement('div');
-                        keyContainer.style.position = 'absolute';
-                        keyContainer.style.display = 'inline-block';
-                        keyContainer.style.width = '30px';
-                        keyContainer.style.left = `${(octave * 12 + index) * 30}px`;
-        
-                        const keyDiv = document.createElement('div');
-                        keyDiv.className = `pianoKey ${key.color}`;
-                        keyDiv.style.position = 'absolute';
-                        keyDiv.style.width = '30px';
-                        keyDiv.style.height = '120px';
-                        keyDiv.style.left = '0';
-                        keyDiv.style.backgroundColor = key.color === 'white' ? 'white' : 'black';
-                        keyDiv.style.border = '1px solid black';
-                        keyDiv.dataset.note = key.note;
-                        keyDiv.dataset.value = rootNote + index + (octave * 12);
-                        keyDiv.dataset.color = key.color;
-        
-                        keyDiv.addEventListener('mousedown', (event) => {
-                            event.stopPropagation();
-                            isMouseDown = true;
-                            highlightKey(keyDiv);
+            
+                let heldNotes = [];
+                let voiceAssignments = new Array(8).fill(null); // track which notes are assigned to which voices
+            
+                // request MIDI access
+                if (navigator.requestMIDIAccess) {
+                    navigator.requestMIDIAccess().then(midiAccess => {
+                        midiAccess.inputs.forEach(input => {
+                            input.addEventListener('midimessage', event => {
+                                const [status, note, velocity] = event.data;
+                                const channel = (status & 0x0F) + 1; // extract channel number (1-16)
+                                const selectedChannel = parseInt(midiChannel.input.value, 10);
+            
+                                // check if the message is a note on or note off and matches the selected channel
+                                if (channel === selectedChannel) {
+                                    if ((status & 0xF0) === 144 && velocity > 0) { // note on
+                                        const frequency = midiToFrequency(note);
+                                        let voiceIndex = voiceAssignments.indexOf(null); // find an unoccupied voice
+            
+                                        if (voiceIndex === -1) {
+                                            // if no unoccupied voice, steal the first one
+                                            voiceIndex = 0;
+                                        }
+            
+                                        voiceAssignments[voiceIndex] = note;
+                                        heldNotes.push(note);
+                                        // transmit the frequency as a signal with linear ramping
+                                        voiceSources[voiceIndex].offset.setTargetAtTime(frequency, context.currentTime, 0.01);
+                                        // set the gate to 1
+                                        gateSources[voiceIndex].offset.setTargetAtTime(1, context.currentTime, 0.01);
+                                    } else if ((status & 0xF0) === 128 || ((status & 0xF0) === 144 && velocity === 0)) { // note off
+                                        const noteIndex = heldNotes.indexOf(note);
+                                        if (noteIndex !== -1) {
+                                            heldNotes.splice(noteIndex, 1);
+                                        }
+            
+                                        const voiceIndex = voiceAssignments.indexOf(note);
+                                        if (voiceIndex !== -1) {
+                                            voiceAssignments[voiceIndex] = null;
+                                            // set the gate to 0
+                                            gateSources[voiceIndex].offset.setTargetAtTime(0, context.currentTime, 0.01);
+                                        }
+                                    }
+                                }
+                            });
                         });
-        
-                        keyDiv.addEventListener('mouseover', () => {
-                            handleMouseOver(keyDiv);
-                        });
-        
-                        keyDiv.addEventListener('mouseup', () => isMouseDown = false);
-        
-                        keyDiv.addEventListener('touchstart', (event) => {
-                            event.stopPropagation();
-                            event.preventDefault();
-                            highlightKey(keyDiv);
-                        }, { passive: false });
-        
-                        keyDiv.addEventListener('touchmove', (event) => {
-                            event.preventDefault();
-                            handleTouchMove(event);
-                        }, { passive: false });
-        
-                        keyContainer.appendChild(keyDiv);
-                        keyboardDiv.appendChild(keyContainer);
+                    }).catch(err => {
+                        console.error('Failed to get MIDI access', err);
                     });
+                } else {
+                    console.error('MIDI not supported in this browser.');
                 }
-                keyboardDiv.style.width = `${30 * 12 * octaves}px`;
-            };
-        
-            createKeys();
-        
-            // append the keyboard to the device div
-            deviceDiv.appendChild(keyboardDiv);
-        
-            // create labeled input for the root note
-            const rootNoteInput = createLabeledInput('Root Note', 'rootNote', 'rootNote', rootNote, {
-                input: { width: '3em' }
-            });
-        
-            // append the label and input to the device div
-            deviceDiv.appendChild(rootNoteInput.label);
-            deviceDiv.appendChild(rootNoteInput.input);
-        
-            rootNoteInput.input.addEventListener('input', (event) => {
-                rootNote = parseInt(event.target.value, 10);
-                createKeys();
-            });
-        
-            rootNoteInput.input.addEventListener('change', (event) => {
-                rootNote = parseInt(event.target.value, 10);
-                createKeys();
-            });
-        
-            // create labeled input for the octaves
-            const octavesInput = createLabeledInput('Octaves', 'octaves', 'octaves', octaves, {
-                input: { width: '3em' }
-            }, {
-                min: '1',
-                max: '4'
-            });
-        
-            // append the label and input to the device div
-            deviceDiv.appendChild(octavesInput.label);
-            deviceDiv.appendChild(octavesInput.input);
-        
-            octavesInput.input.addEventListener('input', (event) => {
-                octaves = parseInt(event.target.value, 10);
-                createKeys();
-            });
-        
-            octavesInput.input.addEventListener('change', (event) => {
-                octaves = parseInt(event.target.value, 10);
-                createKeys();
-            });
-        }
-        else if (filename === "slider") {
-            const silenceGenerator = context.createConstantSource();
-            silenceGenerator.offset.value = 0;
-            silenceGenerator.start();
-            // create the device
-            const device = createMockRNBODevice(context, silenceGenerator, [silenceGenerator], [{ comment: 'output' }], []);
-            deviceDiv = addDeviceToWorkspace(device, "slider", false);
-        
-            // create a slider
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.min = '0';
-            slider.max = '1';
-            slider.step = '0.001';
-            slider.value = '0';
-            slider.id = 'slider';
-        
-            // find the existing form in the device
-            const form = deviceDiv.querySelector('form');
-        
-            // create a div to hold the labels and inputs
-            const div = document.createElement('div');
-            div.className = 'labelAndInputContainer';
-            div.style.left = '16px';
-            div.style.top = '34px';
-        
-            div.appendChild(slider);
-        
-            // create min input and its label
-            const minInput = createLabeledInput('min', 'min', 'deviceInport sliderMin', slider.min, {
-                input: { float: 'none' },
-                label: { width: '20px' }
-            });
-        
-            // create max input and its label
-            const maxInput = createLabeledInput('max', 'max', 'deviceInport sliderMax', slider.max, {
-                input: { float: 'none' },
-                label: { width: '20px' }
-            });
-        
-            // append the labels and inputs to the div
-            div.appendChild(minInput.label);
-            div.appendChild(minInput.input);
-            div.appendChild(maxInput.label);
-            div.appendChild(maxInput.input);
-            div.appendChild(document.createElement('br'));
-        
-            // append the div to the form
-            form.appendChild(div);
-        
-            // add event listeners to the min and max inputs
-            minInput.input.addEventListener('change', () => {
-                slider.min = minInput.input.value;
-            });
-        
-            maxInput.input.addEventListener('change', () => {
-                slider.max = maxInput.input.value;
-            });
-        
-            // add event listeners to the slider
-            slider.addEventListener('input', () => {
-                // update the silenceGenerator offset value
-                silenceGenerator.offset.value = slider.value;
-            });
-            slider.addEventListener('change', () => {
-                // update the silenceGenerator offset value
-                silenceGenerator.offset.value = slider.value;
-            });
-        }
-        else if (filename === "touchpad") {
-            const silenceGeneratorX = context.createConstantSource();
-            const silenceGeneratorY = context.createConstantSource();
-            silenceGeneratorX.offset.value = 0;
-            silenceGeneratorY.offset.value = 0;
-            silenceGeneratorX.start();
-            silenceGeneratorY.start();
-        
-            // create a channel merger node with two inputs
-            const mergerNode = context.createChannelMerger(2);
-        
-            // connect the silence generators to the merger node's inputs
-            silenceGeneratorX.connect(mergerNode, 0, 0); // Connect to input 0
-            silenceGeneratorY.connect(mergerNode, 0, 1); // Connect to input 1
-        
-            // create the device
-            const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], [], 2);
-            deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
-        
-            // create a touchpad
-            const touchpad = document.createElement('div');
-            touchpad.className = 'touchpad';
-        
-            // create an indicator
-            const indicator = document.createElement('div');
-            indicator.className = 'touchpadIndicator';
-            touchpad.appendChild(indicator);
-        
-            // create hidden inputs to store x and y values in state
-            const inputX = document.createElement('input');
-            inputX.type = 'hidden';
-            inputX.name = 'touchpadX';
-            inputX.id = 'touchpadX';
-            inputX.value = '0';
-        
-            const inputY = document.createElement('input');
-            inputY.type = 'hidden';
-            inputY.name = 'touchpadY';
-            inputY.id = 'touchpadY';
-            inputY.value = '0';
-        
-            // find the existing form in the device
-            const form = deviceDiv.querySelector('form');
-        
-            // create a div to hold the touchpad
-            const div = document.createElement('div');
-            div.className = 'labelAndInputContainer';
-            div.style.left = '16px';
-            div.style.top = '34px';
-        
-            div.appendChild(touchpad);
-        
-            // append the div and hidden inputs to the form
-            form.appendChild(div);
-            div.appendChild(inputX);
-            div.appendChild(inputY);
-        
-            let isDragging = false;
-        
-            // add event listeners to the touchpad
-            touchpad.addEventListener('mousedown', (event) => {
-                isDragging = true;
-                event.stopPropagation();
-                event.preventDefault();
-            });
-        
-            touchpad.addEventListener('mousemove', (event) => {
-                if (isDragging) {
-                    const rect = touchpad.getBoundingClientRect();
-                    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
-                        const x = (event.clientX - rect.left) / rect.width;
-                        const y = 1 - (event.clientY - rect.top) / rect.height;
-                        silenceGeneratorX.offset.value = x;
-                        silenceGeneratorY.offset.value = y;
-                        indicator.style.left = `${event.clientX - rect.left}px`;
-                        indicator.style.top = `${event.clientY - rect.top}px`;
-                        inputX.value = x;
-                        inputY.value = y;
+            }
+            else if (filename === "toggle") {
+                const silenceGenerator = context.createConstantSource();
+                silenceGenerator.offset.value = 0;
+                silenceGenerator.start();
+                // create the device
+                const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
+            
+                deviceDiv = addDeviceToWorkspace(device, "toggle", false);
+            
+                // create a toggle button
+                const toggleButton = document.createElement('button');
+                toggleButton.textContent = 'off';
+                toggleButton.className = 'toggle-button toggle-off';
+            
+                // create a hidden input
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.value = '0'; 
+                hiddenInput.id = 'toggleHiddenInput';
+            
+                // find the existing form in the device
+                const form = deviceDiv.querySelector('form');
+            
+                // create a div to hold the labels and inputs
+                const div = document.createElement('div');
+                div.className = 'labelAndInputContainer';
+                div.style.left = '9px';
+                div.style.top = '0px';
+            
+                // append the toggle button and hidden input to the div
+                div.appendChild(toggleButton);
+                div.appendChild(hiddenInput);
+            
+                // append the div to the form
+                form.appendChild(div);
+            
+                // add event listener to the toggle button
+                toggleButton.addEventListener('click', () => {
+                    // toggle the value between 1 and 0
+                    silenceGenerator.offset.value = 1 - silenceGenerator.offset.value;
+                    
+                    // update the hidden input value
+                    hiddenInput.value = silenceGenerator.offset.value;
+            
+                    // toggle the class and text
+                    if (toggleButton.className === 'toggle-button toggle-off') {
+                        toggleButton.className = 'toggle-button toggle-on';
+                        toggleButton.textContent = 'on';
+                    } else {
+                        toggleButton.className = 'toggle-button toggle-off';
+                        toggleButton.textContent = 'off';
                     }
+                });
+            }
+            else if (filename === "keyboard") {
+                const silenceGenerator = context.createConstantSource();
+                silenceGenerator.offset.value = 0;
+                silenceGenerator.start();
+            
+                const triggerSource = context.createConstantSource();
+                triggerSource.offset.value = 0;
+                triggerSource.start();
+            
+                const merger = context.createChannelMerger(2);
+            
+                // connect the generators to the merger
+                silenceGenerator.connect(merger, 0, 0);
+                triggerSource.connect(merger, 0, 1);
+            
+                // create the device
+                const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], [], 2);
+                deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
+            
+                // create a div to hold the piano keyboard
+                const keyboardDiv = document.createElement('div');
+                keyboardDiv.className = 'pianoKeyboard';
+                keyboardDiv.style.position = 'relative';
+                keyboardDiv.style.marginBottom = '9px';
+                keyboardDiv.style.marginRight = '50px';
+                keyboardDiv.style.marginTop = '5px';
+                keyboardDiv.style.height = '120px';
+                keyboardDiv.style.border = '1px solid black';    
+                let isMouseDown = false;
+                let rootNote = 60; // default middle C
+                let octaves = 1; // default 1 octave
+                let previousKeyDiv = null;
+            
+                const midiToFrequency = (midiNote) => {
+                    return 440 * Math.pow(2, (midiNote - 69) / 12);
+                };
+            
+                const highlightKey = (keyDiv) => {
+                    if (previousKeyDiv && previousKeyDiv !== keyDiv) {
+                        resetKey(previousKeyDiv);
+                    }
+                    keyDiv.style.backgroundColor = 'yellow';
+                    const freq = midiToFrequency(parseInt(keyDiv.dataset.value));
+                    silenceGenerator.offset.value = freq;
+                    triggerSource.offset.setValueAtTime(1, context.currentTime);
+                    triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // briefly output 1
+                    previousKeyDiv = keyDiv;
+                };
+            
+                const resetKey = (keyDiv) => {
+                    keyDiv.style.backgroundColor = keyDiv.dataset.color === 'white' ? 'white' : 'black';
+                };
+            
+                const handleMouseOver = (keyDiv) => {
+                    if (isMouseDown) {
+                        highlightKey(keyDiv);
+                    }
+                };
+            
+                const handleTouchMove = (event) => {
+                    const touch = event.touches[0];
+                    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const keyDiv = element && element.classList.contains('pianoKey') ? element : null;
+                    if (keyDiv) {
+                        highlightKey(keyDiv);
+                    }
+                };
+            
+                document.addEventListener('mouseup', () => {
+                    isMouseDown = false;
+                    if (previousKeyDiv) {
+                        resetKey(previousKeyDiv);
+                        previousKeyDiv = null;
+                    }
+                });
+            
+                document.addEventListener('touchend', () => {
+                    if (previousKeyDiv) {
+                        resetKey(previousKeyDiv);
+                        previousKeyDiv = null;
+                    }
+                });
+            
+                document.addEventListener('touchcancel', () => {
+                    if (previousKeyDiv) {
+                        resetKey(previousKeyDiv);
+                        previousKeyDiv = null;
+                    }
+                });
+            
+                const createKeys = () => {
+                    const keys = [
+                        { note: 'C', color: 'white' },
+                        { note: 'C#', color: 'black' },
+                        { note: 'D', color: 'white' },
+                        { note: 'D#', color: 'black' },
+                        { note: 'E', color: 'white' },
+                        { note: 'F', color: 'white' },
+                        { note: 'F#', color: 'black' },
+                        { note: 'G', color: 'white' },
+                        { note: 'G#', color: 'black' },
+                        { note: 'A', color: 'white' },
+                        { note: 'A#', color: 'black' },
+                        { note: 'B', color: 'white' }
+                    ];
+            
+                    keyboardDiv.innerHTML = ''; // clear existing keys
+                    for (let octave = 0; octave < octaves; octave++) {
+                        keys.forEach((key, index) => {
+                            const keyContainer = document.createElement('div');
+                            keyContainer.style.position = 'absolute';
+                            keyContainer.style.display = 'inline-block';
+                            keyContainer.style.width = '30px';
+                            keyContainer.style.left = `${(octave * 12 + index) * 30}px`;
+            
+                            const keyDiv = document.createElement('div');
+                            keyDiv.className = `pianoKey ${key.color}`;
+                            keyDiv.style.position = 'absolute';
+                            keyDiv.style.width = '30px';
+                            keyDiv.style.height = '120px';
+                            keyDiv.style.left = '0';
+                            keyDiv.style.backgroundColor = key.color === 'white' ? 'white' : 'black';
+                            keyDiv.style.border = '1px solid black';
+                            keyDiv.dataset.note = key.note;
+                            keyDiv.dataset.value = rootNote + index + (octave * 12);
+                            keyDiv.dataset.color = key.color;
+            
+                            keyDiv.addEventListener('mousedown', (event) => {
+                                event.stopPropagation();
+                                isMouseDown = true;
+                                highlightKey(keyDiv);
+                            });
+            
+                            keyDiv.addEventListener('mouseover', () => {
+                                handleMouseOver(keyDiv);
+                            });
+            
+                            keyDiv.addEventListener('mouseup', () => isMouseDown = false);
+            
+                            keyDiv.addEventListener('touchstart', (event) => {
+                                event.stopPropagation();
+                                event.preventDefault();
+                                highlightKey(keyDiv);
+                            }, { passive: false });
+            
+                            keyDiv.addEventListener('touchmove', (event) => {
+                                event.preventDefault();
+                                handleTouchMove(event);
+                            }, { passive: false });
+            
+                            keyContainer.appendChild(keyDiv);
+                            keyboardDiv.appendChild(keyContainer);
+                        });
+                    }
+                    keyboardDiv.style.width = `${30 * 12 * octaves}px`;
+                };
+            
+                createKeys();
+            
+                // append the keyboard to the device div
+                deviceDiv.appendChild(keyboardDiv);
+            
+                // create labeled input for the root note
+                const rootNoteInput = createLabeledInput('Root Note', 'rootNote', 'rootNote', rootNote, {
+                    input: { width: '3em' }
+                });
+            
+                // append the label and input to the device div
+                deviceDiv.appendChild(rootNoteInput.label);
+                deviceDiv.appendChild(rootNoteInput.input);
+            
+                rootNoteInput.input.addEventListener('input', (event) => {
+                    rootNote = parseInt(event.target.value, 10);
+                    createKeys();
+                });
+            
+                rootNoteInput.input.addEventListener('change', (event) => {
+                    rootNote = parseInt(event.target.value, 10);
+                    createKeys();
+                });
+            
+                // create labeled input for the octaves
+                const octavesInput = createLabeledInput('Octaves', 'octaves', 'octaves', octaves, {
+                    input: { width: '3em' }
+                }, {
+                    min: '1',
+                    max: '4'
+                });
+            
+                // append the label and input to the device div
+                deviceDiv.appendChild(octavesInput.label);
+                deviceDiv.appendChild(octavesInput.input);
+            
+                octavesInput.input.addEventListener('input', (event) => {
+                    octaves = parseInt(event.target.value, 10);
+                    createKeys();
+                });
+            
+                octavesInput.input.addEventListener('change', (event) => {
+                    octaves = parseInt(event.target.value, 10);
+                    createKeys();
+                });
+            }
+            else if (filename === "slider") {
+                const silenceGenerator = context.createConstantSource();
+                silenceGenerator.offset.value = 0;
+                silenceGenerator.start();
+                // create the device
+                const device = createMockRNBODevice(context, silenceGenerator, [silenceGenerator], [{ comment: 'output' }], []);
+                deviceDiv = addDeviceToWorkspace(device, "slider", false);
+            
+                // create a slider
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.min = '0';
+                slider.max = '1';
+                slider.step = '0.001';
+                slider.value = '0';
+                slider.id = 'slider';
+            
+                // find the existing form in the device
+                const form = deviceDiv.querySelector('form');
+            
+                // create a div to hold the labels and inputs
+                const div = document.createElement('div');
+                div.className = 'labelAndInputContainer';
+                div.style.left = '16px';
+                div.style.top = '34px';
+            
+                div.appendChild(slider);
+            
+                // create min input and its label
+                const minInput = createLabeledInput('min', 'min', 'deviceInport sliderMin', slider.min, {
+                    input: { float: 'none' },
+                    label: { width: '20px' }
+                });
+            
+                // create max input and its label
+                const maxInput = createLabeledInput('max', 'max', 'deviceInport sliderMax', slider.max, {
+                    input: { float: 'none' },
+                    label: { width: '20px' }
+                });
+            
+                // append the labels and inputs to the div
+                div.appendChild(minInput.label);
+                div.appendChild(minInput.input);
+                div.appendChild(maxInput.label);
+                div.appendChild(maxInput.input);
+                div.appendChild(document.createElement('br'));
+            
+                // append the div to the form
+                form.appendChild(div);
+            
+                // add event listeners to the min and max inputs
+                minInput.input.addEventListener('change', () => {
+                    slider.min = minInput.input.value;
+                });
+            
+                maxInput.input.addEventListener('change', () => {
+                    slider.max = maxInput.input.value;
+                });
+            
+                // add event listeners to the slider
+                slider.addEventListener('input', () => {
+                    // update the silenceGenerator offset value
+                    silenceGenerator.offset.value = slider.value;
+                });
+                slider.addEventListener('change', () => {
+                    // update the silenceGenerator offset value
+                    silenceGenerator.offset.value = slider.value;
+                });
+            }
+            else if (filename === "touchpad") {
+                const silenceGeneratorX = context.createConstantSource();
+                const silenceGeneratorY = context.createConstantSource();
+                silenceGeneratorX.offset.value = 0;
+                silenceGeneratorY.offset.value = 0;
+                silenceGeneratorX.start();
+                silenceGeneratorY.start();
+            
+                // create a channel merger node with two inputs
+                const mergerNode = context.createChannelMerger(2);
+            
+                // connect the silence generators to the merger node's inputs
+                silenceGeneratorX.connect(mergerNode, 0, 0); // Connect to input 0
+                silenceGeneratorY.connect(mergerNode, 0, 1); // Connect to input 1
+            
+                // create the device
+                const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], [], 2);
+                deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
+            
+                // create a touchpad
+                const touchpad = document.createElement('div');
+                touchpad.className = 'touchpad';
+            
+                // create an indicator
+                const indicator = document.createElement('div');
+                indicator.className = 'touchpadIndicator';
+                touchpad.appendChild(indicator);
+            
+                // create hidden inputs to store x and y values in state
+                const inputX = document.createElement('input');
+                inputX.type = 'hidden';
+                inputX.name = 'touchpadX';
+                inputX.id = 'touchpadX';
+                inputX.value = '0';
+            
+                const inputY = document.createElement('input');
+                inputY.type = 'hidden';
+                inputY.name = 'touchpadY';
+                inputY.id = 'touchpadY';
+                inputY.value = '0';
+            
+                // find the existing form in the device
+                const form = deviceDiv.querySelector('form');
+            
+                // create a div to hold the touchpad
+                const div = document.createElement('div');
+                div.className = 'labelAndInputContainer';
+                div.style.left = '16px';
+                div.style.top = '34px';
+            
+                div.appendChild(touchpad);
+            
+                // append the div and hidden inputs to the form
+                form.appendChild(div);
+                div.appendChild(inputX);
+                div.appendChild(inputY);
+            
+                let isDragging = false;
+            
+                // add event listeners to the touchpad
+                touchpad.addEventListener('mousedown', (event) => {
+                    isDragging = true;
                     event.stopPropagation();
                     event.preventDefault();
-                }
-            });
-        
-            document.addEventListener('mouseup', (event) => {
-                isDragging = false;
-            });
-        
-            touchpad.addEventListener('touchstart', (event) => {
-                isDragging = true;
-                event.stopPropagation();
-                event.preventDefault();
-            });
-        
-            touchpad.addEventListener('touchstart', (event) => {
-                isDragging = true;
-                const rect = touchpad.getBoundingClientRect();
-                const touch = event.touches[0];
-                if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-                    const x = (touch.clientX - rect.left) / rect.width;
-                    const y = 1 - (touch.clientY - rect.top) / rect.height;
-                    silenceGeneratorX.offset.value = x;
-                    silenceGeneratorY.offset.value = y;
-                    indicator.style.left = `${touch.clientX - rect.left}px`;
-                    indicator.style.top = `${touch.clientY - rect.top}px`;
-                    inputX.value = x;
-                    inputY.value = y;
-                }
-                event.stopPropagation();
-                event.preventDefault();
-            });
+                });
             
-            touchpad.addEventListener('touchmove', (event) => {
-                if (isDragging) {
+                touchpad.addEventListener('mousemove', (event) => {
+                    if (isDragging) {
+                        const rect = touchpad.getBoundingClientRect();
+                        if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+                            const x = (event.clientX - rect.left) / rect.width;
+                            const y = 1 - (event.clientY - rect.top) / rect.height;
+                            silenceGeneratorX.offset.value = x;
+                            silenceGeneratorY.offset.value = y;
+                            indicator.style.left = `${event.clientX - rect.left}px`;
+                            indicator.style.top = `${event.clientY - rect.top}px`;
+                            inputX.value = x;
+                            inputY.value = y;
+                        }
+                        event.stopPropagation();
+                        event.preventDefault();
+                    }
+                });
+            
+                document.addEventListener('mouseup', (event) => {
+                    isDragging = false;
+                });
+            
+                touchpad.addEventListener('touchstart', (event) => {
+                    isDragging = true;
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+            
+                touchpad.addEventListener('touchstart', (event) => {
+                    isDragging = true;
                     const rect = touchpad.getBoundingClientRect();
                     const touch = event.touches[0];
                     if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
@@ -2625,133 +2659,152 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     }
                     event.stopPropagation();
                     event.preventDefault();
-                }
-            });
-        
-            document.addEventListener('touchend', (event) => {
-                isDragging = false;
-            });
-        
-            document.addEventListener('touchcancel', (event) => {
-                isDragging = false;
-            });
-        
-            document.addEventListener('touchpadStateRecall', (event) => {
-                const x = parseFloat(inputX.value);
-                const y = parseFloat(inputY.value);
-                const rect = touchpad.getBoundingClientRect();
-                indicator.style.left = `${x * rect.width}px`;
-                indicator.style.top = `${(1 - y) * rect.height}px`;
-                silenceGeneratorX.offset.value = x;
-                silenceGeneratorY.offset.value = y;
-            });
-        }
-        else if (filename === "button") {
-            const silenceGenerator = context.createConstantSource();
-            silenceGenerator.offset.value = 0;
-            silenceGenerator.start();
-        
-            // create the device
-            const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
-            deviceDiv = addDeviceToWorkspace(device, "button", false);
-        
-            // create a button
-            const button = document.createElement('button');
-            button.textContent = '⬤';
-            button.className = 'button-ui';
-            button.style.color = 'black';
-        
-            // find the existing form in the device
-            const form = deviceDiv.querySelector('form');
-        
-            // create a div to hold the labels and inputs
-            const div = document.createElement('div');
-            div.className = 'labelAndInputContainer';
-            div.style.left = '9px';
-            div.style.top = '0px';
-        
-            // append the button to the div
-            div.appendChild(button);
-        
-            // append the div to the form
-            form.appendChild(div);
-        
-            let isTouchEvent = false;
-            function handleButtonDown(event) {
-                if (event.type === 'touchstart') {
-                    isTouchEvent = true;
-                } else if (isTouchEvent) {
-                    return;
-                }
-                silenceGenerator.offset.value = 1;
-                button.style.color = 'white';
+                });
+                
+                touchpad.addEventListener('touchmove', (event) => {
+                    if (isDragging) {
+                        const rect = touchpad.getBoundingClientRect();
+                        const touch = event.touches[0];
+                        if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                            const x = (touch.clientX - rect.left) / rect.width;
+                            const y = 1 - (touch.clientY - rect.top) / rect.height;
+                            silenceGeneratorX.offset.value = x;
+                            silenceGeneratorY.offset.value = y;
+                            indicator.style.left = `${touch.clientX - rect.left}px`;
+                            indicator.style.top = `${touch.clientY - rect.top}px`;
+                            inputX.value = x;
+                            inputY.value = y;
+                        }
+                        event.stopPropagation();
+                        event.preventDefault();
+                    }
+                });
+            
+                document.addEventListener('touchend', (event) => {
+                    isDragging = false;
+                });
+            
+                document.addEventListener('touchcancel', (event) => {
+                    isDragging = false;
+                });
+            
+                document.addEventListener('touchpadStateRecall', (event) => {
+                    const x = parseFloat(inputX.value);
+                    const y = parseFloat(inputY.value);
+                    const rect = touchpad.getBoundingClientRect();
+                    indicator.style.left = `${x * rect.width}px`;
+                    indicator.style.top = `${(1 - y) * rect.height}px`;
+                    silenceGeneratorX.offset.value = x;
+                    silenceGeneratorY.offset.value = y;
+                });
             }
-
-            function handleButtonUp(event) {
-                if (event.type === 'touchend') {
-                    isTouchEvent = true;
-                } else if (isTouchEvent) {
-                    return;
-                }
+            else if (filename === "button") {
+                const silenceGenerator = context.createConstantSource();
                 silenceGenerator.offset.value = 0;
+                silenceGenerator.start();
+            
+                // create the device
+                const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
+                deviceDiv = addDeviceToWorkspace(device, "button", false);
+            
+                // create a button
+                const button = document.createElement('button');
+                button.textContent = '⬤';
+                button.className = 'button-ui';
                 button.style.color = 'black';
+            
+                // find the existing form in the device
+                const form = deviceDiv.querySelector('form');
+            
+                // create a div to hold the labels and inputs
+                const div = document.createElement('div');
+                div.className = 'labelAndInputContainer';
+                div.style.left = '9px';
+                div.style.top = '0px';
+            
+                // append the button to the div
+                div.appendChild(button);
+            
+                // append the div to the form
+                form.appendChild(div);
+            
+                let isTouchEvent = false;
+                function handleButtonDown(event) {
+                    if (event.type === 'touchstart') {
+                        isTouchEvent = true;
+                    } else if (isTouchEvent) {
+                        return;
+                    }
+                    silenceGenerator.offset.value = 1;
+                    button.style.color = 'white';
+                }
+    
+                function handleButtonUp(event) {
+                    if (event.type === 'touchend') {
+                        isTouchEvent = true;
+                    } else if (isTouchEvent) {
+                        return;
+                    }
+                    silenceGenerator.offset.value = 0;
+                    button.style.color = 'black';
+                }
+            
+                // add event listeners to the button
+                button.addEventListener('mousedown', handleButtonDown);
+                button.addEventListener('touchstart', handleButtonDown);
+                button.addEventListener('mouseup', handleButtonUp);
+                button.addEventListener('touchend', handleButtonUp);
             }
-        
-            // add event listeners to the button
-            button.addEventListener('mousedown', handleButtonDown);
-            button.addEventListener('touchstart', handleButtonDown);
-            button.addEventListener('mouseup', handleButtonUp);
-            button.addEventListener('touchend', handleButtonUp);
-        }
-        else if ( filename.startsWith('output') ) {
-            deviceDiv  = addDeviceToWorkspace(null, 'output', true);
-        }
-        else {
-            // is a RNBO-generated device
-            if (filename == "*" ) {
-                filename = "times";
+            else if ( filename.startsWith('output') ) {
+                deviceDiv  = addDeviceToWorkspace(null, 'output', true);
             }
-            else if (filename == "+" ) {
-                filename = "add";
-            }
-            else if (filename == "-" ) {
-                filename = "subtract";
-            }
-            else if (filename == "/" ) {
-                filename = "divide";
-            }
-            else if (filename == "==" ) {
-                filename = "equals";
-            }
-            else if (filename == ">" ) {
-                filename = "greater";
-            }
-            else if (filename == "<" ) {
-                filename = "less";
-            }
-            else if (filename == "&&" ) {
-                filename = "and";
-            }
-            else if (filename == "||" ) {
-                filename = "or";
-            }
-            else if (filename == "!" ) {
-                filename = "not";
-            }
-            const patcher = jsonFiles[`${filename}`];
-            const device = await RNBO.createDevice({ context, patcher });
-            deviceDiv = addDeviceToWorkspace(device, filename, false);
-            if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' ) {
-                createAudioLoader(device, context, deviceDiv);
-                if (audioBuffer) {
-                    await device.setDataBuffer('buf', audioBuffer.buffer);
-                    audioBuffers[audioBuffer.name] = audioBuffer.buffer;
-                    deviceDiv.dataset.audioFileName = audioBuffer.name;
-                    const fileNameElement = document.createElement('p');
-                    fileNameElement.className = 'audioFileName';
-                    fileNameElement.textContent = `file: ${audioBuffer.name}`;
-                    const form = deviceDiv.querySelector('form');
-                    form.appendChild(fileNameElement);
+            else {
+                // is a RNBO-generated device
+                if (filename == "*" ) {
+                    filename = "times";
+                }
+                else if (filename == "+" ) {
+                    filename = "add";
+                }
+                else if (filename == "-" ) {
+                    filename = "subtract";
+                }
+                else if (filename == "/" ) {
+                    filename = "divide";
+                }
+                else if (filename == "==" ) {
+                    filename = "equals";
+                }
+                else if (filename == ">" ) {
+                    filename = "greater";
+                }
+                else if (filename == "<" ) {
+                    filename = "less";
+                }
+                else if (filename == "&&" ) {
+                    filename = "and";
+                }
+                else if (filename == "||" ) {
+                    filename = "or";
+                }
+                else if (filename == "!" ) {
+                    filename = "not";
+                }
+                const patcher = jsonFiles[`${filename}`];
+                const device = await RNBO.createDevice({ context, patcher });
+                deviceDiv = addDeviceToWorkspace(device, filename, false);
+                if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' ) {
+                    createAudioLoader(device, context, deviceDiv);
+                    if (audioBuffer) {
+                        await device.setDataBuffer('buf', audioBuffer.buffer);
+                        audioBuffers[audioBuffer.name] = audioBuffer.buffer;
+                        deviceDiv.dataset.audioFileName = audioBuffer.name;
+                        const fileNameElement = document.createElement('p');
+                        fileNameElement.className = 'audioFileName';
+                        fileNameElement.textContent = `file: ${audioBuffer.name}`;
+                        const form = deviceDiv.querySelector('form');
+                        form.appendChild(fileNameElement);
+                    }
                 }
             }
         }
@@ -2808,8 +2861,8 @@ function applyDeviceStyles(deviceDiv, filename) {
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' },
         step_trig: {width: '14em'},
-        quantizer: { width: '549px' }
-        
+        quantizer: { width: '549px' },
+        complexity: { width: '150px' }
     };
 
     const style = styles[filename];

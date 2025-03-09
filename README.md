@@ -127,6 +127,9 @@ Applies a comb filter effect to `input`. `feedback` expect a range of floats 0 -
 ## comment
 Stores text in the workspace which can be saved and loaded as part of system presets.
 
+## complexity
+Outputs a signal that represents the complexity of the input signal. Complexity is measured by counting the iterations neded to reduce the signal to a constant sequence, thereby indicating the signal's compressibility. Highly repetitive signals such as silence and oscillations produce lower values, whereas audio samples, noise, and systems with high feedback levels produce higher values.
+
 ## cross
 Imparts the spectral envelope of `modulator` onto `carrier`.
 

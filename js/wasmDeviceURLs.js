@@ -52,6 +52,11 @@ var wasmDeviceURLs = [
         "displayName": "comment"
     },
     {
+        "fileName": "complexity",
+        "displayName": "complexity",
+        "worklet": "complexity"
+    },
+    {
         "fileName": "counter",
         "displayName": "counter"
     },
@@ -86,6 +91,11 @@ var wasmDeviceURLs = [
     {
         "fileName": "ffilter",
         "displayName": "fftfilter"
+    },
+    {
+        "fileName": "fftshift",
+        "displayName": "fftshift",
+        "worklet": "fftshift"
     },
     {
         "fileName": "fold",
