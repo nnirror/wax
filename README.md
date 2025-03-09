@@ -79,6 +79,21 @@ Press the `load` button to load a previously saved .zip file, including all audi
 # Locking the workspace
 Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices. Whether a workspace is locked is stored as part of the system state which is shareable as a URL or zip file.
 
+# Creating custom devices
+It is possible to create custom Wax devices that run as [Web Audio API AudioWorklets](https://googlechromelabs.github.io/web-audio-samples/audio-worklet/). The `js/customWorklets` directory has two examples: `complexity` and `fftshift`, which are both available as Wax devices.
+
+1. Add a new entry to the `js/wasmDeviceURLs.js` array, including a `worklet` property for your device. For example:
+
+```
+{
+        "fileName": "fftshift",
+        "displayName": "fftshift",
+        "worklet": "fftshift"
+}
+```
+
+ 2. Add your AudioWorklet file to the `js/customWorklets` directory. The file's class name (e.g., `complexity`, `fftshift`) should be the same as its `worklet` property in the `js/wasmDeviceURLs.js` entry from step 1. Be sure to include the `numberOfInputs()`, `numberOfOutputs()`, `inputNames()`, `outputNames()`, `processorName()`, `constructor()`, and `registerProcessor()` functions as they are implemented in the example files. These are necessary for the device to show up and function properly in the Wax workspace. Then, implement the core DSP of the AudioWorklet in the `process()` function.
+
 # Device reference
 
 ## absolute
@@ -157,6 +172,9 @@ Applies a FFT-based bandpass filter to `input`, passing only frequencies between
 
 ## fftgate
 Applies a FFT-based bin threshold gate to `input`, passing only FFT bin frequencies higher than `threshold`. Values for `threshold` are normalized and clipped between 0 and 1.
+
+## fftfilter
+Applies FFT-based bin shifting to `input`, moving all frequency bins upwards or downwards by `shiftAmount` bins.
 
 ## fold
 Folds any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount above subtracted from `maximum`.  If the input value is below `minimum`, the output will be the amount below added to from `minimum`.
