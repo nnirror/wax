@@ -1691,7 +1691,7 @@ function finishConnection(deviceId, inputIndex) {
             devices[sourceDeviceId].connections.push(connection);
 
             // listen for resizing of the pattern device so that connections can be redrawn
-            if (sourceDeviceId.split('-')[0] === 'pattern') {
+            if (sourceDeviceId.split('-')[0] === 'pattern' || sourceDeviceId.split('-')[0] === 'sequencer') {
                 const patternDeviceDiv = document.getElementById(sourceDeviceId);
                 const resizeObserver = new ResizeObserver(() => {
                     const newSourceHeight = sourceButton.parentNode.parentNode.offsetHeight;
@@ -1703,7 +1703,7 @@ function finishConnection(deviceId, inputIndex) {
                 resizeObserver.observe(patternDeviceDiv);
             }
 
-            if (deviceId.split('-')[0] === 'pattern') {
+            if (deviceId.split('-')[0] === 'pattern' || deviceId.split('-')[0] === 'sequencer' ) {
                 const patternDeviceDiv = document.getElementById(deviceId);
                 const resizeObserver = new ResizeObserver(() => {
                     const newTargetHeight = targetButton.parentNode.parentNode.offsetHeight;
@@ -1735,10 +1735,12 @@ function setSignalConnectionState(deviceId, inputIndex) {
     inportsWithConnectedSignals[deviceId][inletComment]++;
 
     let inport = null;
-    for (let i = 0; i < targetDevice.it.T.inports.length; i++) {
-        if (targetDevice.it.T.inports[i].tag === inletComment) {
-            inport = targetDevice.it.T.inports[i];
-            break;
+    if (typeof targetDevice.it.T.inports !== 'undefined') {
+        for (let i = 0; i < targetDevice.it.T.inports.length; i++) {
+            if (targetDevice.it.T.inports[i].tag === inletComment) {
+                inport = targetDevice.it.T.inports[i];
+                break;
+            }
         }
     }
     if (inport) {
