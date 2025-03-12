@@ -814,12 +814,13 @@ body .CodeMirror {
     z-index: 1011;
 }
 .permissionButton {
+    display: block;
     border-radius: 10px;
     font-size: 20px;
     position: absolute;
     left: 0;
     width: 90%;
-    margin-top: 16%;
+    margin-top: 8px;
     margin-left: 5%;
     margin-bottom: 5%;
     padding: 7px;
