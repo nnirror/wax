@@ -3684,7 +3684,6 @@ async function reconstructWorkspaceState(deviceStates = null) {
                 let deviceName = deviceState.id.split('-')[0];
                 if (deviceName === 'motion') {
                     hasMotionDevice = true;
-                    break;
                 }
             }
         }
