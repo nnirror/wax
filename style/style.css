@@ -817,14 +817,13 @@ body .CodeMirror {
     border-radius: 10px;
     font-size: 20px;
     position: absolute;
-    top: 0px;
     left: 0;
     width: 90%;
     margin-top: 16%;
     margin-left: 5%;
     margin-bottom: 5%;
-    padding: 1em;
-    height: 60%;
+    padding: 7px;
+    height: 64%;
     cursor: pointer;
     background: lightgrey;
 }
