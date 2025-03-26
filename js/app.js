@@ -4935,7 +4935,7 @@ function createQuantizerUI(deviceDiv) {
 
 let isLocalAction = false;
 
-const ws = new WebSocket('ws://localhost:9314');
+const ws = new WebSocket('wss://nnirror.xyz:9314');
 
 ws.onopen = () => {
     console.log('Connected to WebSocket server');
