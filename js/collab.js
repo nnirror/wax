@@ -13,4 +13,4 @@ wss.on('connection', (ws) => {
     });
 });
 
-console.log('WebSocket server is running on wss://nnirror.xyz:9314');
+console.log('WebSocket server is running on ws://nnirror.xyz:9314');
