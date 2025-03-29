@@ -194,21 +194,30 @@ window.onload = async function() {
         window.scrollTo(0, 0);
     }, 10);
     
-    mousePosition.x = document.documentElement.clientWidth - 200;
-    mousePosition.y = document.documentElement.clientHeight / 2 - 50;
-    let speaker1Div = await createDeviceByName('output');
-    let inputElement = speaker1Div.querySelector('input');
-    if (inputElement) {
-        inputElement.value = 1;
+    // check if the user is in a room
+    const params = new URLSearchParams(window.location.search);
+    const roomName = params.get('room');
+
+    if (!roomName) {
+        // only add the speaker divs if the user is NOT in a room
+        mousePosition.x = document.documentElement.clientWidth - 200;
+        mousePosition.y = document.documentElement.clientHeight / 2 - 50;
+        let speaker1Div = await createDeviceByName('output');
+        let inputElement = speaker1Div.querySelector('input');
+        if (inputElement) {
+            inputElement.value = 1;
+        }
+
+        mousePosition.x = document.documentElement.clientWidth - 200;
+        mousePosition.y = (document.documentElement.clientHeight / 2) + 50;
+        let speaker2Div = await createDeviceByName('output');
+        inputElement = speaker2Div.querySelector('input');
+        if (inputElement) {
+            inputElement.value = 2;
+        }
     }
-    
-    mousePosition.x = document.documentElement.clientWidth - 200;
-    mousePosition.y = (document.documentElement.clientHeight / 2) + 50;
-    let speaker2Div = await createDeviceByName('output');
-    inputElement = speaker2Div.querySelector('input');
-    if (inputElement) {
-        inputElement.value = 2;
-    }
+
+
     document.addEventListener('mousemove', function(event) {
         mousePosition.x = event.pageX;
         mousePosition.y = event.pageY;
@@ -453,6 +462,10 @@ evalWorker.onmessage = (event) => {
         handleWorkerMessage(event);
     }
 };
+let isInRoom = false;
+let isLocalAction = false;
+const ws = new WebSocket('wss://nnirror.xyz:9314');
+
 /* END globally acessible objects */
 
 /* BEGIN event handlers */
@@ -463,6 +476,15 @@ jsPlumb.bind("connectionDetached", function(info) {
         let jsPlumbConnectionId = info.connection.getId();  
         let connection = sourceDevice.connections.find(conn => conn.id === jsPlumbConnectionId);
         if (connection) {
+            try {
+                // disconnect the connection
+                connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
+                // unset the signal connection state
+                unsetSignalConnectionState(connection.target, connection.input);
+                triggerChangeOnTargetDeviceInputs(connection.target);
+            } catch (error) {}
+            // remove the connection from the list
+            sourceDevice.connections = sourceDevice.connections.filter(conn => conn.id !== jsPlumbConnectionId);
             // Send update to WebSocket server if this is a local action
             if (!isLocalAction) {
                 sendUpdate({
@@ -3464,10 +3486,10 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         },
         drag: function(event) {
             if (isLocked) return false;
-    
+            
+            isLocalAction = false;
             // Send update to WebSocket server if this is a local action
-            if (!isLocalAction) {
-                const deviceId = deviceDiv.id;
+            const deviceId = deviceDiv.id;
                 const devicePosition = {
                     left: parseInt(deviceDiv.style.left, 10),
                     top: parseInt(deviceDiv.style.top, 10)
@@ -3478,29 +3500,26 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
                     devicePosition: devicePosition,
                     clientId: clientId
                 });
-            }
         },
         stop: function(event) {
             if (isLocked) return false;
             isDraggingDevice = false;
+            isLocalAction = false;
     
-            // Send update to WebSocket server if this is a local action
-            if (!isLocalAction) {
-                const selectedNodes = document.querySelectorAll('.selectedNode');
-                selectedNodes.forEach(node => {
-                    const deviceId = node.id;
-                    const devicePosition = {
-                        left: parseInt(node.style.left, 10),
-                        top: parseInt(node.style.top, 10)
-                    };
-                    sendUpdate({
-                        type: 'moveDevice',
-                        deviceId: deviceId,
-                        devicePosition: devicePosition,
-                        clientId: clientId
-                    });
+            const selectedNodes = document.querySelectorAll('.selectedNode');
+            selectedNodes.forEach(node => {
+                const deviceId = node.id;
+                const devicePosition = {
+                    left: parseInt(node.style.left, 10),
+                    top: parseInt(node.style.top, 10)
+                };
+                sendUpdate({
+                    type: 'moveDevice',
+                    deviceId: deviceId,
+                    devicePosition: devicePosition,
+                    clientId: clientId
                 });
-            }
+            });
         }
     });
 
@@ -3947,6 +3966,7 @@ async function checkDeviceMotionPermission() {
 }
 
 async function reconstructWorkspaceState(deviceStates = null) {
+    isLocalAction = true;
     deleteAllNodes();
     try {
         document.getElementById('infoDiv').style.display = 'none';
@@ -3958,8 +3978,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
             if (deviceState.isLocked !== undefined) {
                 setLockState(!deviceState.isLocked);
                 continue;
-            }
-            else {
+            } else {
                 let deviceName = deviceState.id.split('-')[0];
                 if (deviceName === 'motion') {
                     hasMotionDevice = true;
@@ -3969,7 +3988,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
     }
 
     if (hasMotionDevice || deviceStates == null) {
-        if ( hasMotionDevice ) {
+        if (hasMotionDevice) {
             // first, hide the "main" permission button
             hidePermissionButton();
             // when a shared state has a motion device in it, we need to initiate the permission request via user input
@@ -4007,8 +4026,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
 
             // attach the div to the body
             document.body.appendChild(permissionDiv);
-        }
-        else {
+        } else {
             // proceed with reconstructing the workspace state directly
             await loadWorkspaceState(deviceStates);
             await startAudio();
@@ -4018,6 +4036,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
         await loadWorkspaceState(deviceStates);
         await startAudio();
     }
+    isLocalAction = false;
 }
 
 async function loadWorkspaceState(deviceStates) {
@@ -4933,26 +4952,56 @@ function createQuantizerUI(deviceDiv) {
 }
 /* END functions */
 
-let isLocalAction = false;
-
-const ws = new WebSocket('wss://nnirror.xyz:9314');
-
 ws.onopen = () => {
-    console.log('Connected to WebSocket server');
+    setTimeout(()=>{checkForRoomParam()}, 1000);
+};
+
+ws.onerror = (error) => {
+    showGrowlNotification('Unable to connect to the shared room server. Please try again later.');
+};
+
+ws.onclose = (event) => {
+    showGrowlNotification('The shared room server closed. Please try again later.');
 };
 
 ws.onmessage = async (event) => {
-    const blob = event.data;
-    const update = await blob.text();
+    let update;
+    if (typeof event.data === 'string') {
+        // if it's already a string, parse it directly
+        update = event.data;
+    } else if (event.data instanceof Blob) {
+        // if it's a Blob, convert it to text
+        update = await event.data.text();
+    } else {
+        console.error('Unexpected data type:', event.data);
+        return;
+    }
+
     const parsedUpdate = JSON.parse(update);
 
-    // Ignore updates sent by this client
+    // ignore updates sent by this client
     if (parsedUpdate.clientId === clientId) {
         return;
     }
 
-    // Apply the update based on its type
+    // apply the update based on its type
     switch (parsedUpdate.type) {
+        case 'roomState':
+            // let user know if the room is empty
+            if (Object.keys(parsedUpdate.baseState).length === 0) {
+                const params = new URLSearchParams(window.location.search);
+                const roomName = params.get('room');
+                showGrowlNotification(`Room "${roomName}" is empty.`);
+                return;
+            }
+            else {
+                // load the room's base state
+                isLocalAction = true;
+                isInRoom = true;
+                await reconstructWorkspaceState(parsedUpdate.baseState);
+                isLocalAction = false;
+                break;
+            }
         case 'addDevice':
             isLocalAction = true;
             await createDeviceByName(parsedUpdate.filename, null, parsedUpdate.devicePosition);
@@ -4989,14 +5038,21 @@ ws.onmessage = async (event) => {
             await reconstructDevicesAndConnections(parsedUpdate.deviceStates, null, true, true);
             isLocalAction = false;
             break;
-        // Add more cases as needed
     }
 };
 
 async function sendUpdate(update) {
     if (!isLocalAction) {
         update.clientId = clientId;
+        // include the full workspace state for state-changing events
+        if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(update.type)) {
+            update.newState = await getWorkspaceState(); // get the current workspace state
+        }
+
         ws.send(JSON.stringify(update));
+    }
+    else {
+        console.log('NOT sending update to server');
     }
 }
 
@@ -5078,11 +5134,15 @@ function updateInput(deviceId, inportTag, value) {
                 codeMirrorInstance.setSelection({line: first_line_of_block, ch: 0 }, {line: last_line_of_block, ch: 10000 });
                 setTimeout(function(){ codeMirrorInstance.setCursor({line: line, ch: cursor.ch }); }, 100);
 
-                // dispatch a "change" event to the corresponding textarea
+                // dispatch a "change" event to the corresponding textarea to trigger the re-evaluation
                 const textarea = codeMirrorElement.previousElementSibling;
                 if (textarea && textarea.tagName.toLowerCase() === 'textarea' && textarea.id === 'pattern') {
                     textarea.value = codeMirrorInstance.getValue();
                     textarea.dispatchEvent(new Event('change'));
+                    const regenButton = codeMirrorElement.parentElement.querySelector('.inport-button');
+                    if (regenButton) {
+                        regenButton.click();
+                    }
                 }
             }
         }
@@ -5205,5 +5265,49 @@ function updateInput(deviceId, inportTag, value) {
                 element.dispatchEvent(event);
             }
         }
+    }
+}
+
+function addStartRoomButton() {
+    const button = document.createElement('button');
+    button.textContent = 'Start Room';
+    button.className = 'startRoomButton navbarButton';
+    button.onclick = async () => {
+        const roomName = prompt('Enter a room name (alphanumeric, dashes, underscores only):');
+        if (!roomName || !/^[a-zA-Z0-9_-]+$/.test(roomName)) {
+            alert('Invalid room name. Please use only alphanumeric characters, dashes, and underscores.');
+            return;
+        }
+
+        // Get the current workspace state
+        const workspaceState = await getWorkspaceState();
+
+        // Send the room name and workspace state to the server
+        sendUpdate({
+            type: 'joinRoom',
+            roomName: roomName,
+            baseState: workspaceState
+        });
+
+        // Redirect to the room
+        const currentUrl = window.location.origin + window.location.pathname;
+        window.location.href = `${currentUrl}?room=${roomName}`;
+    };
+
+    navBar.appendChild(button);
+}
+
+addStartRoomButton();
+
+async function checkForRoomParam() {
+    const params = new URLSearchParams(window.location.search);
+    const roomName = params.get('room');
+
+    if (roomName) {
+        // Send a request to join the room
+        sendUpdate({
+            type: 'joinRoom',
+            roomName: roomName
+        });
     }
 }
