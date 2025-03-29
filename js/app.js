@@ -193,6 +193,9 @@ window.onload = async function() {
     setTimeout(function() {
         window.scrollTo(0, 0);
     }, 10);
+
+    // initialize WebSocket if the user is in a room
+    initializeWebSocket();
     
     // check if the user is in a room
     const params = new URLSearchParams(window.location.search);
@@ -464,7 +467,7 @@ evalWorker.onmessage = (event) => {
 };
 let isInRoom = false;
 let isLocalAction = false;
-const ws = new WebSocket('wss://nnirror.xyz:9314');
+let ws = null;
 
 /* END globally acessible objects */
 
@@ -1620,6 +1623,7 @@ document.addEventListener('mouseup', (event) => {
                         startConnection(startDeviceId, startIndex);
                         finishConnection(endDeviceId, outputChannel);
                     }
+                    jsPlumb.repaintEverything();
                 }
             }
             else if (startDeviceId.includes('output')) {
@@ -1634,6 +1638,7 @@ document.addEventListener('mouseup', (event) => {
                         startConnection(startDeviceId, outputChannel);
                         finishConnection(endDeviceId, endIndex);
                     }
+                    jsPlumb.repaintEverything();
                 }
             }
             else {
@@ -1645,6 +1650,7 @@ document.addEventListener('mouseup', (event) => {
                         startConnection(startDeviceId, startIndex);
                         finishConnection(endDeviceId, endIndex);
                     }
+                    jsPlumb.repaintEverything();
                 }
             }
         }
@@ -1685,6 +1691,7 @@ function handleButtonClick(deviceId, index, isInputButton) {
             startConnection(lastClicked.deviceId, lastClicked.index);
             finishConnection(deviceId, index);
         }
+        jsPlumb.repaintEverything();
         lastClicked = null;
     } else {
         lastClicked = {
@@ -4952,107 +4959,30 @@ function createQuantizerUI(deviceDiv) {
 }
 /* END functions */
 
-ws.onopen = () => {
-    setTimeout(()=>{checkForRoomParam()}, 1000);
-};
-
-ws.onerror = (error) => {
-    showGrowlNotification('Unable to connect to the shared room server. Please try again later.');
-};
-
-ws.onclose = (event) => {
-    showGrowlNotification('The shared room server closed. Please try again later.');
-};
-
-ws.onmessage = async (event) => {
-    let update;
-    if (typeof event.data === 'string') {
-        // if it's already a string, parse it directly
-        update = event.data;
-    } else if (event.data instanceof Blob) {
-        // if it's a Blob, convert it to text
-        update = await event.data.text();
-    } else {
-        console.error('Unexpected data type:', event.data);
-        return;
-    }
-
-    const parsedUpdate = JSON.parse(update);
-
-    // ignore updates sent by this client
-    if (parsedUpdate.clientId === clientId) {
-        return;
-    }
-
-    // apply the update based on its type
-    switch (parsedUpdate.type) {
-        case 'roomState':
-            // let user know if the room is empty
-            if (Object.keys(parsedUpdate.baseState).length === 0) {
-                const params = new URLSearchParams(window.location.search);
-                const roomName = params.get('room');
-                showGrowlNotification(`Room "${roomName}" is empty.`);
-                return;
-            }
-            else {
-                // load the room's base state
-                isLocalAction = true;
-                isInRoom = true;
-                await reconstructWorkspaceState(parsedUpdate.baseState);
-                isLocalAction = false;
-                break;
-            }
-        case 'addDevice':
-            isLocalAction = true;
-            await createDeviceByName(parsedUpdate.filename, null, parsedUpdate.devicePosition);
-            isLocalAction = false;
-            break;
-        case 'makeConnection':
-            isLocalAction = true;
-            startConnection(parsedUpdate.sourceDeviceId, parsedUpdate.sourceOutputIndex);
-            finishConnection(parsedUpdate.targetDeviceId, parsedUpdate.inputIndex);
-            isLocalAction = false;
-            break;
-        case 'deleteConnection':
-            isLocalAction = true;
-            deleteConnection(parsedUpdate.sourceDeviceId, parsedUpdate.targetDeviceId, parsedUpdate.sourceOutputIndex, parsedUpdate.inputIndex);
-            isLocalAction = false;
-            break;
-        case 'moveDevice':
-            isLocalAction = true;
-            moveDevice(parsedUpdate.deviceId, parsedUpdate.devicePosition);
-            isLocalAction = false;
-            break;
-        case 'updateInput':
-            isLocalAction = true;
-            updateInput(parsedUpdate.deviceId, parsedUpdate.inportTag ? parsedUpdate.inportTag : parsedUpdate.elementId, parsedUpdate.value);
-            isLocalAction = false;
-            break;
-        case 'deleteDevice':
-            isLocalAction = true;
-            removeDeviceFromWorkspace(parsedUpdate.deviceId);
-            isLocalAction = false;
-            break;
-        case 'duplicateDevices':
-            isLocalAction = true;
-            await reconstructDevicesAndConnections(parsedUpdate.deviceStates, null, true, true);
-            isLocalAction = false;
-            break;
-    }
-};
-
 async function sendUpdate(update) {
     if (!isLocalAction) {
-        update.clientId = clientId;
-        // include the full workspace state for state-changing events
-        if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(update.type)) {
-            update.newState = await getWorkspaceState(); // get the current workspace state
+        if (!ws) {
+            // don't send an update because this session is not connected to a room
+            return;
         }
 
-        ws.send(JSON.stringify(update));
-    }
-    else {
-        console.log('NOT sending update to server');
+        if (ws.readyState !== WebSocket.OPEN) {
+            // don't send an update because the websocket connection is closed
+            return;
+        }
+
+        update.clientId = clientId;
+
+        // include the full workspace state for state-changing events
+        if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(update.type)) {
+            update.newState = await getWorkspaceState(); // Get the current workspace state
+        }
+
+        try {
+            ws.send(JSON.stringify(update));
+        } catch (error) {
+            console.error('Error sending update via WebSocket:', error);
+        }
     }
 }
 
@@ -5268,36 +5198,37 @@ function updateInput(deviceId, inportTag, value) {
     }
 }
 
-function addStartRoomButton() {
+function addCollabButton() {
     const button = document.createElement('button');
-    button.textContent = 'Start Room';
-    button.className = 'startRoomButton navbarButton';
-    button.onclick = async () => {
-        const roomName = prompt('Enter a room name (alphanumeric, dashes, underscores only):');
-        if (!roomName || !/^[a-zA-Z0-9_-]+$/.test(roomName)) {
-            alert('Invalid room name. Please use only alphanumeric characters, dashes, and underscores.');
-            return;
-        }
-
-        // Get the current workspace state
-        const workspaceState = await getWorkspaceState();
-
-        // Send the room name and workspace state to the server
-        sendUpdate({
-            type: 'joinRoom',
-            roomName: roomName,
-            baseState: workspaceState
-        });
-
-        // Redirect to the room
-        const currentUrl = window.location.origin + window.location.pathname;
-        window.location.href = `${currentUrl}?room=${roomName}`;
-    };
-
+    button.textContent = 'Collab';
+    button.className = 'collabButton navbarButton';
+    button.onclick = handleCollabButtonClick;
     navBar.appendChild(button);
 }
 
-addStartRoomButton();
+addCollabButton();
+
+async function handleCollabButtonClick() {
+    const roomName = prompt('Enter a room name (alphanumeric, dashes, underscores only):');
+    if (!roomName || !/^[a-zA-Z0-9_-]+$/.test(roomName)) {
+        alert('Invalid room name. Please use only alphanumeric characters, dashes, and underscores.');
+        return;
+    }
+
+    // get the current workspace state
+    const workspaceState = await getWorkspaceState();
+
+    // send the room name and workspace state to the server
+    sendUpdate({
+        type: 'joinRoom',
+        roomName: roomName,
+        baseState: workspaceState
+    });
+
+    // redirect to the room
+    const currentUrl = window.location.origin + window.location.pathname;
+    window.location.href = `${currentUrl}?room=${roomName}`;
+}
 
 async function checkForRoomParam() {
     const params = new URLSearchParams(window.location.search);
@@ -5309,5 +5240,103 @@ async function checkForRoomParam() {
             type: 'joinRoom',
             roomName: roomName
         });
+    }
+}
+
+function initializeWebSocket() {
+    const params = new URLSearchParams(window.location.search);
+    const roomName = params.get('room');
+
+    if (roomName) {
+        ws = new WebSocket('wss://nnirror.xyz:9314');
+
+        ws.onopen = () => {
+            setTimeout(()=>{checkForRoomParam()}, 1000);
+        };
+        
+        ws.onerror = (error) => {
+            showGrowlNotification('Unable to connect to the shared room server. Please try again later.');
+        };
+        
+        ws.onclose = (event) => {
+            showGrowlNotification('The shared room server closed. Please try again later.');
+        };
+        
+        ws.onmessage = async (event) => {
+            let update;
+            if (typeof event.data === 'string') {
+                // if it's already a string, parse it directly
+                update = event.data;
+            } else if (event.data instanceof Blob) {
+                // if it's a Blob, convert it to text
+                update = await event.data.text();
+            } else {
+                console.error('Unexpected data type:', event.data);
+                return;
+            }
+        
+            const parsedUpdate = JSON.parse(update);
+        
+            // ignore updates sent by this client
+            if (parsedUpdate.clientId === clientId) {
+                return;
+            }
+        
+            // apply the update based on its type
+            switch (parsedUpdate.type) {
+                case 'roomState':
+                    // let user know if the room is empty
+                    if (Object.keys(parsedUpdate.baseState).length === 0) {
+                        const params = new URLSearchParams(window.location.search);
+                        const roomName = params.get('room');
+                        showGrowlNotification(`Room "${roomName}" is empty.`);
+                        return;
+                    }
+                    else {
+                        // load the room's base state
+                        isLocalAction = true;
+                        isInRoom = true;
+                        await reconstructWorkspaceState(parsedUpdate.baseState);
+                        isLocalAction = false;
+                        break;
+                    }
+                case 'addDevice':
+                    isLocalAction = true;
+                    await createDeviceByName(parsedUpdate.filename, null, parsedUpdate.devicePosition);
+                    isLocalAction = false;
+                    break;
+                case 'makeConnection':
+                    isLocalAction = true;
+                    startConnection(parsedUpdate.sourceDeviceId, parsedUpdate.sourceOutputIndex);
+                    finishConnection(parsedUpdate.targetDeviceId, parsedUpdate.inputIndex);
+                    isLocalAction = false;
+                    break;
+                case 'deleteConnection':
+                    isLocalAction = true;
+                    deleteConnection(parsedUpdate.sourceDeviceId, parsedUpdate.targetDeviceId, parsedUpdate.sourceOutputIndex, parsedUpdate.inputIndex);
+                    isLocalAction = false;
+                    break;
+                case 'moveDevice':
+                    isLocalAction = true;
+                    moveDevice(parsedUpdate.deviceId, parsedUpdate.devicePosition);
+                    isLocalAction = false;
+                    break;
+                case 'updateInput':
+                    isLocalAction = true;
+                    updateInput(parsedUpdate.deviceId, parsedUpdate.inportTag ? parsedUpdate.inportTag : parsedUpdate.elementId, parsedUpdate.value);
+                    isLocalAction = false;
+                    break;
+                case 'deleteDevice':
+                    isLocalAction = true;
+                    removeDeviceFromWorkspace(parsedUpdate.deviceId);
+                    isLocalAction = false;
+                    break;
+                case 'duplicateDevices':
+                    isLocalAction = true;
+                    await reconstructDevicesAndConnections(parsedUpdate.deviceStates, null, true, true);
+                    isLocalAction = false;
+                    break;
+            }
+        };
     }
 }
