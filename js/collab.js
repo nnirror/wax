@@ -2,7 +2,7 @@ const fs = require('fs');
 const https = require('https');
 const WebSocket = require('ws');
 
-// Get the certificate and key file paths from command-line arguments
+// get the certificate and key file paths from command-line arguments
 const certPath = process.argv[2];
 const keyPath = process.argv[3];
 
@@ -11,19 +11,19 @@ if (!certPath || !keyPath) {
     process.exit(1);
 }
 
-// Load SSL/TLS certificates
+// load SSL/TLS certificates
 const server = https.createServer({
     cert: fs.readFileSync(certPath),
     key: fs.readFileSync(keyPath)
 });
 
-// Create WebSocket server on top of the HTTPS server
+// create WebSocket server on top of the HTTPS server
 const wss = new WebSocket.Server({ server });
 
-// Store rooms and their states
-const rooms = {}; // { roomName: { baseState: {}, clients: Set<WebSocket>, lastActivity: Date, updateTimeout: null } }
+// store rooms and their states
+const rooms = {};
 
-// Clean up inactive rooms every 15 minutes
+// clean up inactive rooms every 15 minutes
 setInterval(() => {
     const now = Date.now();
     for (const [roomName, room] of Object.entries(rooms)) {
@@ -32,7 +32,7 @@ setInterval(() => {
             delete rooms[roomName];
         }
     }
-}, 60 * 1000); // Run every minute
+}, 60 * 1000); // run every minute
 
 wss.on('connection', (ws) => {
     console.log('New client connected');
@@ -46,46 +46,51 @@ wss.on('connection', (ws) => {
             if (data.type === 'joinRoom') {
                 const { roomName, baseState } = data;
 
-                // Validate room name
+                // validate room name
                 if (!/^[a-zA-Z0-9_-]+$/.test(roomName)) {
                     ws.send(JSON.stringify({ type: 'error', message: 'Invalid room name' }));
                     return;
                 }
 
-                // Create the room if it doesn't exist
+                // create the room if it doesn't exist
                 if (!rooms[roomName]) {
                     rooms[roomName] = {
-                        baseState: baseState || {}, // Initialize with the provided base state
+                        baseState: baseState || {}, // initialize with the provided base state
                         clients: new Set(),
                         lastActivity: Date.now(),
                         updateTimeout: null,
-                        pendingState: null // Store the latest pending state
+                        pendingState: null // store the latest pending state
                     };
                     console.log(`Room "${roomName}" created.`);
+                } else {
+                    console.log(`Room "${roomName}" already exists.`);
+                    // update the baseState if provided
+                    if (baseState && baseState.length > 0) {
+                        rooms[roomName].baseState = baseState;
+                        console.log(`Room "${roomName}" baseState updated.`);
+                    }
                 }
-
-                // Join the room
+            
+                // join the room
                 currentRoom = roomName;
                 rooms[roomName].clients.add(ws);
                 rooms[roomName].lastActivity = Date.now();
-
-                // Send the current base state to the client
+            
+                // send the current base state to the client
                 ws.send(JSON.stringify({ type: 'roomState', baseState: rooms[roomName].baseState }));
                 console.log(`Client joined room "${roomName}".`);
-
-                
             } else if (currentRoom) {
-                // Broadcast the received message to all clients in the same room
+                // broadcast the received message to all clients in the same room
                 rooms[currentRoom].clients.forEach((client) => {
                     if (client !== ws && client.readyState === WebSocket.OPEN) {
                         client.send(message);
                     }
                 });
 
-                // Update the room's last activity timestamp
+                // update the room's last activity timestamp
                 rooms[currentRoom].lastActivity = Date.now();
 
-                // Update the base state if this is a state-changing event
+                // update the base state if this is a state-changing event
                 if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(data.type)) {
                     const room = rooms[currentRoom];
                     if (data.newState) {

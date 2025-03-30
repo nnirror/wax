@@ -5215,19 +5215,26 @@ async function handleCollabButtonClick() {
         return;
     }
 
-    // get the current workspace state
-    const workspaceState = await getWorkspaceState();
+    try {
+        // initialize WebSocket for the new room and wait for the connection to be ready
+        await initializeWebSocket(roomName);
 
-    // send the room name and workspace state to the server
-    sendUpdate({
-        type: 'joinRoom',
-        roomName: roomName,
-        baseState: workspaceState
-    });
+        // get the current workspace state
+        const workspaceState = await getWorkspaceState();
+        console.log('about to transmit sendUpdate for joinRoom');
+        // send the room name and workspace state to the server
+        sendUpdate({
+            type: 'joinRoom',
+            roomName: roomName,
+            baseState: workspaceState
+        });
 
-    // redirect to the room
-    const currentUrl = window.location.origin + window.location.pathname;
-    window.location.href = `${currentUrl}?room=${roomName}`;
+        // redirect to the room
+        const currentUrl = window.location.origin + window.location.pathname;
+        window.location.href = `${currentUrl}?room=${roomName}`;
+    } catch (error) {
+        alert('Unable to connect to the WebSocket server. Please try again later.');
+    }
 }
 
 async function checkForRoomParam() {
@@ -5243,63 +5250,78 @@ async function checkForRoomParam() {
     }
 }
 
-function initializeWebSocket() {
-    const params = new URLSearchParams(window.location.search);
-    const roomName = params.get('room');
+function initializeWebSocket(roomName = null) {
+    return new Promise((resolve, reject) => {
+        // if no roomName is provided, check the query string for the room parameter
+        if (!roomName) {
+            const params = new URLSearchParams(window.location.search);
+            roomName = params.get('room');
+        }
 
-    if (roomName) {
+        // if no roomName is found, do not initialize the WebSocket
+        if (!roomName) {
+            return;
+        }
+
+        // close the existing WebSocket connection if it exists
+        if (ws) {
+            ws.close();
+        }
+
+        // create a new WebSocket connection
         ws = new WebSocket('wss://nnirror.xyz:9314');
 
         ws.onopen = () => {
-            setTimeout(()=>{checkForRoomParam()}, 1000);
+            console.log('WebSocket connection established');
+            sendUpdate({
+                type: 'joinRoom',
+                roomName: roomName
+            });
+            resolve(); // resolve the promise when the connection is open
         };
-        
+
         ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
             showGrowlNotification('Unable to connect to the shared room server. Please try again later.');
+            reject(error); // reject the promise on error
         };
-        
+
         ws.onclose = (event) => {
+            console.warn('WebSocket connection closed:', event);
             showGrowlNotification('The shared room server closed. Please try again later.');
+            reject(new Error('WebSocket connection closed.'));
         };
-        
+
         ws.onmessage = async (event) => {
             let update;
             if (typeof event.data === 'string') {
-                // if it's already a string, parse it directly
                 update = event.data;
             } else if (event.data instanceof Blob) {
-                // if it's a Blob, convert it to text
                 update = await event.data.text();
             } else {
                 console.error('Unexpected data type:', event.data);
                 return;
             }
-        
+
             const parsedUpdate = JSON.parse(update);
-        
+
             // ignore updates sent by this client
             if (parsedUpdate.clientId === clientId) {
                 return;
             }
-        
+
             // apply the update based on its type
             switch (parsedUpdate.type) {
                 case 'roomState':
-                    // let user know if the room is empty
                     if (Object.keys(parsedUpdate.baseState).length === 0) {
-                        const params = new URLSearchParams(window.location.search);
-                        const roomName = params.get('room');
                         showGrowlNotification(`Room "${roomName}" is empty.`);
-                        return;
-                    }
-                    else {
-                        // load the room's base state
+                    } else {
                         isLocalAction = true;
                         isInRoom = true;
                         await reconstructWorkspaceState(parsedUpdate.baseState);
                         isLocalAction = false;
-                        break;
                     }
+                    break;
                 case 'addDevice':
                     isLocalAction = true;
                     await createDeviceByName(parsedUpdate.filename, null, parsedUpdate.devicePosition);
@@ -5338,5 +5360,5 @@ function initializeWebSocket() {
                     break;
             }
         };
-    }
+    });
 }
