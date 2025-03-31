@@ -4669,7 +4669,7 @@ function createSequencerUI(deviceDiv) {
     sliderContainer.appendChild(document.createElement('br'));
 
     const driftPercentageLabel = document.createElement('label');
-    driftPercentageLabel.textContent = '   % drift';
+    driftPercentageLabel.textContent = '   % random';
     driftPercentageLabel.htmlFor = 'drift-percentage';
 
     const driftPercentageInput = document.createElement('input');
@@ -4699,7 +4699,7 @@ function createSequencerUI(deviceDiv) {
     sliderContainer.appendChild(document.createElement('br'));
 
     const driftButton = document.createElement('button');
-    driftButton.textContent = 'drift';
+    driftButton.textContent = 'randomize';
     driftButton.style.position = 'absolute';
     driftButton.style.right = '22px';
     driftButton.style.top = '1px';
@@ -5221,7 +5221,6 @@ async function handleCollabButtonClick() {
 
         // get the current workspace state
         const workspaceState = await getWorkspaceState();
-        console.log('about to transmit sendUpdate for joinRoom');
         // send the room name and workspace state to the server
         sendUpdate({
             type: 'joinRoom',
