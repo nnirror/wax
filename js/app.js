@@ -5529,7 +5529,9 @@ function renderParticipantFeedback() {
                     }
                 } else {
                     // handle regular input highlights
-                    const input = parentNode.querySelector(`#${inputId}`);
+                    // escape the input ID to handle spaces or special characters
+                    const escapedInputId = CSS.escape(inputId);
+                    const input = parentNode.querySelector(`#${escapedInputId}`);
                     if (input) {
                         let highlight = renderedElements[clientId].highlight;
                         if (!highlight) {
