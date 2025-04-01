@@ -220,10 +220,21 @@ window.onload = async function() {
         }
     }
 
-
-    document.addEventListener('mousemove', function(event) {
+    document.addEventListener('mousemove', (event) => {
+        const workspaceRect = workspaceElement.getBoundingClientRect();
+        const scrollLeft = workspaceElement.scrollLeft;
+        const scrollTop = workspaceElement.scrollTop;
+    
         mousePosition.x = event.pageX;
         mousePosition.y = event.pageY;
+        mousePosition.workspaceX = event.pageX - workspaceRect.left + scrollLeft;
+        mousePosition.workspaceY = event.pageY - workspaceRect.top + scrollTop;
+    
+        sendUpdate({
+            type: 'cursorMove',
+            clientId: clientId,
+            cursorPosition: mousePosition
+        });
     });
     
     // create the info div element
@@ -284,6 +295,64 @@ window.onload = async function() {
     await checkForQueryStringParams();
     await startAudio();
 };
+
+document.addEventListener('focusin', (event) => {
+    if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea') {
+        const parentNode = event.target.closest('.node');
+        if (parentNode) {
+            focusedInputId = {
+                nodeId: parentNode.id,
+                inputId: event.target.id
+            };
+            sendUpdate({
+                type: 'focusInput',
+                clientId: clientId,
+                focusedInputId: focusedInputId
+            });
+        }
+    }
+
+    // detect CodeMirror focus
+    const codeMirrorWrapper = event.target.closest('.CodeMirror');
+    if (codeMirrorWrapper) {
+        const parentNode = codeMirrorWrapper.closest('.node');
+        if (parentNode) {
+            focusedInputId = {
+                nodeId: parentNode.id,
+                inputId: codeMirrorWrapper.id || `codemirror-${parentNode.id}`
+            };
+            sendUpdate({
+                type: 'focusInput',
+                clientId: clientId,
+                focusedInputId: focusedInputId
+            });
+        }
+    }
+});
+
+document.addEventListener('focusout', (event) => {
+    const codeMirrorWrapper = event.target.closest('.CodeMirror');
+    const inputElement = event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea';
+
+    if (!codeMirrorWrapper && !inputElement) {
+        // if not from a CodeMirror or input/textarea, do nothing
+        return;
+    }
+
+    // clear the focusedInputId and send an update to other participants
+    focusedInputId = null;
+    sendUpdate({
+        type: 'focusInput',
+        clientId: clientId,
+        focusedInputId: null
+    });
+
+    // remove the highlight for this client
+    if (renderedElements[clientId] && renderedElements[clientId].highlight) {
+        document.body.removeChild(renderedElements[clientId].highlight);
+        delete renderedElements[clientId].highlight;
+    }
+});
 
 document.addEventListener('input', function(event) {
     if (event.target.tagName.toLowerCase() === 'textarea') {
@@ -468,6 +537,9 @@ evalWorker.onmessage = (event) => {
 let isInRoom = false;
 let isLocalAction = false;
 let ws = null;
+const participantStates = {};
+const renderedElements = {};
+let focusedInputId = null;
 
 /* END globally acessible objects */
 
@@ -5311,12 +5383,22 @@ function initializeWebSocket(roomName = null) {
 
             // apply the update based on its type
             switch (parsedUpdate.type) {
+                case 'focusInput':
+                    participantStates[parsedUpdate.clientId] = participantStates[parsedUpdate.clientId] || {};
+                    participantStates[parsedUpdate.clientId].focusedInputId = parsedUpdate.focusedInputId;
+                    break;
+                case 'cursorMove':
+                    participantStates[parsedUpdate.clientId] = participantStates[parsedUpdate.clientId] || {};
+                    participantStates[parsedUpdate.clientId].cursorPosition = parsedUpdate.cursorPosition;
+                    break;
                 case 'roomState':
                     if (Object.keys(parsedUpdate.baseState).length === 0) {
                         showGrowlNotification(`Room "${roomName}" is empty.`);
                     } else {
                         isLocalAction = true;
                         isInRoom = true;
+                        // render UI updates from others every 100ms
+                        setInterval(renderParticipantFeedback, 100);
                         await reconstructWorkspaceState(parsedUpdate.baseState);
                         isLocalAction = false;
                     }
@@ -5360,4 +5442,131 @@ function initializeWebSocket(roomName = null) {
             }
         };
     });
+}
+
+function renderParticipantFeedback() {
+    const activeClientIds = Object.keys(participantStates);
+
+    // update or create elements for active participants
+    activeClientIds.forEach((clientId) => {
+        const state = participantStates[clientId];
+        const color = generateColor(clientId);
+
+        // ensure the renderedElements map has an entry for this clientId
+        if (!renderedElements[clientId]) {
+            renderedElements[clientId] = {};
+        }
+
+        // render or update other participants' cursors
+        if (state.cursorPosition) {
+            let cursor = renderedElements[clientId].cursor;
+            if (!cursor) {
+                cursor = document.createElement('div');
+                cursor.className = 'participant-cursor';
+                cursor.style.position = 'absolute';
+                cursor.style.width = '10px';
+                cursor.style.height = '10px';
+                cursor.style.borderRadius = '50%';
+                cursor.style.pointerEvents = 'none';
+                cursor.style.zIndex = '9999';
+                document.body.appendChild(cursor);
+                renderedElements[clientId].cursor = cursor;
+            }
+
+            // adjust for workspace scroll offsets
+            const scrollLeft = workspaceElement.scrollLeft;
+            const scrollTop = workspaceElement.scrollTop;
+
+            // adjust for workspace margin offsets
+            const computedStyle = window.getComputedStyle(workspaceElement);
+            const marginTop = parseFloat(computedStyle.marginTop) || 0;
+            const marginLeft = parseFloat(computedStyle.marginLeft) || 0;
+
+            cursor.style.left = `${state.cursorPosition.workspaceX - scrollLeft + marginLeft}px`;
+            cursor.style.top = `${state.cursorPosition.workspaceY - scrollTop + marginTop}px`;
+            cursor.style.backgroundColor = color;
+        } else if (renderedElements[clientId].cursor) {
+            // remove cursor when no longer needed
+            document.body.removeChild(renderedElements[clientId].cursor);
+            delete renderedElements[clientId].cursor;
+        }
+
+        // render or update highlight
+        if (state.focusedInputId) {
+            const { nodeId, inputId } = state.focusedInputId;
+            const parentNode = document.getElementById(nodeId);
+            if (parentNode) {
+                // handle CodeMirror highlights
+                if (inputId.startsWith('codemirror-')) {
+                    const codeMirrorWrapper = parentNode.querySelector('.CodeMirror');
+                    if (codeMirrorWrapper) {
+                        let highlight = renderedElements[clientId].highlight;
+                        if (!highlight) {
+                            highlight = document.createElement('div');
+                            highlight.className = 'participant-highlight';
+                            highlight.style.position = 'absolute';
+                            highlight.style.pointerEvents = 'none';
+                            highlight.style.zIndex = '9999';
+                            document.body.appendChild(highlight);
+                            renderedElements[clientId].highlight = highlight;
+                        }
+                        const rect = codeMirrorWrapper.getBoundingClientRect();
+                        highlight.style.left = `${rect.left + window.scrollX}px`;
+                        highlight.style.top = `${rect.top + window.scrollY}px`;
+                        highlight.style.width = `${rect.width}px`;
+                        highlight.style.height = `${rect.height}px`;
+                        highlight.style.border = `2px solid ${color}`;
+                    }
+                } else {
+                    // handle regular input highlights
+                    const input = parentNode.querySelector(`#${inputId}`);
+                    if (input) {
+                        let highlight = renderedElements[clientId].highlight;
+                        if (!highlight) {
+                            highlight = document.createElement('div');
+                            highlight.className = 'participant-highlight';
+                            highlight.style.position = 'absolute';
+                            highlight.style.pointerEvents = 'none';
+                            highlight.style.zIndex = '9999';
+                            document.body.appendChild(highlight);
+                            renderedElements[clientId].highlight = highlight;
+                        }
+                        const rect = input.getBoundingClientRect();
+                        highlight.style.left = `${rect.left + window.scrollX}px`;
+                        highlight.style.top = `${rect.top + window.scrollY}px`;
+                        highlight.style.width = `${rect.width}px`;
+                        highlight.style.height = `${rect.height}px`;
+                        highlight.style.border = `2px solid ${color}`;
+                    }
+                }
+            }
+        } else if (renderedElements[clientId].highlight) {
+            // remove highlight when no longer needed
+            document.body.removeChild(renderedElements[clientId].highlight);
+            delete renderedElements[clientId].highlight;
+        }
+    });
+
+    // remove elements for inactive participants
+    Object.keys(renderedElements).forEach((clientId) => {
+        if (!activeClientIds.includes(clientId)) {
+            const elements = renderedElements[clientId];
+            if (elements.cursor) {
+                document.body.removeChild(elements.cursor);
+            }
+            if (elements.highlight) {
+                document.body.removeChild(elements.highlight);
+            }
+            delete renderedElements[clientId];
+        }
+    });
+}
+
+function generateColor(clientId) {
+    let hash = 0;
+    for (let i = 0; i < clientId.length; i++) {
+        hash = clientId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = `hsl(${hash % 360}, 70%, 50%)`;
+    return color;
 }

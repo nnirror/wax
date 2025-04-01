@@ -924,3 +924,27 @@ body .CodeMirror {
     left: 46px;
     line-height: 0;
 }
+
+.participant-cursor {
+    animation: cursor-pulse 1s infinite;
+    z-index: 9999;
+}
+
+@keyframes cursor-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.participant-highlight {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
