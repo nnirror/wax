@@ -919,6 +919,11 @@ document.addEventListener('keydown', (event) => {
     if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input' || event.target.closest('.CodeMirror')) {
         return;
     }
+    let currentPosition = {
+        left: mousePosition.workspaceX,
+        top: mousePosition.workspaceY
+    };
+
     if (event.key === 'Delete' || event.key === 'Backspace') {
         // get all selected nodes
         let nodes = document.querySelectorAll('.node');
@@ -957,27 +962,27 @@ document.addEventListener('keydown', (event) => {
     // 'f' creates a number input
     else if (event.key === 'f' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('number');
+        createDeviceByName('number',null,currentPosition);
     }
     // 'c' creates a comment
     else if (event.key === 'c' && !event.metaKey && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('comment');
+        createDeviceByName('comment',null,currentPosition);
     }
     // 'b' creates a button
     else if (event.key === 'b' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('button');
+        createDeviceByName('button',null,currentPosition);
     }
     // 's' creates a slider
     else if (event.key === 's' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('slider');
+        createDeviceByName('slider',null,currentPosition);
     }
     // 't' creates a toggle
     else if (event.key === 't' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('toggle');
+        createDeviceByName('toggle',null,currentPosition);
     }
 });
 
@@ -1047,6 +1052,11 @@ function openAwesompleteUI(event) {
     // focus the input
     input.focus();
 
+    let currentPosition = {
+        left: mousePosition.workspaceX,
+        top: mousePosition.workspaceY
+    };
+
     let selectCompleteTriggered = false;
     // add event listener for awesomplete-selectcomplete event
     awesomplete.input.addEventListener('awesomplete-selectcomplete', async function() {
@@ -1054,13 +1064,13 @@ function openAwesompleteUI(event) {
         var selectedOption = awesomplete.input.value;
         selectedOption = getFileNameByDisplayName(selectedOption);
         if (selectedOption == 'microphone input') {
-            await createDeviceByName('mic',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+            await createDeviceByName('mic',null,currentPosition);
         }
         else if (selectedOption == 'speaker') {
-            await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+            await createDeviceByName('output',null,currentPosition);
         }
         else {
-            await createDeviceByName(selectedOption,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+            await createDeviceByName(selectedOption,null,currentPosition);
         }
         hideAwesomplete();
     });
@@ -1087,25 +1097,25 @@ function openAwesompleteUI(event) {
         // if there's only one result in the autocomplete list, use that result
         if (awesomplete.ul.childNodes.length === 1) {
             if ( awesomplete.ul.childNodes[0].textContent == 'microphone input' ) {
-                await createDeviceByName('mic',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName('mic',null,currentPosition);
             }
             else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
-                await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName('output',null,currentPosition);
             }
             else {
                 const displayName = awesomplete.ul.childNodes[0].textContent;
                 const fileName = getFileNameByDisplayName(displayName);
                 if (fileName) {
-                    await createDeviceByName(fileName,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                    await createDeviceByName(fileName,null,currentPosition);
                 }
             }
         } else {
             // use exactly what the user typed
             if ( input.value == 'speaker' ) {
-                await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName('output',null,currentPosition);
             }
             else {
-                await createDeviceByName(input.value,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName(input.value,null,currentPosition);
             }
         }
     }
