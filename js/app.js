@@ -182,6 +182,16 @@ createButtonForNavBar('Menu', 'mobileMenuToggleButton navbarButton', handleMenuB
 createButtonForNavBar('Lock', 'mobileMenuLockButton navbarButton', handleLockButtonClick);
 
 
+window.addEventListener('beforeunload', () => {
+    // if collaborating, tell other participants that user is leaving
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'leaveRoom',
+            clientId: clientId
+        }));
+    }
+});
+
 // prevent accidental refreshes which would lose unsaved changes
 window.onbeforeunload = function() {
     return "Are you sure you want to leave? Unsaved changes will be lost.";
@@ -5528,6 +5538,21 @@ function initializeWebSocket(roomName = null) {
                 case 'cursorMove':
                     participantStates[parsedUpdate.clientId] = participantStates[parsedUpdate.clientId] || {};
                     participantStates[parsedUpdate.clientId].cursorPosition = parsedUpdate.cursorPosition;
+                    break;
+                case 'leaveRoom':
+                    const leftClientId = parsedUpdate.clientId;
+                    // remove the participant's cursor and tooltip
+                    if (renderedElements[leftClientId]) {
+                        if (renderedElements[leftClientId].cursor) {
+                            document.body.removeChild(renderedElements[leftClientId].cursor);
+                        }
+                        if (renderedElements[leftClientId].tooltip) {
+                            document.body.removeChild(renderedElements[leftClientId].tooltip);
+                        }
+                        delete renderedElements[leftClientId];
+                    }
+                    // remove the participant from the state
+                    delete participantStates[leftClientId];
                     break;
                 case 'roomState':
                     if (Object.keys(parsedUpdate.baseState).length === 0) {
