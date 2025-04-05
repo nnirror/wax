@@ -1208,9 +1208,51 @@ async function createMicrophoneDevice() {
 }
 
 async function createMotionDevice(context) {
-    // check if DeviceOrientationEvent is supported
-    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        // request permission for DeviceMotionEvent
+    // check if Accelerometer is available
+    if ('Accelerometer' in window) {
+        try {
+            // create a ConstantSourceNode for each axis
+            const xNode = context.createConstantSource();
+            const yNode = context.createConstantSource();
+            xNode.start();
+            yNode.start();
+
+            const acl = new Accelerometer({ frequency: 60 });
+            acl.addEventListener('reading', () => {
+                // normalize each axis to the range of -1 to 1
+                xNode.offset.value = (acl.x / 9.8) * -1;
+                yNode.offset.value = acl.y / 9.8;
+            });
+            acl.addEventListener('error', (event) => {
+                showGrowlNotification(`Accelerometer error: ${event.error.message}`);
+            });
+            acl.start();
+
+            // create a ChannelMergerNode to combine the outputs of the three nodes
+            const merger = context.createChannelMerger(2);
+            xNode.connect(merger, 0, 1);
+            yNode.connect(merger, 0, 0);
+
+            // create a wrapper object for the device
+            const device = createMockRNBODevice(
+                context,
+                merger,
+                merger,
+                [
+                    { comment: 'pitch' },
+                    { comment: 'roll' }
+                ],
+                [],
+                3
+            );
+            return device;
+        } catch (error) {
+            showGrowlNotification(`Error initializing Accelerometer: ${error.message}`);
+        }
+    } 
+    // Fallback to DeviceMotionEvent if Accelerometer is not available
+    else if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        // Original DeviceMotionEvent code (unchanged)
         const response = await DeviceMotionEvent.requestPermission();
         if (response === 'granted') {
             // create a ConstantSourceNode for each axis
@@ -1218,6 +1260,7 @@ async function createMotionDevice(context) {
             const gammaNode = context.createConstantSource();
             betaNode.start();
             gammaNode.start();
+
             // add event listener for deviceorientation
             window.addEventListener('deviceorientation', function(event) {
                 // normalize each axis to the range of -1 to 1
@@ -1231,7 +1274,17 @@ async function createMotionDevice(context) {
             gammaNode.connect(merger, 0, 1);
 
             // create a wrapper object for the device
-            const device = createMockRNBODevice(context, merger, merger, [{ comment: 'pitch' },{ comment: 'roll' }], [], 2);
+            const device = createMockRNBODevice(
+                context,
+                merger,
+                merger,
+                [
+                    { comment: 'pitch' },
+                    { comment: 'roll' }
+                ],
+                [],
+                2
+            );
             return device;
         } else {
             showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
@@ -4089,10 +4142,22 @@ async function reconstructWorkspaceState(deviceStates = null) {
             permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
             permissionButton.addEventListener('click', async () => {
                 try {
-                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    if ('Accelerometer' in window) {
+                        // accelerometer is available - no need to request DeviceMotionEvent permission
+                        let deviceDropdown = createDropdownofAllDevices();
+                        addMotionDeviceToDropdown(deviceDropdown);
+                    
+                        // remove the div after handling interaction
+                        document.body.removeChild(permissionDiv);
+                    
+                        // rroceed with reconstructing the workspace state
+                        await loadWorkspaceState(deviceStates);
+                        await startAudio();
+                    } else if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                        // fallback to DeviceMotionEvent if Accelerometer is not available
                         const response = await DeviceMotionEvent.requestPermission();
                         if (response === 'granted') {
-                            // device motion event permission granted
+                            // DeviceMotionEvent permission granted
                             let deviceDropdown = createDropdownofAllDevices();
                             addMotionDeviceToDropdown(deviceDropdown);
                         } else {
@@ -4100,7 +4165,15 @@ async function reconstructWorkspaceState(deviceStates = null) {
                         }
                         // remove the div after handling interaction
                         document.body.removeChild(permissionDiv);
-
+                    
+                        // proceed with reconstructing the workspace state
+                        await loadWorkspaceState(deviceStates);
+                        await startAudio();
+                    } else {
+                        showGrowlNotification('Sorry, your device does not support motion sensors.');
+                        // remove the div after handling interaction
+                        document.body.removeChild(permissionDiv);
+                    
                         // proceed with reconstructing the workspace state
                         await loadWorkspaceState(deviceStates);
                         await startAudio();
