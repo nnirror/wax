@@ -72,6 +72,22 @@ Press the `save` button to save the system state as a zip file, including all au
 ## Loading state
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
+# Collaboration
+
+Wax supports real-time collaboration, allowing multiple users to work together on the same workspace in real time. This feature is ideal for collaborative sound design, teaching, or sharing ideas with others.
+
+## Creating a New Room
+1. Click the **Collab** button in the top navigation bar.
+2. In the modal window that appears, click the **Create Room** button.
+3. A new room will be created with a randomly generated name, and you will automatically join it.
+4. Share the URL of the room with others to invite them to collaborate.
+
+## Joining an Existing Room
+1. Click the **Collab** button in the top navigation bar.
+2. In the modal window that appears, enter the name of the room you want to join in the **Join Room** input field.
+3. Click the **Join Room** button to connect to the room.
+4. Alternatively, you can join a room directly by appending `?room=<roomName>` to the URL and loading the page.
+
 # Locking the workspace
 Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices. Whether a workspace is locked is stored as part of the system state which is shareable as a URL or zip file.
 
@@ -354,13 +370,13 @@ Translates `input` into a different number range.
 Displays the input signal as a waveform in an oscilloscope. `scope min` and `scope max` control the amplitude range of the oscilloscope. `block size` controls the number of samples in the total history of the oscilloscope, and it must be a power of 2 between 32 and 32768.
 
 ## sequencer
-Advances to the next step in a sequence of sliders every time a signal connected to the `advance` inlet goes above 0.5. When a signal connected to the `reset` inlet goes above 0.5, the sequence will immediately reset to the first step. The `output (step)` signal produces the slider value for the current step, with slider ranges between 0 - 1. The `step` outlet outputs the current step number. Steps are zero-based, so the first step = step 0.
+Advances to the next step in a sequence of sliders every time a signal connected to the `clock` inlet goes above 0.5. When a signal connected to the `reset` inlet goes above 0.5, the sequence will immediately reset to the first step. The `output (clock)` signal produces the slider value for the current step, with slider ranges between 0 - 1. The `step index` outlet outputs the current step number. Steps are zero-based, so the first step = step 0. The `step trigger` outlet outputs an impulse if the checkbox for the current step is checked.
 
 The `phase` inlet expects a signal between 0 and 1 and outputs the slider value in that relative position via the `output (phase)` outlet. In other words, a 0 outputs the first slider's value; a 0.5 outputs the middle slider; a 1 outputs the last slider; etc.
 
 The `steps` control changes the number of steps in the sequence.
 
-The `drift` inlet controls a slider randomization process that can also be run manually via the `drift` button. `% drift` controls the percentage of sliders that will randomize. `% intensity` controls the intensity of randomization.
+The `random` inlet controls a slider randomization process that can also be run manually via the `randomize` button. `% random` controls the percentage of sliders that will randomize. `% intensity` controls the intensity of randomization.
 
 ## sine
 Generates a sine wave between -1 and 1, oscillating at `frequency`. The phase of the sine wave can be modified at signal-rate with `phase`,which will be added to the `frequency` parameter.

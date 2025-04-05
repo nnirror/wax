@@ -182,6 +182,16 @@ createButtonForNavBar('Menu', 'mobileMenuToggleButton navbarButton', handleMenuB
 createButtonForNavBar('Lock', 'mobileMenuLockButton navbarButton', handleLockButtonClick);
 
 
+window.addEventListener('beforeunload', () => {
+    // if collaborating, tell other participants that user is leaving
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'leaveRoom',
+            clientId: clientId
+        }));
+    }
+});
+
 // prevent accidental refreshes which would lose unsaved changes
 window.onbeforeunload = function() {
     return "Are you sure you want to leave? Unsaved changes will be lost.";
@@ -193,25 +203,48 @@ window.onload = async function() {
     setTimeout(function() {
         window.scrollTo(0, 0);
     }, 10);
+
+    // initialize WebSocket if the user is in a room
+    initializeWebSocket();
     
-    mousePosition.x = document.documentElement.clientWidth - 200;
-    mousePosition.y = document.documentElement.clientHeight / 2 - 50;
-    let speaker1Div = await createDeviceByName('output');
-    let inputElement = speaker1Div.querySelector('input');
-    if (inputElement) {
-        inputElement.value = 1;
+    // check if the user is in a room
+    const params = new URLSearchParams(window.location.search);
+    const roomName = params.get('room');
+
+    if (!roomName) {
+        // only add the speaker divs if the user is NOT in a room
+        mousePosition.x = document.documentElement.clientWidth - 200;
+        mousePosition.y = document.documentElement.clientHeight / 2 - 50;
+        let speaker1Div = await createDeviceByName('output');
+        let inputElement = speaker1Div.querySelector('input');
+        if (inputElement) {
+            inputElement.value = 1;
+        }
+
+        mousePosition.x = document.documentElement.clientWidth - 200;
+        mousePosition.y = (document.documentElement.clientHeight / 2) + 50;
+        let speaker2Div = await createDeviceByName('output');
+        inputElement = speaker2Div.querySelector('input');
+        if (inputElement) {
+            inputElement.value = 2;
+        }
     }
+
+    document.addEventListener('mousemove', (event) => {
+        const workspaceRect = workspaceElement.getBoundingClientRect();
+        const scrollLeft = workspaceElement.scrollLeft;
+        const scrollTop = workspaceElement.scrollTop;
     
-    mousePosition.x = document.documentElement.clientWidth - 200;
-    mousePosition.y = (document.documentElement.clientHeight / 2) + 50;
-    let speaker2Div = await createDeviceByName('output');
-    inputElement = speaker2Div.querySelector('input');
-    if (inputElement) {
-        inputElement.value = 2;
-    }
-    document.addEventListener('mousemove', function(event) {
         mousePosition.x = event.pageX;
         mousePosition.y = event.pageY;
+        mousePosition.workspaceX = event.pageX - workspaceRect.left + scrollLeft;
+        mousePosition.workspaceY = event.pageY - workspaceRect.top + scrollTop;
+    
+        sendUpdate({
+            type: 'cursorMove',
+            clientId: clientId,
+            cursorPosition: mousePosition
+        });
     });
     
     // create the info div element
@@ -272,6 +305,64 @@ window.onload = async function() {
     await checkForQueryStringParams();
     await startAudio();
 };
+
+document.addEventListener('focusin', (event) => {
+    if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea') {
+        const parentNode = event.target.closest('.node');
+        if (parentNode) {
+            focusedInputId = {
+                nodeId: parentNode.id,
+                inputId: event.target.id
+            };
+            sendUpdate({
+                type: 'focusInput',
+                clientId: clientId,
+                focusedInputId: focusedInputId
+            });
+        }
+    }
+
+    // detect CodeMirror focus
+    const codeMirrorWrapper = event.target.closest('.CodeMirror');
+    if (codeMirrorWrapper) {
+        const parentNode = codeMirrorWrapper.closest('.node');
+        if (parentNode) {
+            focusedInputId = {
+                nodeId: parentNode.id,
+                inputId: codeMirrorWrapper.id || `codemirror-${parentNode.id}`
+            };
+            sendUpdate({
+                type: 'focusInput',
+                clientId: clientId,
+                focusedInputId: focusedInputId
+            });
+        }
+    }
+});
+
+document.addEventListener('focusout', (event) => {
+    const codeMirrorWrapper = event.target.closest('.CodeMirror');
+    const inputElement = event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea';
+
+    if (!codeMirrorWrapper && !inputElement) {
+        // if not from a CodeMirror or input/textarea, do nothing
+        return;
+    }
+
+    // clear the focusedInputId and send an update to other participants
+    focusedInputId = null;
+    sendUpdate({
+        type: 'focusInput',
+        clientId: clientId,
+        focusedInputId: null
+    });
+
+    // remove the highlight for this client
+    if (renderedElements[clientId] && renderedElements[clientId].highlight) {
+        document.body.removeChild(renderedElements[clientId].highlight);
+        delete renderedElements[clientId].highlight;
+    }
+});
 
 document.addEventListener('input', function(event) {
     if (event.target.tagName.toLowerCase() === 'textarea') {
@@ -453,6 +544,13 @@ evalWorker.onmessage = (event) => {
         handleWorkerMessage(event);
     }
 };
+let isInRoom = false;
+let isLocalAction = false;
+let ws = null;
+const participantStates = {};
+const renderedElements = {};
+let focusedInputId = null;
+
 /* END globally acessible objects */
 
 /* BEGIN event handlers */
@@ -472,6 +570,17 @@ jsPlumb.bind("connectionDetached", function(info) {
             } catch (error) {}
             // remove the connection from the list
             sourceDevice.connections = sourceDevice.connections.filter(conn => conn.id !== jsPlumbConnectionId);
+            // Send update to WebSocket server if this is a local action
+            if (!isLocalAction) {
+                sendUpdate({
+                    type: 'deleteConnection',
+                    sourceDeviceId: info.sourceId,
+                    targetDeviceId: info.targetId,
+                    sourceOutputIndex: connection.output,
+                    inputIndex: connection.input,
+                    clientId: clientId
+                });
+            }
         }
     }
 });
@@ -820,6 +929,11 @@ document.addEventListener('keydown', (event) => {
     if (event.target.tagName.toLowerCase() === 'textarea' || event.target.tagName.toLowerCase() === 'input' || event.target.closest('.CodeMirror')) {
         return;
     }
+    let currentPosition = {
+        left: mousePosition.workspaceX,
+        top: mousePosition.workspaceY
+    };
+
     if (event.key === 'Delete' || event.key === 'Backspace') {
         // get all selected nodes
         let nodes = document.querySelectorAll('.node');
@@ -858,27 +972,27 @@ document.addEventListener('keydown', (event) => {
     // 'f' creates a number input
     else if (event.key === 'f' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('number');
+        createDeviceByName('number',null,currentPosition);
     }
     // 'c' creates a comment
     else if (event.key === 'c' && !event.metaKey && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('comment');
+        createDeviceByName('comment',null,currentPosition);
     }
     // 'b' creates a button
     else if (event.key === 'b' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('button');
+        createDeviceByName('button',null,currentPosition);
     }
     // 's' creates a slider
     else if (event.key === 's' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('slider');
+        createDeviceByName('slider',null,currentPosition);
     }
     // 't' creates a toggle
     else if (event.key === 't' && document.activeElement.tagName.toLowerCase() !== 'input' && document.activeElement.tagName.toLowerCase() !== 'textarea') {
         event.preventDefault();
-        createDeviceByName('toggle');
+        createDeviceByName('toggle',null,currentPosition);
     }
 });
 
@@ -948,6 +1062,11 @@ function openAwesompleteUI(event) {
     // focus the input
     input.focus();
 
+    let currentPosition = {
+        left: mousePosition.workspaceX,
+        top: mousePosition.workspaceY
+    };
+
     let selectCompleteTriggered = false;
     // add event listener for awesomplete-selectcomplete event
     awesomplete.input.addEventListener('awesomplete-selectcomplete', async function() {
@@ -955,13 +1074,13 @@ function openAwesompleteUI(event) {
         var selectedOption = awesomplete.input.value;
         selectedOption = getFileNameByDisplayName(selectedOption);
         if (selectedOption == 'microphone input') {
-            await createDeviceByName('mic',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+            await createDeviceByName('mic',null,currentPosition);
         }
         else if (selectedOption == 'speaker') {
-            await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+            await createDeviceByName('output',null,currentPosition);
         }
         else {
-            await createDeviceByName(selectedOption,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+            await createDeviceByName(selectedOption,null,currentPosition);
         }
         hideAwesomplete();
     });
@@ -988,25 +1107,25 @@ function openAwesompleteUI(event) {
         // if there's only one result in the autocomplete list, use that result
         if (awesomplete.ul.childNodes.length === 1) {
             if ( awesomplete.ul.childNodes[0].textContent == 'microphone input' ) {
-                await createDeviceByName('mic',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName('mic',null,currentPosition);
             }
             else if ( awesomplete.ul.childNodes[0].textContent == 'speaker' ) {
-                await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName('output',null,currentPosition);
             }
             else {
                 const displayName = awesomplete.ul.childNodes[0].textContent;
                 const fileName = getFileNameByDisplayName(displayName);
                 if (fileName) {
-                    await createDeviceByName(fileName,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                    await createDeviceByName(fileName,null,currentPosition);
                 }
             }
         } else {
             // use exactly what the user typed
             if ( input.value == 'speaker' ) {
-                await createDeviceByName('output',null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName('output',null,currentPosition);
             }
             else {
-                await createDeviceByName(input.value,null,{left:mousePosition.x+document.getElementById('workspace').scrollLeft,top:mousePosition.y+document.getElementById('workspace').scrollTop});
+                await createDeviceByName(input.value,null,currentPosition);
             }
         }
     }
@@ -1099,9 +1218,51 @@ async function createMicrophoneDevice() {
 }
 
 async function createMotionDevice(context) {
-    // check if DeviceOrientationEvent is supported
-    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        // request permission for DeviceMotionEvent
+    // check if Accelerometer is available
+    if ('Accelerometer' in window) {
+        try {
+            // create a ConstantSourceNode for each axis
+            const xNode = context.createConstantSource();
+            const yNode = context.createConstantSource();
+            xNode.start();
+            yNode.start();
+
+            const acl = new Accelerometer({ frequency: 60 });
+            acl.addEventListener('reading', () => {
+                // normalize each axis to the range of -1 to 1
+                xNode.offset.value = (acl.x / 9.8) * -1;
+                yNode.offset.value = acl.y / 9.8;
+            });
+            acl.addEventListener('error', (event) => {
+                showGrowlNotification(`Accelerometer error: ${event.error.message}`);
+            });
+            acl.start();
+
+            // create a ChannelMergerNode to combine the outputs of the three nodes
+            const merger = context.createChannelMerger(2);
+            xNode.connect(merger, 0, 1);
+            yNode.connect(merger, 0, 0);
+
+            // create a wrapper object for the device
+            const device = createMockRNBODevice(
+                context,
+                merger,
+                merger,
+                [
+                    { comment: 'pitch' },
+                    { comment: 'roll' }
+                ],
+                [],
+                3
+            );
+            return device;
+        } catch (error) {
+            showGrowlNotification(`Error initializing Accelerometer: ${error.message}`);
+        }
+    } 
+    // Fallback to DeviceMotionEvent if Accelerometer is not available
+    else if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        // Original DeviceMotionEvent code (unchanged)
         const response = await DeviceMotionEvent.requestPermission();
         if (response === 'granted') {
             // create a ConstantSourceNode for each axis
@@ -1109,6 +1270,7 @@ async function createMotionDevice(context) {
             const gammaNode = context.createConstantSource();
             betaNode.start();
             gammaNode.start();
+
             // add event listener for deviceorientation
             window.addEventListener('deviceorientation', function(event) {
                 // normalize each axis to the range of -1 to 1
@@ -1122,7 +1284,17 @@ async function createMotionDevice(context) {
             gammaNode.connect(merger, 0, 1);
 
             // create a wrapper object for the device
-            const device = createMockRNBODevice(context, merger, merger, [{ comment: 'pitch' },{ comment: 'roll' }], [], 2);
+            const device = createMockRNBODevice(
+                context,
+                merger,
+                merger,
+                [
+                    { comment: 'pitch' },
+                    { comment: 'roll' }
+                ],
+                [],
+                2
+            );
             return device;
         } else {
             showGrowlNotification(`Permission for DeviceMotionEvent was not granted`);
@@ -1187,13 +1359,13 @@ async function attachOutports(device,deviceDiv) {
             let canvasCtx;
             let scopeMin = deviceDiv.querySelector('.scopeMin');
             let scopeMax = deviceDiv.querySelector('.scopeMax');
-        
+
             if (!valueDiv) {
                 valueDiv = document.createElement('div');
                 valueDiv.className = 'printvalue';
                 deviceDiv.insertBefore(valueDiv, hr);
             }
-        
+
             if (!canvas) {
                 canvas = document.createElement('canvas');
                 canvas.width = 300;
@@ -1201,9 +1373,9 @@ async function attachOutports(device,deviceDiv) {
                 canvas.className = 'waterfallCanvas';
                 deviceDiv.insertBefore(canvas, hr);
             }
-        
+
             canvasCtx = canvas.getContext('2d', { willReadFrequently: true });
-        
+
             if (!scopeMin) {
                 const scopeMinInput = createLabeledInput('scope min', 'scopeMin', 'scopeMin', -1, {
                     input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
@@ -1211,8 +1383,19 @@ async function attachOutports(device,deviceDiv) {
                 scopeMin = scopeMinInput.input;
                 deviceDiv.insertBefore(scopeMinInput.label, hr);
                 deviceDiv.insertBefore(scopeMinInput.input, hr);
+
+                // Add event listener to send updates to WebSocket server
+                scopeMin.addEventListener('change', () => {
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: scopeMin.id,
+                        value: scopeMin.value,
+                        clientId: clientId
+                    });
+                });
             }
-        
+
             if (!scopeMax) {
                 const scopeMaxInput = createLabeledInput('scope max', 'scopeMax', 'scopeMax', 1, {
                     input: { width: '50px', marginLeft: '-20px', marginRight: '20px' }
@@ -1220,40 +1403,51 @@ async function attachOutports(device,deviceDiv) {
                 scopeMax = scopeMaxInput.input;
                 deviceDiv.insertBefore(scopeMaxInput.label, hr);
                 deviceDiv.insertBefore(scopeMaxInput.input, hr);
+
+                // Add event listener to send updates to WebSocket server
+                scopeMax.addEventListener('change', () => {
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: scopeMax.id,
+                        value: scopeMax.value,
+                        clientId: clientId
+                    });
+                });
             }
-        
+
             // update the print span's value
             if (typeof ev.payload === 'number' && ev.payload % 1 !== 0) {
                 valueDiv.textContent = ev.payload.toFixed(2);
             } else {
                 valueDiv.textContent = ev.payload;
             }
-        
+
             // draw the waterfall display
             function drawWaterfall() {
                 const scopeMinValue = parseFloat(scopeMin.value);
                 const scopeMaxValue = parseFloat(scopeMax.value);
                 const scopeRange = scopeMaxValue - scopeMinValue;
-        
+
                 // shift the existing image to the left
                 const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
                 canvasCtx.putImageData(imageData, -1, 0);
-        
+
                 // clear the rightmost column
                 canvasCtx.fillStyle = 'rgb(203, 203, 203)';
                 canvasCtx.fillRect(canvas.width - 1, 0, 1, canvas.height);
-        
+
                 // draw the new value as a line segment
                 const normalizedValue = (ev.payload - scopeMinValue) / scopeRange;
                 const y = canvas.height - (normalizedValue * canvas.height); // flip the y coordinate
-        
+
                 canvasCtx.strokeStyle = 'black';
                 canvasCtx.beginPath();
                 canvasCtx.moveTo(canvas.width - 1, y);
                 canvasCtx.lineTo(canvas.width - 1, canvas.height);
                 canvasCtx.stroke();
             }
-        
+
             drawWaterfall();
         }
     });
@@ -1272,6 +1466,15 @@ function removeDeviceFromWorkspace(deviceId) {
 
     // remove the device from storage
     delete devices[deviceId];
+
+    // Send update to WebSocket server if this is a local action
+    if (!isLocalAction) {
+        sendUpdate({
+            type: 'deleteDevice',
+            deviceId: deviceId,
+            clientId: clientId
+        });
+    }
 }
 
 function addInputsForDevice(device, deviceType, deviceId) {
@@ -1328,6 +1531,16 @@ function addInputsForDevice(device, deviceType, deviceId) {
                 if (document.activeElement !== event.target) {
                     if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
                         scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+                        // Send update to WebSocket server if this is a local action
+                        if (!isLocalAction) {
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceId,
+                                inportTag: inport.tag,
+                                value: this.value,
+                                clientId: clientId
+                            });
+                        }
                     }
                 }
             });
@@ -1336,6 +1549,17 @@ function addInputsForDevice(device, deviceType, deviceId) {
                 if (document.activeElement !== event.target) {
                     if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
                         scheduleDeviceEvent(device, inport, this.value, deviceId, true);
+
+                        // Send update to WebSocket server if this is a local action
+                        if (!isLocalAction) {
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceId,
+                                inportTag: inport.tag,
+                                value: this.value,
+                                clientId: clientId
+                            });
+                        }
                     }
                 }
             });
@@ -1344,6 +1568,17 @@ function addInputsForDevice(device, deviceType, deviceId) {
                 if (event.key === 'Enter') {
                     if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
                         scheduleDeviceEvent(device, inport, this.value, deviceId, false);
+
+                        // Send update to WebSocket server if this is a local action
+                        if (!isLocalAction) {
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceId,
+                                inportTag: inport.tag,
+                                value: this.value,
+                                clientId: clientId
+                            });
+                        }
                     }
                 }
             });
@@ -1533,6 +1768,7 @@ document.addEventListener('mouseup', (event) => {
                         startConnection(startDeviceId, startIndex);
                         finishConnection(endDeviceId, outputChannel);
                     }
+                    jsPlumb.repaintEverything();
                 }
             }
             else if (startDeviceId.includes('output')) {
@@ -1547,6 +1783,7 @@ document.addEventListener('mouseup', (event) => {
                         startConnection(startDeviceId, outputChannel);
                         finishConnection(endDeviceId, endIndex);
                     }
+                    jsPlumb.repaintEverything();
                 }
             }
             else {
@@ -1558,6 +1795,7 @@ document.addEventListener('mouseup', (event) => {
                         startConnection(startDeviceId, startIndex);
                         finishConnection(endDeviceId, endIndex);
                     }
+                    jsPlumb.repaintEverything();
                 }
             }
         }
@@ -1598,6 +1836,7 @@ function handleButtonClick(deviceId, index, isInputButton) {
             startConnection(lastClicked.deviceId, lastClicked.index);
             finishConnection(deviceId, index);
         }
+        jsPlumb.repaintEverything();
         lastClicked = null;
     } else {
         lastClicked = {
@@ -1614,7 +1853,7 @@ function startConnection(deviceId, outputIndex) {
     sourceButtonId = document.querySelector(`#${deviceId} .output-container button:nth-child(${outputIndex + 1})`).id;
 }
 
-function finishConnection(deviceId, inputIndex) {
+async function finishConnection(deviceId, inputIndex) {
     try {
         if (sourceDeviceId) {
             const sourceDevice = devices[sourceDeviceId].device;
@@ -1713,6 +1952,18 @@ function finishConnection(deviceId, inputIndex) {
                     jsPlumb.repaintEverything();
                 });
                 resizeObserver.observe(patternDeviceDiv);
+            }
+
+            // Send update to WebSocket server if this is a local action
+            if (!isLocalAction) {
+                sendUpdate({
+                    type: 'makeConnection',
+                    sourceDeviceId: sourceDeviceId,
+                    targetDeviceId: deviceId,
+                    sourceOutputIndex: sourceOutputIndex,
+                    inputIndex: inputIndex,
+                    clientId: clientId
+                });
             }
 
             sourceDeviceId = null;
@@ -1817,7 +2068,7 @@ async function createCustomAudioWorkletDevice(workletfile, filename) {
     }
 }
 
-async function createDeviceByName(filename, audioBuffer = null, devicePosition = null) {
+async function createDeviceByName(filename, audioBuffer = null, devicePosition = null, isDuplicate = false) {
     try {
         let deviceDiv;
          // Find the device in wasmDeviceURLs that matches the supplied filename
@@ -2231,36 +2482,39 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 silenceGenerator.start();
                 // create the device
                 const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
-            
+                
                 deviceDiv = addDeviceToWorkspace(device, "toggle", false);
-            
+                
+                // Store reference to the silence generator
+                devices[deviceDiv.id].silenceGenerator = silenceGenerator;
+                
                 // create a toggle button
                 const toggleButton = document.createElement('button');
                 toggleButton.textContent = 'off';
                 toggleButton.className = 'toggle-button toggle-off';
-            
+                
                 // create a hidden input
                 const hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';
                 hiddenInput.value = '0'; 
                 hiddenInput.id = 'toggleHiddenInput';
-            
+                
                 // find the existing form in the device
                 const form = deviceDiv.querySelector('form');
-            
+                
                 // create a div to hold the labels and inputs
                 const div = document.createElement('div');
                 div.className = 'labelAndInputContainer';
                 div.style.left = '9px';
                 div.style.top = '0px';
-            
+                
                 // append the toggle button and hidden input to the div
                 div.appendChild(toggleButton);
                 div.appendChild(hiddenInput);
-            
+                
                 // append the div to the form
                 form.appendChild(div);
-            
+                
                 // add event listener to the toggle button
                 toggleButton.addEventListener('click', () => {
                     // toggle the value between 1 and 0
@@ -2268,7 +2522,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     
                     // update the hidden input value
                     hiddenInput.value = silenceGenerator.offset.value;
-            
+                
                     // toggle the class and text
                     if (toggleButton.className === 'toggle-button toggle-off') {
                         toggleButton.className = 'toggle-button toggle-on';
@@ -2277,6 +2531,15 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                         toggleButton.className = 'toggle-button toggle-off';
                         toggleButton.textContent = 'off';
                     }
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: hiddenInput.id,
+                        value: hiddenInput.value,
+                        clientId: clientId
+                    });
                 });
             }
             else if (filename === "keyboard") {
@@ -2297,6 +2560,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 // create the device
                 const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], [], 2);
                 deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
+            
+                // Store references to the silence generator and trigger source
+                devices[deviceDiv.id].silenceGenerator = silenceGenerator;
+                devices[deviceDiv.id].triggerSource = triggerSource;
             
                 // create a div to hold the piano keyboard
                 const keyboardDiv = document.createElement('div');
@@ -2326,10 +2593,28 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     triggerSource.offset.setValueAtTime(1, context.currentTime);
                     triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // briefly output 1
                     previousKeyDiv = keyDiv;
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: `id-${keyDiv.dataset.value}`,
+                        value: '1',
+                        clientId: clientId
+                    });
                 };
             
                 const resetKey = (keyDiv) => {
                     keyDiv.style.backgroundColor = keyDiv.dataset.color === 'white' ? 'white' : 'black';
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: `id-${keyDiv.dataset.value}`,
+                        value: '0',
+                        clientId: clientId
+                    });
                 };
             
                 const handleMouseOver = (keyDiv) => {
@@ -2453,11 +2738,29 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 rootNoteInput.input.addEventListener('input', (event) => {
                     rootNote = parseInt(event.target.value, 10);
                     createKeys();
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: rootNoteInput.input.id,
+                        value: rootNoteInput.input.value,
+                        clientId: clientId
+                    });
                 });
             
                 rootNoteInput.input.addEventListener('change', (event) => {
                     rootNote = parseInt(event.target.value, 10);
                     createKeys();
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: rootNoteInput.input.id,
+                        value: rootNoteInput.input.value,
+                        clientId: clientId
+                    });
                 });
             
                 // create labeled input for the octaves
@@ -2475,11 +2778,29 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 octavesInput.input.addEventListener('input', (event) => {
                     octaves = parseInt(event.target.value, 10);
                     createKeys();
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: octavesInput.input.id,
+                        value: octavesInput.input.value,
+                        clientId: clientId
+                    });
                 });
             
                 octavesInput.input.addEventListener('change', (event) => {
                     octaves = parseInt(event.target.value, 10);
                     createKeys();
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: octavesInput.input.id,
+                        value: octavesInput.input.value,
+                        clientId: clientId
+                    });
                 });
             }
             else if (filename === "slider") {
@@ -2535,20 +2856,49 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 // add event listeners to the min and max inputs
                 minInput.input.addEventListener('change', () => {
                     slider.min = minInput.input.value;
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: minInput.input.id,
+                        value: minInput.input.value,
+                        clientId: clientId
+                    });
                 });
-            
+                
                 maxInput.input.addEventListener('change', () => {
                     slider.max = maxInput.input.value;
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: maxInput.input.id,
+                        value: maxInput.input.value,
+                        clientId: clientId
+                    });
                 });
-            
+                
                 // add event listeners to the slider
                 slider.addEventListener('input', () => {
                     // update the silenceGenerator offset value
                     silenceGenerator.offset.value = slider.value;
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: slider.id,
+                        value: slider.value,
+                        clientId: clientId
+                    });
                 });
+                
                 slider.addEventListener('change', () => {
                     // update the silenceGenerator offset value
                     silenceGenerator.offset.value = slider.value;
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: slider.id,
+                        value: slider.value,
+                        clientId: clientId
+                    });
                 });
             }
             else if (filename === "touchpad") {
@@ -2569,6 +2919,10 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 // create the device
                 const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], [], 2);
                 deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
+            
+                // Store references to the silence generators
+                devices[deviceDiv.id].silenceGeneratorX = silenceGeneratorX;
+                devices[deviceDiv.id].silenceGeneratorY = silenceGeneratorY;
             
                 // create a touchpad
                 const touchpad = document.createElement('div');
@@ -2629,6 +2983,22 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                             indicator.style.top = `${event.clientY - rect.top}px`;
                             inputX.value = x;
                             inputY.value = y;
+                            
+                            // Send update to WebSocket server
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceDiv.id,
+                                elementId: inputX.id,
+                                value: inputX.value,
+                                clientId: clientId
+                            });
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceDiv.id,
+                                elementId: inputY.id,
+                                value: inputY.value,
+                                clientId: clientId
+                            });
                         }
                         event.stopPropagation();
                         event.preventDefault();
@@ -2645,24 +3015,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     event.preventDefault();
                 });
             
-                touchpad.addEventListener('touchstart', (event) => {
-                    isDragging = true;
-                    const rect = touchpad.getBoundingClientRect();
-                    const touch = event.touches[0];
-                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-                        const x = (touch.clientX - rect.left) / rect.width;
-                        const y = 1 - (touch.clientY - rect.top) / rect.height;
-                        silenceGeneratorX.offset.value = x;
-                        silenceGeneratorY.offset.value = y;
-                        indicator.style.left = `${touch.clientX - rect.left}px`;
-                        indicator.style.top = `${touch.clientY - rect.top}px`;
-                        inputX.value = x;
-                        inputY.value = y;
-                    }
-                    event.stopPropagation();
-                    event.preventDefault();
-                });
-                
                 touchpad.addEventListener('touchmove', (event) => {
                     if (isDragging) {
                         const rect = touchpad.getBoundingClientRect();
@@ -2676,6 +3028,21 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                             indicator.style.top = `${touch.clientY - rect.top}px`;
                             inputX.value = x;
                             inputY.value = y;
+                            // Send update to WebSocket server
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceDiv.id,
+                                elementId: inputX.id,
+                                value: inputX.value,
+                                clientId: clientId
+                            });
+                            sendUpdate({
+                                type: 'updateInput',
+                                deviceId: deviceDiv.id,
+                                elementId: inputY.id,
+                                value: inputY.value,
+                                clientId: clientId
+                            });
                         }
                         event.stopPropagation();
                         event.preventDefault();
@@ -2709,11 +3076,20 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
                 deviceDiv = addDeviceToWorkspace(device, "button", false);
             
+                // Store reference to the silence generator
+                devices[deviceDiv.id].silenceGenerator = silenceGenerator;
+            
                 // create a button
                 const button = document.createElement('button');
                 button.textContent = '⬤';
                 button.className = 'button-ui';
                 button.style.color = 'black';
+            
+                // create a hidden input
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.value = '0';
+                hiddenInput.id = 'buttonHiddenInput';
             
                 // find the existing form in the device
                 const form = deviceDiv.querySelector('form');
@@ -2724,8 +3100,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 div.style.left = '9px';
                 div.style.top = '0px';
             
-                // append the button to the div
+                // append the button and hidden input to the div
                 div.appendChild(button);
+                div.appendChild(hiddenInput);
             
                 // append the div to the form
                 form.appendChild(div);
@@ -2739,8 +3116,18 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     }
                     silenceGenerator.offset.value = 1;
                     button.style.color = 'white';
+                    hiddenInput.value = '1';
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: hiddenInput.id,
+                        value: hiddenInput.value,
+                        clientId: clientId
+                    });
                 }
-    
+            
                 function handleButtonUp(event) {
                     if (event.type === 'touchend') {
                         isTouchEvent = true;
@@ -2749,6 +3136,16 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     }
                     silenceGenerator.offset.value = 0;
                     button.style.color = 'black';
+                    hiddenInput.value = '0';
+            
+                    // Send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: hiddenInput.id,
+                        value: hiddenInput.value,
+                        clientId: clientId
+                    });
                 }
             
                 // add event listeners to the button
@@ -2819,6 +3216,17 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         }
         // apply device-specific styles to the div
         applyDeviceStyles(deviceDiv, filename);
+
+        // send update to WebSocket server if this is a local action
+        if (!isLocalAction && !isDuplicate) {
+            sendUpdate({
+                type: 'addDevice',
+                filename: filename,
+                devicePosition: devicePosition,
+                clientId: clientId
+            });
+        }
+
         return deviceDiv;
     }
     catch (error) {
@@ -3228,9 +3636,42 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
             isDraggingDevice = true;
             deviceDiv.classList.add('selectedNode');
         },
+        drag: function(event) {
+            if (isLocked) return false;
+            
+            isLocalAction = false;
+            // Send update to WebSocket server if this is a local action
+            const deviceId = deviceDiv.id;
+                const devicePosition = {
+                    left: parseInt(deviceDiv.style.left, 10),
+                    top: parseInt(deviceDiv.style.top, 10)
+                };
+                sendUpdate({
+                    type: 'moveDevice',
+                    deviceId: deviceId,
+                    devicePosition: devicePosition,
+                    clientId: clientId
+                });
+        },
         stop: function(event) {
             if (isLocked) return false;
             isDraggingDevice = false;
+            isLocalAction = false;
+    
+            const selectedNodes = document.querySelectorAll('.selectedNode');
+            selectedNodes.forEach(node => {
+                const deviceId = node.id;
+                const devicePosition = {
+                    left: parseInt(node.style.left, 10),
+                    top: parseInt(node.style.top, 10)
+                };
+                sendUpdate({
+                    type: 'moveDevice',
+                    deviceId: deviceId,
+                    devicePosition: devicePosition,
+                    clientId: clientId
+                });
+            });
         }
     });
 
@@ -3649,7 +4090,16 @@ async function copySelectedNodes() {
     let deviceIds = Array.from(document.getElementsByClassName('selectedNode')).map(node => node.id);
     deselectAllNodes();
     // call reconstructDevicesAndConnections with the state for the selected devices
-    reconstructDevicesAndConnections(await getStateForDeviceIds(deviceIds), null, true);
+    const deviceStates = await getStateForDeviceIds(deviceIds);
+    reconstructDevicesAndConnections(deviceStates, null, true, true);
+
+    // Send update to WebSocket server
+    sendUpdate({
+        type: 'duplicateDevices',
+        deviceStates: deviceStates,
+        clientId: clientId
+    });
+
     selectionDiv = null;
 }
 
@@ -3668,6 +4118,7 @@ async function checkDeviceMotionPermission() {
 }
 
 async function reconstructWorkspaceState(deviceStates = null) {
+    isLocalAction = true;
     deleteAllNodes();
     try {
         document.getElementById('infoDiv').style.display = 'none';
@@ -3679,8 +4130,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
             if (deviceState.isLocked !== undefined) {
                 setLockState(!deviceState.isLocked);
                 continue;
-            }
-            else {
+            } else {
                 let deviceName = deviceState.id.split('-')[0];
                 if (deviceName === 'motion') {
                     hasMotionDevice = true;
@@ -3690,7 +4140,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
     }
 
     if (hasMotionDevice || deviceStates == null) {
-        if ( hasMotionDevice ) {
+        if (hasMotionDevice) {
             // first, hide the "main" permission button
             hidePermissionButton();
             // when a shared state has a motion device in it, we need to initiate the permission request via user input
@@ -3702,10 +4152,22 @@ async function reconstructWorkspaceState(deviceStates = null) {
             permissionButton.innerText = 'Please tap this button to select whether to allow motion sensing or not.';
             permissionButton.addEventListener('click', async () => {
                 try {
-                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    if ('Accelerometer' in window) {
+                        // accelerometer is available - no need to request DeviceMotionEvent permission
+                        let deviceDropdown = createDropdownofAllDevices();
+                        addMotionDeviceToDropdown(deviceDropdown);
+                    
+                        // remove the div after handling interaction
+                        document.body.removeChild(permissionDiv);
+                    
+                        // rroceed with reconstructing the workspace state
+                        await loadWorkspaceState(deviceStates);
+                        await startAudio();
+                    } else if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                        // fallback to DeviceMotionEvent if Accelerometer is not available
                         const response = await DeviceMotionEvent.requestPermission();
                         if (response === 'granted') {
-                            // device motion event permission granted
+                            // DeviceMotionEvent permission granted
                             let deviceDropdown = createDropdownofAllDevices();
                             addMotionDeviceToDropdown(deviceDropdown);
                         } else {
@@ -3713,7 +4175,15 @@ async function reconstructWorkspaceState(deviceStates = null) {
                         }
                         // remove the div after handling interaction
                         document.body.removeChild(permissionDiv);
-
+                    
+                        // proceed with reconstructing the workspace state
+                        await loadWorkspaceState(deviceStates);
+                        await startAudio();
+                    } else {
+                        showGrowlNotification('Sorry, your device does not support motion sensors.');
+                        // remove the div after handling interaction
+                        document.body.removeChild(permissionDiv);
+                    
                         // proceed with reconstructing the workspace state
                         await loadWorkspaceState(deviceStates);
                         await startAudio();
@@ -3728,8 +4198,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
 
             // attach the div to the body
             document.body.appendChild(permissionDiv);
-        }
-        else {
+        } else {
             // proceed with reconstructing the workspace state directly
             await loadWorkspaceState(deviceStates);
             await startAudio();
@@ -3739,6 +4208,7 @@ async function reconstructWorkspaceState(deviceStates = null) {
         await loadWorkspaceState(deviceStates);
         await startAudio();
     }
+    isLocalAction = false;
 }
 
 async function loadWorkspaceState(deviceStates) {
@@ -3838,22 +4308,22 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
             let wavFileData = await zip.file(deviceState.audioFileName).async('arraybuffer');
             let audioBuffer = await context.decodeAudioData(wavFileData);
             audioBuffers[deviceState.audioFileName] = audioBuffer;
-            deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition);
+            deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition, reconstructFromDuplicateCommand);
         } else if (deviceState.audioFileName && !zip) {
             if (audioBuffers[deviceState.audioFileName]) {
                 let audioBuffer = audioBuffers[deviceState.audioFileName];
-                deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition);
+                deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition, reconstructFromDuplicateCommand);
             } else {
-                deviceElement = await createDeviceByName(deviceName, null, devicePosition);
+                deviceElement = await createDeviceByName(deviceName, null, devicePosition, reconstructFromDuplicateCommand);
                 showGrowlNotification(`Make sure to load the missing audio file: "${deviceState.audioFileName}", since audio files are not stored with shared state URLs`);
             }
         } else {
             if (deviceName == 'microphone input') {
-                deviceElement = await createDeviceByName('mic', null, devicePosition);
+                deviceElement = await createDeviceByName('mic', null, devicePosition, reconstructFromDuplicateCommand);
             } else {
-                deviceElement = await createDeviceByName(deviceName, null, devicePosition);
-                if ( deviceName == 'print' ) {
-                    // special handling neede because print UI elements are created after the device is created.
+                deviceElement = await createDeviceByName(deviceName, null, devicePosition, reconstructFromDuplicateCommand);
+                if (deviceName == 'print') {
+                    // special handling needed because print UI elements are created after the device is created.
                     // the device needs to send data via outports to the UI elements, so that any number can be 
                     // visualized. this fix is needed when loading a saved state.
                     setTimeout(() => {
@@ -3871,8 +4341,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
         let inputs = deviceElement.getElementsByTagName('input');
         for (let input of inputs) {
             if (typeof deviceState.inputs[input.id] != 'undefined') {
-                const inputElement = document.getElementById(input.id);                
-                if (inputElement.type == 'checkbox') {
+                if (input.type == 'checkbox') {
                     input.checked = deviceState.inputs[input.id];
                 }
                 else {
@@ -3889,7 +4358,7 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                 }
             }
         }
-        if ( deviceName === 'touchpad' ) {
+        if (deviceName === 'touchpad') {
             const event = new Event('touchpadStateRecall');
             document.dispatchEvent(event);
         }
@@ -4365,7 +4834,7 @@ function createSequencerUI(deviceDiv) {
     sliderContainer.appendChild(document.createElement('br'));
 
     const driftPercentageLabel = document.createElement('label');
-    driftPercentageLabel.textContent = '   % drift';
+    driftPercentageLabel.textContent = '   % random';
     driftPercentageLabel.htmlFor = 'drift-percentage';
 
     const driftPercentageInput = document.createElement('input');
@@ -4395,7 +4864,7 @@ function createSequencerUI(deviceDiv) {
     sliderContainer.appendChild(document.createElement('br'));
 
     const driftButton = document.createElement('button');
-    driftButton.textContent = 'drift';
+    driftButton.textContent = 'randomize';
     driftButton.style.position = 'absolute';
     driftButton.style.right = '22px';
     driftButton.style.top = '1px';
@@ -4470,6 +4939,23 @@ function createSequencerUI(deviceDiv) {
                 const checkboxValues = checkboxes.map(checkbox => checkbox.checked ? 1 : 0);
                 skipDataInput.value = checkboxValues.join(' ');
                 skipDataInput.dispatchEvent(new Event('change'));
+
+                // Send update to WebSocket server
+                sendUpdate({
+                    type: 'updateInput',
+                    deviceId: deviceDiv.id,
+                    elementId: slider.id,
+                    value: slider.value,
+                    clientId: clientId
+                });
+
+                sendUpdate({
+                    type: 'updateInput',
+                    deviceId: deviceDiv.id,
+                    elementId: checkbox.id,
+                    value: checkbox.checked ? '1' : '0',
+                    clientId: clientId
+                });
             };
 
             slider.addEventListener('input', updateSequencerData);
@@ -4491,6 +4977,15 @@ function createSequencerUI(deviceDiv) {
                 slider.dispatchEvent(new Event('input'));
             }
         });
+
+        // Send update to WebSocket server
+        sendUpdate({
+            type: 'updateInput',
+            deviceId: deviceDiv.id,
+            elementId: driftButton.id,
+            value: 'drift',
+            clientId: clientId
+        });
     };
 
     driftButton.addEventListener('click', applyDrift);
@@ -4506,7 +5001,38 @@ function createSequencerUI(deviceDiv) {
             Array.from(slidersDiv.querySelectorAll('.sequencer-slider')).forEach(slider => {
                 slider.dispatchEvent(new Event('input'));
             });
+
+            // Send update to WebSocket server
+            sendUpdate({
+                type: 'updateInput',
+                deviceId: deviceDiv.id,
+                elementId: sliderCountInput.id,
+                value: sliderCountInput.value,
+                clientId: clientId
+            });
         }
+    });
+
+    driftPercentageInput.addEventListener('change', (event) => {
+        // Send update to WebSocket server
+        sendUpdate({
+            type: 'updateInput',
+            deviceId: deviceDiv.id,
+            elementId: driftPercentageInput.id,
+            value: driftPercentageInput.value,
+            clientId: clientId
+        });
+    });
+
+    driftIntensityInput.addEventListener('change', (event) => {
+        // Send update to WebSocket server
+        sendUpdate({
+            type: 'updateInput',
+            deviceId: deviceDiv.id,
+            elementId: driftIntensityInput.id,
+            value: driftIntensityInput.value,
+            clientId: clientId
+        });
     });
 
     createSliders(previousSliderCount);
@@ -4545,7 +5071,7 @@ function createQuantizerUI(deviceDiv) {
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.id = `checkbox-${note}`;
+        checkbox.id = `checkbox-${note.replace('#', 'sharp')}`;
         checkbox.className = 'quantizer-checkbox';
         checkbox.style.width = '20px';
         checkbox.style.height = '20px';
@@ -4562,7 +5088,9 @@ function createQuantizerUI(deviceDiv) {
                 .filter(value => value !== null);
 
             const fullScale = noteValues.map((note, index) => {
-                if (selectedNotes.includes(note)) {
+                if (selectedNotes.length === 0) {
+                    return noteValues[0]; // Default to the first note if no notes are selected
+                } else if (selectedNotes.includes(note)) {
                     return note;
                 } else {
                     let closestNote = selectedNotes.reduce((prev, curr) => {
@@ -4576,6 +5104,15 @@ function createQuantizerUI(deviceDiv) {
 
             scaleDataInput.value = fullScale.join(' ');
             scaleDataInput.dispatchEvent(new Event('change'));
+
+            // Send update to WebSocket server
+            sendUpdate({
+                type: 'updateInput',
+                deviceId: deviceDiv.id,
+                elementId: checkbox.id,
+                value: checkbox.checked ? '1' : '0',
+                clientId: clientId
+            });
         };
 
         checkbox.addEventListener('change', updateQuantizerData);
@@ -4586,3 +5123,601 @@ function createQuantizerUI(deviceDiv) {
     deviceDiv.appendChild(quantizerContainer);
 }
 /* END functions */
+
+async function sendUpdate(update) {
+    if (!isLocalAction) {
+        if (!ws) {
+            // don't send an update because this session is not connected to a room
+            return;
+        }
+
+        if (ws.readyState !== WebSocket.OPEN) {
+            // don't send an update because the websocket connection is closed
+            return;
+        }
+
+        update.clientId = clientId;
+
+        // include the full workspace state for state-changing events
+        if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(update.type)) {
+            update.newState = await getWorkspaceState(); // Get the current workspace state
+        }
+
+        try {
+            ws.send(JSON.stringify(update));
+        } catch (error) {
+            console.error('Error sending update via WebSocket:', error);
+        }
+    }
+}
+
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+const clientId = generateUUID();
+
+function deleteConnection(sourceDeviceId, targetDeviceId, sourceOutputIndex, inputIndex) {
+    let sourceDevice = devices[sourceDeviceId];
+    if (sourceDevice && sourceDevice.connections) {
+        // find the connection in the source device's connections list
+        let connection = sourceDevice.connections.find(conn => conn.target === targetDeviceId && conn.output === sourceOutputIndex && conn.input === inputIndex);
+        if (connection) {
+            try {
+                // disconnect the connection
+                connection.splitter.disconnect(devices[connection.target].device.node, connection.output, connection.input);
+                // unset the signal connection state
+                unsetSignalConnectionState(connection.target, connection.input);
+                triggerChangeOnTargetDeviceInputs(connection.target);
+            } catch (error) {}
+            // remove the connection from the list
+            sourceDevice.connections = sourceDevice.connections.filter(conn => conn !== connection);
+
+            // remove the visual connection
+            let jsPlumbConnection = jsPlumb.getConnections({ source: sourceDeviceId, target: targetDeviceId }).find(conn => conn.getId() === connection.id);
+            if (jsPlumbConnection) {
+                jsPlumb.deleteConnection(jsPlumbConnection);
+            }
+        }
+    }
+}
+
+function moveDevice(deviceId, devicePosition) {
+    const deviceDiv = document.getElementById(deviceId);
+    if (deviceDiv) {
+        deviceDiv.style.left = `${devicePosition.left}px`;
+        deviceDiv.style.top = `${devicePosition.top}px`;
+        jsPlumb.repaintEverything();
+    }
+}
+
+function updateInput(deviceId, inportTag, value) {
+    const deviceDiv = document.getElementById(deviceId);
+    if (deviceDiv) {
+        // find the input element based on its label text or position within the device container
+        let inputElement = Array.from(deviceDiv.querySelectorAll('input, textarea')).find(input => {
+            const label = deviceDiv.querySelector(`label[for="${input.id}"]`);
+            return label && label.textContent.trim() === inportTag;
+        });
+
+        // fallback to look for an element inside the device with the ID equal to inportTag
+        if (!inputElement) {
+            inputElement = deviceDiv.querySelector(`#${inportTag}`);
+        }
+
+        if (inputElement) {
+            inputElement.value = value;
+            const event = new Event('change');
+            inputElement.dispatchEvent(event);
+        }
+
+        // special handling for CodeMirror instances
+        const codeMirrorElement = deviceDiv.querySelector('.CodeMirror');
+        if (codeMirrorElement) {
+            const codeMirrorInstance = codeMirrorElement.CodeMirror;
+            if (codeMirrorInstance) {
+                codeMirrorInstance.setValue(value);
+
+                // briefly highlight the code after the value has been set
+                let cursor = codeMirrorInstance.getCursor();
+                let line = cursor.line;
+                let first_line_of_block = getFirstLineOfBlock(line, codeMirrorInstance);
+                let last_line_of_block = getLastLineOfBlock(line, codeMirrorInstance);
+                codeMirrorInstance.setSelection({line: first_line_of_block, ch: 0 }, {line: last_line_of_block, ch: 10000 });
+                setTimeout(function(){ codeMirrorInstance.setCursor({line: line, ch: cursor.ch }); }, 100);
+
+                // dispatch a "change" event to the corresponding textarea to trigger the re-evaluation
+                const textarea = codeMirrorElement.previousElementSibling;
+                if (textarea && textarea.tagName.toLowerCase() === 'textarea' && textarea.id === 'pattern') {
+                    textarea.value = codeMirrorInstance.getValue();
+                    textarea.dispatchEvent(new Event('change'));
+                    const regenButton = codeMirrorElement.parentElement.querySelector('.inport-button');
+                    if (regenButton) {
+                        regenButton.click();
+                    }
+                }
+            }
+        }
+
+        // special handling for touchpad
+        if (inportTag === 'touchpadX' || inportTag === 'touchpadY') {
+            const touchpad = deviceDiv.querySelector('.touchpad');
+            const indicator = deviceDiv.querySelector('.touchpadIndicator');
+            const inputX = deviceDiv.querySelector('#touchpadX');
+            const inputY = deviceDiv.querySelector('#touchpadY');
+
+            if (touchpad && indicator && inputX && inputY) {
+                const x = parseFloat(inputX.value);
+                const y = parseFloat(inputY.value);
+                const rect = touchpad.getBoundingClientRect();
+                indicator.style.left = `${x * rect.width}px`;
+                indicator.style.top = `${(1 - y) * rect.height}px`;
+
+                // Update the silenceGeneratorX and silenceGeneratorY values
+                const silenceGeneratorX = devices[deviceId].silenceGeneratorX;
+                const silenceGeneratorY = devices[deviceId].silenceGeneratorY;
+                silenceGeneratorX.offset.value = x;
+                silenceGeneratorY.offset.value = y;
+            }
+        }
+
+        // special handling for toggle button
+        if (inportTag === 'toggleHiddenInput') {
+            const toggleButton = deviceDiv.querySelector('.toggle-button');
+            const hiddenInput = deviceDiv.querySelector('#toggleHiddenInput');
+
+            if (toggleButton && hiddenInput) {
+                hiddenInput.value = value;
+                const newValue = parseFloat(value);
+                const silenceGenerator = devices[deviceId].silenceGenerator;
+                silenceGenerator.offset.value = newValue;
+
+                if (newValue === 1) {
+                    toggleButton.className = 'toggle-button toggle-on';
+                    toggleButton.textContent = 'on';
+                } else {
+                    toggleButton.className = 'toggle-button toggle-off';
+                    toggleButton.textContent = 'off';
+                }
+            }
+        }
+
+        // special handling for button
+        if (inportTag === 'buttonHiddenInput') {
+            const button = deviceDiv.querySelector('.button-ui');
+            const hiddenInput = deviceDiv.querySelector('#buttonHiddenInput');
+
+            if (button && hiddenInput) {
+                hiddenInput.value = value;
+                const newValue = parseFloat(value);
+                const silenceGenerator = devices[deviceId].silenceGenerator;
+                silenceGenerator.offset.value = newValue;
+
+                if (newValue === 1) {
+                    button.style.color = 'white';
+                } else {
+                    button.style.color = 'black';
+                }
+            }
+        }
+
+        // special handling for keyboard keys
+        if (inportTag.startsWith('id-')) {
+            const keyDiv = deviceDiv.querySelector(`.pianoKey[data-value="${inportTag.slice(3)}"]`);
+            if (keyDiv) {
+                const newValue = parseFloat(value);
+                const silenceGenerator = devices[deviceId].silenceGenerator;
+                const triggerSource = devices[deviceId].triggerSource;
+
+                if (newValue === 1) {
+                    keyDiv.style.backgroundColor = 'yellow';
+                    function midiToFrequency(midiNote) {
+                        return 440 * Math.pow(2, (midiNote - 69) / 12);
+                    }
+                    const freq = midiToFrequency(parseInt(inportTag.slice(3)));
+                    silenceGenerator.offset.value = freq;
+                    triggerSource.offset.setValueAtTime(1, context.currentTime);
+                    triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // briefly output 1
+                } else {
+                    keyDiv.style.backgroundColor = keyDiv.dataset.color === 'white' ? 'white' : 'black';
+                }
+            }
+        }
+
+        // special handling for quantizer checkboxes
+        if (inportTag.startsWith('checkbox-')) {
+            const checkbox = document.getElementById(inportTag);
+            if (checkbox) {
+                checkbox.checked = value === '1';
+                const event = new Event('change');
+                checkbox.dispatchEvent(event);
+            }
+        }
+
+        // special handling for sequencer sliders, number of steps, % drift, % intensity, and drift button
+        if (inportTag.startsWith('slider-') || inportTag.startsWith('checkbox-') || inportTag === 'slider-count' || inportTag === 'drift-percentage' || inportTag === 'drift-intensity' || inportTag === 'drift-button') {
+            const element = document.getElementById(inportTag);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = value === '1';
+                } else {
+                    element.value = value;
+                }
+                const event = new Event('change');
+                element.dispatchEvent(event);
+            }
+        }
+
+        // special handling for scopeMin and scopeMax inputs
+        if (inportTag === 'scopeMin' || inportTag === 'scopeMax') {
+            const element = document.getElementById(inportTag);
+            if (element) {
+                element.value = value;
+                const event = new Event('change');
+                element.dispatchEvent(event);
+            }
+        }
+    }
+}
+
+function addCollabButton() {
+    const button = document.createElement('button');
+    button.textContent = 'Collab';
+    button.className = 'collabButton navbarButton';
+    button.onclick = handleCollabButtonClick;
+    navBar.appendChild(button);
+}
+
+addCollabButton();
+
+async function handleCollabButtonClick() {
+    const modal = document.createElement('div');
+    modal.className = 'collab-modal';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'collab-modal-content';
+
+    const title = document.createElement('h2');
+    title.textContent = 'Real-time collaboration';
+    modalContent.appendChild(title);
+    const createRoomSection = document.createElement('div');
+    createRoomSection.className = 'collab-create-room';
+
+    const createRoomTitle = document.createElement('h3');
+    createRoomTitle.textContent = 'create a new room';
+    createRoomSection.appendChild(createRoomTitle);
+
+    const createRoomButton = document.createElement('button');
+    createRoomButton.textContent = 'create room';
+    createRoomButton.onclick = async () => {
+        const roomName = generateRandomRoomName();
+        await initializeWebSocket(roomName);
+
+        // get the current workspace state
+        const workspaceState = await getWorkspaceState();
+        // send the room name and workspace state to the server
+        sendUpdate({
+            type: 'joinRoom',
+            roomName: roomName,
+            baseState: workspaceState
+        });
+
+        // redirect to the room
+        const currentUrl = window.location.origin + window.location.pathname;
+        window.location.href = `${currentUrl}?room=${roomName}`;
+    };
+    createRoomSection.appendChild(createRoomButton);
+
+    modalContent.appendChild(createRoomSection);
+
+    const joinRoomSection = document.createElement('div');
+    joinRoomSection.className = 'collab-join-room';
+
+    const joinRoomTitle = document.createElement('h3');
+    joinRoomTitle.textContent = 'join an existing room';
+    joinRoomSection.appendChild(joinRoomTitle);
+
+    const joinRoomInput = document.createElement('input');
+    joinRoomInput.type = 'text';
+    joinRoomInput.placeholder = 'Enter room name';
+    joinRoomSection.appendChild(joinRoomInput);
+
+    const joinRoomButton = document.createElement('button');
+    joinRoomButton.textContent = 'Join Room';
+    joinRoomButton.onclick = async () => {
+        const roomName = joinRoomInput.value.trim();
+        if (!roomName || !/^[a-zA-Z0-9_-]+$/.test(roomName)) {
+            alert('Invalid room name. Please use only alphanumeric characters, dashes, and underscores.');
+            return;
+        }
+
+        await initializeWebSocket(roomName);
+
+        // redirect to the room
+        const currentUrl = window.location.origin + window.location.pathname;
+        window.location.href = `${currentUrl}?room=${roomName}`;
+    };
+    joinRoomSection.appendChild(joinRoomButton);
+
+    modalContent.appendChild(joinRoomSection);
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.className = 'collab-modal-close';
+    closeButton.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    modalContent.appendChild(closeButton);
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+}
+
+async function checkForRoomParam() {
+    const params = new URLSearchParams(window.location.search);
+    const roomName = params.get('room');
+
+    if (roomName) {
+        // Send a request to join the room
+        sendUpdate({
+            type: 'joinRoom',
+            roomName: roomName
+        });
+    }
+}
+
+function initializeWebSocket(roomName = null) {
+    return new Promise((resolve, reject) => {
+        // if no roomName is provided, check the query string for the room parameter
+        if (!roomName) {
+            const params = new URLSearchParams(window.location.search);
+            roomName = params.get('room');
+        }
+
+        // if no roomName is found, do not initialize the WebSocket
+        if (!roomName) {
+            return;
+        }
+
+        // close the existing WebSocket connection if it exists
+        if (ws) {
+            ws.close();
+        }
+
+        // create a new WebSocket connection
+        ws = new WebSocket('wss://nnirror.xyz:9314');
+
+        ws.onopen = () => {
+            console.log('WebSocket connection established');
+            sendUpdate({
+                type: 'joinRoom',
+                roomName: roomName
+            });
+            resolve(); // resolve the promise when the connection is open
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            showGrowlNotification('Unable to connect to the shared room server. Please try again later.');
+            reject(error); // reject the promise on error
+        };
+
+        ws.onclose = (event) => {
+            console.warn('WebSocket connection closed:', event);
+            showGrowlNotification('The shared room server closed. Please try again later.');
+            reject(new Error('WebSocket connection closed.'));
+        };
+
+        ws.onmessage = async (event) => {
+            let update;
+            if (typeof event.data === 'string') {
+                update = event.data;
+            } else if (event.data instanceof Blob) {
+                update = await event.data.text();
+            } else {
+                console.error('Unexpected data type:', event.data);
+                return;
+            }
+
+            const parsedUpdate = JSON.parse(update);
+
+            // ignore updates sent by this client
+            if (parsedUpdate.clientId === clientId) {
+                return;
+            }
+
+            // apply the update based on its type
+            switch (parsedUpdate.type) {
+                case 'focusInput':
+                    participantStates[parsedUpdate.clientId] = participantStates[parsedUpdate.clientId] || {};
+                    participantStates[parsedUpdate.clientId].focusedInputId = parsedUpdate.focusedInputId;
+                    break;
+                case 'cursorMove':
+                    participantStates[parsedUpdate.clientId] = participantStates[parsedUpdate.clientId] || {};
+                    participantStates[parsedUpdate.clientId].cursorPosition = parsedUpdate.cursorPosition;
+                    break;
+                case 'leaveRoom':
+                    const leftClientId = parsedUpdate.clientId;
+                    // remove the participant's cursor and tooltip
+                    if (renderedElements[leftClientId]) {
+                        if (renderedElements[leftClientId].cursor) {
+                            document.body.removeChild(renderedElements[leftClientId].cursor);
+                        }
+                        if (renderedElements[leftClientId].tooltip) {
+                            document.body.removeChild(renderedElements[leftClientId].tooltip);
+                        }
+                        delete renderedElements[leftClientId];
+                    }
+                    // remove the participant from the state
+                    delete participantStates[leftClientId];
+                    break;
+                case 'roomState':
+                    if (Object.keys(parsedUpdate.baseState).length === 0) {
+                        showGrowlNotification(`Room "${roomName}" is empty.`);
+                    } else {
+                        isLocalAction = true;
+                        isInRoom = true;
+                        // render UI updates from others every 100ms
+                        setInterval(renderParticipantFeedback, 100);
+                        await reconstructWorkspaceState(parsedUpdate.baseState);
+                        isLocalAction = false;
+                    }
+                    break;
+                case 'addDevice':
+                    isLocalAction = true;
+                    await createDeviceByName(parsedUpdate.filename, null, parsedUpdate.devicePosition);
+                    isLocalAction = false;
+                    break;
+                case 'makeConnection':
+                    isLocalAction = true;
+                    startConnection(parsedUpdate.sourceDeviceId, parsedUpdate.sourceOutputIndex);
+                    finishConnection(parsedUpdate.targetDeviceId, parsedUpdate.inputIndex);
+                    isLocalAction = false;
+                    break;
+                case 'deleteConnection':
+                    isLocalAction = true;
+                    deleteConnection(parsedUpdate.sourceDeviceId, parsedUpdate.targetDeviceId, parsedUpdate.sourceOutputIndex, parsedUpdate.inputIndex);
+                    isLocalAction = false;
+                    break;
+                case 'moveDevice':
+                    isLocalAction = true;
+                    moveDevice(parsedUpdate.deviceId, parsedUpdate.devicePosition);
+                    isLocalAction = false;
+                    break;
+                case 'updateInput':
+                    isLocalAction = true;
+                    updateInput(parsedUpdate.deviceId, parsedUpdate.inportTag ? parsedUpdate.inportTag : parsedUpdate.elementId, parsedUpdate.value);
+                    isLocalAction = false;
+                    break;
+                case 'deleteDevice':
+                    isLocalAction = true;
+                    removeDeviceFromWorkspace(parsedUpdate.deviceId);
+                    isLocalAction = false;
+                    break;
+                case 'duplicateDevices':
+                    isLocalAction = true;
+                    await reconstructDevicesAndConnections(parsedUpdate.deviceStates, null, true, true);
+                    isLocalAction = false;
+                    break;
+            }
+        };
+    });
+}
+
+function renderParticipantFeedback() {
+    const activeClientIds = Object.keys(participantStates);
+
+    // update or create elements for active participants
+    activeClientIds.forEach((clientId) => {
+        const state = participantStates[clientId];
+        const color = generateColor(clientId);
+
+        if (!renderedElements[clientId]) {
+            renderedElements[clientId] = {};
+        }
+
+        // render or update other participants' cursors
+        if (state.cursorPosition) {
+            let cursor = renderedElements[clientId].cursor;
+            let tooltip = renderedElements[clientId].tooltip;
+
+            if (!cursor) {
+                // create cursor
+                cursor = document.createElement('div');
+                cursor.className = 'participant-cursor';
+                cursor.style.position = 'absolute';
+                cursor.style.width = '10px';
+                cursor.style.height = '10px';
+                cursor.style.borderRadius = '50%';
+                cursor.style.pointerEvents = 'none';
+                cursor.style.zIndex = '9999';
+                document.body.appendChild(cursor);
+                renderedElements[clientId].cursor = cursor;
+
+                // create tooltip
+                tooltip = document.createElement('div');
+                tooltip.className = 'participant-tooltip';
+                tooltip.style.position = 'absolute';
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                tooltip.style.color = 'white';
+                tooltip.style.padding = '2px 5px';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '12px';
+                tooltip.style.pointerEvents = 'none';
+                tooltip.style.zIndex = '10000';
+                tooltip.textContent = generateRandomUsername(); // assign a random username
+                document.body.appendChild(tooltip);
+                renderedElements[clientId].tooltip = tooltip;
+            }
+
+            // adjust for workspace scroll offsets
+            const scrollLeft = workspaceElement.scrollLeft;
+            const scrollTop = workspaceElement.scrollTop;
+
+            // adjust for workspace margin offsets
+            const computedStyle = window.getComputedStyle(workspaceElement);
+            const marginTop = parseFloat(computedStyle.marginTop) || 0;
+            const marginLeft = parseFloat(computedStyle.marginLeft) || 0;
+
+            // update cursor position
+            cursor.style.left = `${state.cursorPosition.workspaceX - scrollLeft + marginLeft}px`;
+            cursor.style.top = `${state.cursorPosition.workspaceY - scrollTop + marginTop}px`;
+            cursor.style.backgroundColor = color;
+
+            // update tooltip position (slightly offset from the cursor)
+            tooltip.style.left = `${state.cursorPosition.workspaceX - scrollLeft + marginLeft + 15}px`;
+            tooltip.style.top = `${state.cursorPosition.workspaceY - scrollTop + marginTop - 10}px`;
+        } else if (renderedElements[clientId].cursor) {
+            // remove cursor and tooltip when no longer needed
+            document.body.removeChild(renderedElements[clientId].cursor);
+            document.body.removeChild(renderedElements[clientId].tooltip);
+            delete renderedElements[clientId].cursor;
+            delete renderedElements[clientId].tooltip;
+        }
+    });
+
+    // remove elements for inactive participants
+    Object.keys(renderedElements).forEach((clientId) => {
+        if (!activeClientIds.includes(clientId)) {
+            const elements = renderedElements[clientId];
+            if (elements.cursor) {
+                document.body.removeChild(elements.cursor);
+            }
+            if (elements.tooltip) {
+                document.body.removeChild(elements.tooltip);
+            }
+            delete renderedElements[clientId];
+        }
+    });
+}
+
+function generateColor(clientId) {
+    let hash = 0;
+    for (let i = 0; i < clientId.length; i++) {
+        hash = clientId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = `hsl(${hash % 360}, 70%, 50%)`;
+    return color;
+}
+
+function generateRandomRoomName() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let roomName = '';
+    for (let i = 0; i < 8; i++) {
+        roomName += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return roomName;
+}
+
+function generateRandomUsername() {
+    const adjectives = ['brave', 'clever', 'hungry', 'witty', 'jazzy', 'kind', 'lovely', 'bold', 'cheeky', 'fast', 'happy', 'bright', 'calm', 'slow', 'easy', 'floppy', 'talking', 'singing', 'clapping', 'drumming', 'vamping', 'sneaky', 'quirky', 'silly', 'spicy', 'sassy', 'zany', 'fuzzy', 'bouncy', 'squishy', 'fluffy', 'wobbly', 'wiggly', 'snappy', 'zippy'];
+    const nouns = ['lion', 'lizard', 'snake', 'rock', 'sand', 'water', 'mountain', 'wolf', 'eagle', 'fox', 'jellyfish', 'bear', 'tiger', 'hawk', 'dolphin', 'shark', 'whale', 'ocean', 'river', 'grass', 'tree', 'wind', 'cicada', 'armadillo', 'bunny', 'dog', 'cat', 'moose', 'mouse'];
+
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+
+    return `${randomAdjective}-${randomNoun}`;
+}
