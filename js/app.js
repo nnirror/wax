@@ -5291,14 +5291,26 @@ function addCollabButton() {
 addCollabButton();
 
 async function handleCollabButtonClick() {
-    const roomName = prompt('Enter a room name (alphanumeric, dashes, underscores only):');
-    if (!roomName || !/^[a-zA-Z0-9_-]+$/.test(roomName)) {
-        alert('Invalid room name. Please use only alphanumeric characters, dashes, and underscores.');
-        return;
-    }
+    const modal = document.createElement('div');
+    modal.className = 'collab-modal';
 
-    try {
-        // initialize WebSocket for the new room and wait for the connection to be ready
+    const modalContent = document.createElement('div');
+    modalContent.className = 'collab-modal-content';
+
+    const title = document.createElement('h2');
+    title.textContent = 'Real-time collaboration';
+    modalContent.appendChild(title);
+    const createRoomSection = document.createElement('div');
+    createRoomSection.className = 'collab-create-room';
+
+    const createRoomTitle = document.createElement('h3');
+    createRoomTitle.textContent = 'create a new room';
+    createRoomSection.appendChild(createRoomTitle);
+
+    const createRoomButton = document.createElement('button');
+    createRoomButton.textContent = 'create room';
+    createRoomButton.onclick = async () => {
+        const roomName = generateRandomRoomName();
         await initializeWebSocket(roomName);
 
         // get the current workspace state
@@ -5313,9 +5325,52 @@ async function handleCollabButtonClick() {
         // redirect to the room
         const currentUrl = window.location.origin + window.location.pathname;
         window.location.href = `${currentUrl}?room=${roomName}`;
-    } catch (error) {
-        alert('Unable to connect to the WebSocket server. Please try again later.');
-    }
+    };
+    createRoomSection.appendChild(createRoomButton);
+
+    modalContent.appendChild(createRoomSection);
+
+    const joinRoomSection = document.createElement('div');
+    joinRoomSection.className = 'collab-join-room';
+
+    const joinRoomTitle = document.createElement('h3');
+    joinRoomTitle.textContent = 'join an existing room';
+    joinRoomSection.appendChild(joinRoomTitle);
+
+    const joinRoomInput = document.createElement('input');
+    joinRoomInput.type = 'text';
+    joinRoomInput.placeholder = 'Enter room name';
+    joinRoomSection.appendChild(joinRoomInput);
+
+    const joinRoomButton = document.createElement('button');
+    joinRoomButton.textContent = 'Join Room';
+    joinRoomButton.onclick = async () => {
+        const roomName = joinRoomInput.value.trim();
+        if (!roomName || !/^[a-zA-Z0-9_-]+$/.test(roomName)) {
+            alert('Invalid room name. Please use only alphanumeric characters, dashes, and underscores.');
+            return;
+        }
+
+        await initializeWebSocket(roomName);
+
+        // redirect to the room
+        const currentUrl = window.location.origin + window.location.pathname;
+        window.location.href = `${currentUrl}?room=${roomName}`;
+    };
+    joinRoomSection.appendChild(joinRoomButton);
+
+    modalContent.appendChild(joinRoomSection);
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.className = 'collab-modal-close';
+    closeButton.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    modalContent.appendChild(closeButton);
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
 }
 
 async function checkForRoomParam() {
@@ -5462,7 +5517,6 @@ function renderParticipantFeedback() {
         const state = participantStates[clientId];
         const color = generateColor(clientId);
 
-        // ensure the renderedElements map has an entry for this clientId
         if (!renderedElements[clientId]) {
             renderedElements[clientId] = {};
         }
@@ -5470,7 +5524,10 @@ function renderParticipantFeedback() {
         // render or update other participants' cursors
         if (state.cursorPosition) {
             let cursor = renderedElements[clientId].cursor;
+            let tooltip = renderedElements[clientId].tooltip;
+
             if (!cursor) {
+                // create cursor
                 cursor = document.createElement('div');
                 cursor.className = 'participant-cursor';
                 cursor.style.position = 'absolute';
@@ -5481,6 +5538,21 @@ function renderParticipantFeedback() {
                 cursor.style.zIndex = '9999';
                 document.body.appendChild(cursor);
                 renderedElements[clientId].cursor = cursor;
+
+                // create tooltip
+                tooltip = document.createElement('div');
+                tooltip.className = 'participant-tooltip';
+                tooltip.style.position = 'absolute';
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                tooltip.style.color = 'white';
+                tooltip.style.padding = '2px 5px';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '12px';
+                tooltip.style.pointerEvents = 'none';
+                tooltip.style.zIndex = '10000';
+                tooltip.textContent = generateRandomUsername(); // assign a random username
+                document.body.appendChild(tooltip);
+                renderedElements[clientId].tooltip = tooltip;
             }
 
             // adjust for workspace scroll offsets
@@ -5492,70 +5564,20 @@ function renderParticipantFeedback() {
             const marginTop = parseFloat(computedStyle.marginTop) || 0;
             const marginLeft = parseFloat(computedStyle.marginLeft) || 0;
 
+            // update cursor position
             cursor.style.left = `${state.cursorPosition.workspaceX - scrollLeft + marginLeft}px`;
             cursor.style.top = `${state.cursorPosition.workspaceY - scrollTop + marginTop}px`;
             cursor.style.backgroundColor = color;
-        } else if (renderedElements[clientId].cursor) {
-            // remove cursor when no longer needed
-            document.body.removeChild(renderedElements[clientId].cursor);
-            delete renderedElements[clientId].cursor;
-        }
 
-        // render or update highlight
-        if (state.focusedInputId) {
-            const { nodeId, inputId } = state.focusedInputId;
-            const parentNode = document.getElementById(nodeId);
-            if (parentNode) {
-                // handle CodeMirror highlights
-                if (inputId.startsWith('codemirror-')) {
-                    const codeMirrorWrapper = parentNode.querySelector('.CodeMirror');
-                    if (codeMirrorWrapper) {
-                        let highlight = renderedElements[clientId].highlight;
-                        if (!highlight) {
-                            highlight = document.createElement('div');
-                            highlight.className = 'participant-highlight';
-                            highlight.style.position = 'absolute';
-                            highlight.style.pointerEvents = 'none';
-                            highlight.style.zIndex = '9999';
-                            document.body.appendChild(highlight);
-                            renderedElements[clientId].highlight = highlight;
-                        }
-                        const rect = codeMirrorWrapper.getBoundingClientRect();
-                        highlight.style.left = `${rect.left + window.scrollX}px`;
-                        highlight.style.top = `${rect.top + window.scrollY}px`;
-                        highlight.style.width = `${rect.width}px`;
-                        highlight.style.height = `${rect.height}px`;
-                        highlight.style.border = `2px solid ${color}`;
-                    }
-                } else {
-                    // handle regular input highlights
-                    // escape the input ID to handle spaces or special characters
-                    const escapedInputId = CSS.escape(inputId);
-                    const input = parentNode.querySelector(`#${escapedInputId}`);
-                    if (input) {
-                        let highlight = renderedElements[clientId].highlight;
-                        if (!highlight) {
-                            highlight = document.createElement('div');
-                            highlight.className = 'participant-highlight';
-                            highlight.style.position = 'absolute';
-                            highlight.style.pointerEvents = 'none';
-                            highlight.style.zIndex = '9999';
-                            document.body.appendChild(highlight);
-                            renderedElements[clientId].highlight = highlight;
-                        }
-                        const rect = input.getBoundingClientRect();
-                        highlight.style.left = `${rect.left + window.scrollX}px`;
-                        highlight.style.top = `${rect.top + window.scrollY}px`;
-                        highlight.style.width = `${rect.width}px`;
-                        highlight.style.height = `${rect.height}px`;
-                        highlight.style.border = `2px solid ${color}`;
-                    }
-                }
-            }
-        } else if (renderedElements[clientId].highlight) {
-            // remove highlight when no longer needed
-            document.body.removeChild(renderedElements[clientId].highlight);
-            delete renderedElements[clientId].highlight;
+            // update tooltip position (slightly offset from the cursor)
+            tooltip.style.left = `${state.cursorPosition.workspaceX - scrollLeft + marginLeft + 15}px`;
+            tooltip.style.top = `${state.cursorPosition.workspaceY - scrollTop + marginTop - 10}px`;
+        } else if (renderedElements[clientId].cursor) {
+            // remove cursor and tooltip when no longer needed
+            document.body.removeChild(renderedElements[clientId].cursor);
+            document.body.removeChild(renderedElements[clientId].tooltip);
+            delete renderedElements[clientId].cursor;
+            delete renderedElements[clientId].tooltip;
         }
     });
 
@@ -5566,8 +5588,8 @@ function renderParticipantFeedback() {
             if (elements.cursor) {
                 document.body.removeChild(elements.cursor);
             }
-            if (elements.highlight) {
-                document.body.removeChild(elements.highlight);
+            if (elements.tooltip) {
+                document.body.removeChild(elements.tooltip);
             }
             delete renderedElements[clientId];
         }
@@ -5581,4 +5603,23 @@ function generateColor(clientId) {
     }
     const color = `hsl(${hash % 360}, 70%, 50%)`;
     return color;
+}
+
+function generateRandomRoomName() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let roomName = '';
+    for (let i = 0; i < 8; i++) {
+        roomName += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return roomName;
+}
+
+function generateRandomUsername() {
+    const adjectives = ['brave', 'clever', 'hungry', 'witty', 'jazzy', 'kind', 'lovely', 'bold', 'cheeky', 'fast', 'happy', 'bright', 'calm', 'slow', 'easy', 'floppy', 'talking', 'singing', 'clapping', 'drumming', 'vamping', 'sneaky', 'quirky', 'silly', 'spicy', 'sassy', 'zany', 'fuzzy', 'bouncy', 'squishy', 'fluffy', 'wobbly', 'wiggly', 'snappy', 'zippy'];
+    const nouns = ['lion', 'lizard', 'snake', 'rock', 'sand', 'water', 'mountain', 'wolf', 'eagle', 'fox', 'jellyfish', 'bear', 'tiger', 'hawk', 'dolphin', 'shark', 'whale', 'ocean', 'river', 'grass', 'tree', 'wind', 'cicada', 'armadillo', 'bunny', 'dog', 'cat', 'moose', 'mouse'];
+
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+
+    return `${randomAdjective}-${randomNoun}`;
 }

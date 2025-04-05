@@ -76,6 +76,22 @@ Press the `save` button to save the system state as a zip file, including all au
 ## Loading state
 Press the `load` button to load a previously saved .zip file, including all audio files.
 
+# Collaboration
+
+Wax supports real-time collaboration, allowing multiple users to work together on the same workspace in real time. This feature is ideal for collaborative sound design, teaching, or sharing ideas with others.
+
+## Creating a New Room
+1. Click the **Collab** button in the top navigation bar.
+2. In the modal window that appears, click the **Create Room** button.
+3. A new room will be created with a randomly generated name, and you will automatically join it.
+4. Share the URL of the room with others to invite them to collaborate.
+
+## Joining an Existing Room
+1. Click the **Collab** button in the top navigation bar.
+2. In the modal window that appears, enter the name of the room you want to join in the **Join Room** input field.
+3. Click the **Join Room** button to connect to the room.
+4. Alternatively, you can join a room directly by appending `?room=<roomName>` to the URL and loading the page.
+
 # Locking the workspace
 Press the `Lock` button to lock all objects in place and prevent accidental dragging. You can still interact with all UI elements but cannot create and delete connections or objects. This is especially helpful when interacting with UI elements on touchscreen devices. Whether a workspace is locked is stored as part of the system state which is shareable as a URL or zip file.
 
