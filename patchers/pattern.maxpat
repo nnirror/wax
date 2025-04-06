@@ -80,6 +80,21 @@
 						"title" : "untitled",
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-8",
+									"maxclass" : "newobj",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 752.469195902347565, 446.913615942001343, 56.0, 23.0 ],
+									"rnbo_classname" : "dcblock~",
+									"rnbo_serial" : 1,
+									"rnbo_uniqueid" : "dcblock~_obj-8",
+									"text" : "dcblock~"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-26",
 									"maxclass" : "newobj",
 									"numinlets" : 3,
@@ -87,7 +102,7 @@
 									"outlettype" : [ "signal" ],
 									"patching_rect" : [ 552.0, 354.966917037963867, 87.0, 23.0 ],
 									"rnbo_classname" : "clip~",
-									"rnbo_serial" : 2,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "clip~_obj-26",
 									"text" : "clip~ 0. 0.9999"
 								}
@@ -105,7 +120,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 4,
+									"rnbo_serial" : 1,
 									"rnbo_uniqueid" : "out~_obj-12",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -423,11 +438,11 @@
 									"patching_rect" : [ 462.0, 399.367129445075989, 85.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
-										"indexmode" : "wave",
-										"interp" : "linear",
+										"channelmode" : "wrap",
 										"channels" : 1.0,
-										"boundmode" : "wrap",
-										"channelmode" : "wrap"
+										"interp" : "linear",
+										"indexmode" : "wave",
+										"boundmode" : "wrap"
 									}
 ,
 									"rnbo_serial" : 1,
@@ -1187,7 +1202,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 5,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "out~_obj-3",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1299,13 +1314,13 @@
 									"patching_rect" : [ 552.0, 399.367129445075989, 139.0, 23.0 ],
 									"rnbo_classname" : "wave~",
 									"rnbo_extra_attributes" : 									{
-										"indexmode" : "wave",
+										"channelmode" : "wrap",
 										"channels" : 1.0,
-										"boundmode" : "wrap",
-										"channelmode" : "wrap"
+										"indexmode" : "wave",
+										"boundmode" : "wrap"
 									}
 ,
-									"rnbo_serial" : 3,
+									"rnbo_serial" : 2,
 									"rnbo_uniqueid" : "wave~_obj-15",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -1556,10 +1571,10 @@
 									"patching_rect" : [ 393.285688102245331, 349.935498952865601, 89.0, 23.0 ],
 									"rnbo_classname" : "buffer~",
 									"rnbo_extra_attributes" : 									{
-										"type" : "",
-										"file" : "",
 										"fill" : "",
-										"samplerate" : 0.0
+										"samplerate" : 0.0,
+										"file" : "",
+										"type" : ""
 									}
 ,
 									"rnbo_serial" : 1,
@@ -2002,7 +2017,7 @@
 										"meta" : ""
 									}
 ,
-									"rnbo_serial" : 6,
+									"rnbo_serial" : 3,
 									"rnbo_uniqueid" : "out~_obj-2",
 									"rnboinfo" : 									{
 										"needsInstanceInfo" : 1,
@@ -2247,8 +2262,8 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-3", 0 ],
-									"midpoints" : [ 471.5, 436.363612174987793, 761.817943572998047, 436.363612174987793 ],
+									"destination" : [ "obj-8", 0 ],
+									"midpoints" : [ 471.5, 433.844895340425865, 761.969195902347565, 433.844895340425865 ],
 									"source" : [ "obj-19", 0 ]
 								}
 
@@ -2332,6 +2347,13 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-3", 0 ],
+									"source" : [ "obj-8", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-12", 0 ],
 									"midpoints" : [ 402.785688102245331, 483.0, 979.698756456375122, 483.0 ],
 									"source" : [ "obj-9", 0 ]
@@ -2339,7 +2361,7 @@
 
 							}
  ],
-						"originid" : "pat-6",
+						"originid" : "pat-12",
 						"export_config" : 						{
 							"web-export" : 							{
 								"json-web-export" : 								{
@@ -2425,7 +2447,7 @@
 			}
  ],
 		"lines" : [  ],
-		"originid" : "pat-4",
+		"originid" : "pat-10",
 		"parameters" : 		{
 			"obj-1" : [ "rnbo~", "rnbo~", 0 ],
 			"parameterbanks" : 			{
