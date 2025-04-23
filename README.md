@@ -5,6 +5,8 @@ By adding devices to a virtual workspace and connecting them together, you can c
 
 All devices communicate to each other with audio signals, similar to a modular synthesizer.
 
+Here is a [walkthrough video](https://www.youtube.com/watch?v=pTv-jCThRCA) as a supplement to this documentation.
+
 # Getting started
 
 Wax runs entirely in the browser. When you load the web page, the virtual workspace is empty except for two `speaker` devices at the bottom.
