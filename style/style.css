@@ -175,7 +175,6 @@ html, body {
     border: 3px solid white;
     background: rgb(8,56,78);
     color: white;
-    font-size: 1em;
     cursor: pointer;
     min-height: 20px;
 }
@@ -275,23 +274,23 @@ body .sliderMin, body .sliderMax, body .rootNote {
 @media screen and (min-width: 600px) and (max-width: 1120px) {
     body .shareStateButton {
         top: calc(14px + 40px);
-        left: calc(36px + 8em * 1);
+        left: calc(64px + 8em * 1);
     }
     body .collabButton {
         top: calc(14px + 40px);
-        left: calc(36px);
+        left: calc(64px);
     }
     body .viewAllDevices {
         top: calc(14px + 40px);
-        left: calc(36px + 8em * 2);
+        left: calc(64px + 8em * 2);
     }
     body .deviceListModal {
         left: calc(13px + 8em * 2);
         top: calc(14px + 80px);
     }
-    body .exampleFilesButton {
+    body .64pxtton {
         top: calc(14px + 40px);
-        left: calc(36px + 8em * 3);
+        left: calc(64px + 8em * 3);
     }
     body #exampleFiles {
         left: calc(-33px + 8em * 3);
@@ -299,12 +298,12 @@ body .sliderMin, body .sliderMax, body .rootNote {
     }
     body .helpButton {
         top: calc(14px + 40px);
-        left: calc(36px + 8em * 4);
+        left: calc(64px + 8em * 4);
     }
 
     body #ui-background {
         height: 6em;
-        width: calc(36px + 10em * 4);
+        width: calc(64px + 10em * 4);
     }
     body #workspace {
         margin-top: 6em;
@@ -449,44 +448,45 @@ body .sliderMin, body .sliderMax, body .rootNote {
 .waxButton {
     position: fixed;
     left: -10px;
-    top: 9px;
+    top: 6px;
     color: white;
     z-index: 1011;
-    font-size: 2em;
+    font-size: 36px;
     background: none;
     border: 0;
     font-weight: bold;
     cursor: auto;
 }
 .startAudioButton {
-    left: calc(36px + 8em * 1);
+    left: calc(64px + 8em * 1);
     color: white;
     border: 3px solid rgb(255,0,94);
     background: rgb(255,0,94);
 }
 .lockButton {
-    left: calc(36px + 8em * 2);
+    left: calc(64px + 8em * 2);
 }
 .saveStateButton {
-    left: calc(36px + 8em * 3);
+    left: calc(64px + 8em * 3);
 }
 .reloadStateButton {
-    left: calc(36px + 8em * 4);
+    left: calc(64px + 8em * 4);
 }
 .shareStateButton {
-    left: calc(36px + 8em * 5);
+    left: calc(64px + 8em * 5);
 }
 .collabButton {
-    left: calc(36px + 8em * 6);
+    left: calc(64px + 8em * 6);
 }
 .viewAllDevices {
-    left: calc(36px + 8em * 7);
+    left: calc(64px + 8em * 7);
 }
 .exampleFilesButton {
-    left: calc(36px + 8em * 8);
+    left: calc(64px + 8em * 8);
+    padding-left: 15px;
 }
 .helpButton {
-    left: calc(36px + 8em * 9);
+    left: calc(64px + 8em * 9);
 }
 .exampleFilesDiv::before {
     content: "";
@@ -499,8 +499,8 @@ body .sliderMin, body .sliderMax, body .rootNote {
 }
 #exampleFiles {
     position: fixed;
-    top: calc(14px + 40px);
-    left: calc(-32px + 8em * 8);
+    top: calc(12px + 40px);
+    left: calc(-188px + 8em * 8);
     z-index: 1010;
     background: white;
     padding: 2em;
@@ -513,8 +513,8 @@ body .sliderMin, body .sliderMax, body .rootNote {
 }
 .deviceListModal {
     position: fixed;
-    left: calc(12px + 8em * 7);
-    top: calc(14px + 40px);
+    left: calc(-119px + 8em * 7);
+    top: calc(12px + 40px);
     border: 1px solid black;
     z-index: 1010;
     display: none;
@@ -724,10 +724,9 @@ body .toggle-on {
 }
 #logo {
     position: fixed;
-    height: 33px;
-    height: 33px;
-    top: 14px;
-    left: 14px;
+    height: 52px;
+    top: 5px;
+    left: 10px;
     z-index: 1012;
 }
 .jtk-hover path {
@@ -750,7 +749,7 @@ body .CodeMirror {
 }
 #comment {
     position: absolute;
-    left: -36px;
+    left: -64px;
     top: 0px;
 }
 #slider {
