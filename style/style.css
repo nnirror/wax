@@ -288,7 +288,7 @@ body .sliderMin, body .sliderMax, body .rootNote {
         left: calc(13px + 8em * 2);
         top: calc(14px + 80px);
     }
-    body .64pxtton {
+    body .exampleFilesButton {
         top: calc(14px + 40px);
         left: calc(64px + 8em * 3);
     }
