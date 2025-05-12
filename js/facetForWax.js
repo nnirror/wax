@@ -2674,26 +2674,28 @@ rechunk(numChunks, probability = 1, yes_fade = true) {
     return this;
   }
 
- spread (iterations, command, startRelativePosition = 0, endRelativePosition = 1, skipIterations = []) {
-    if (typeof skipIterations == 'number' || Array.isArray(skipIterations) === true) {
-      skipIterations = new FacetPattern().from(skipIterations);
+ iter (iters, command, prob = 1) {
+    this.original_data = this.data;
+    prob = Math.abs(Number(prob));
+    iters = Math.abs(Math.round(Number(iters)));
+    if ( iters == 0 ) {
+      return this;
     }
-    let maxFrameSize;
-    if (this.data.length == 0 ) {
-      maxFrameSize = SAMPLE_RATE;
+    if ( typeof command != 'function' ) {
+      throw `3rd argument to .iter() must be a function, type found: ${typeof command}`;
     }
-    else {
-      maxFrameSize = this.data.length;
-    }
-    skipIterations.round().clip(0, iterations - 1);
-    let out_fp = new FacetPattern();
-    for (var a = 0; a < iterations; a++) {
-      if (!skipIterations.data.includes(a)) {
-        let calculatedPosition = startRelativePosition + (a / iterations) * (endRelativePosition - startRelativePosition);
-        out_fp.sup(new FacetPattern().sometimes(1,command,{i:a,iters:iterations}),calculatedPosition,maxFrameSize);
+    this.current_total_iterations = iters;
+    command = command.toString();
+    command = command.replace(/current_slice./g, 'this.');
+    command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+    let s = this.current_slice_number;
+    let num_slices = this.current_total_slices;
+    for (var i = 0; i < iters; i++) {
+      this.current_iteration_number = i;
+      if ( Math.random() < prob ) {
+        eval(command);
       }
     }
-    this.data = out_fp.data;
     return this;
   }
 
@@ -2795,23 +2797,23 @@ markov(states) {
     return this;
   }
 
-sometimes(prob, command, vars = {}) {
-    if (typeof command != 'function') {
-      throw `2nd argument must be a function, type found: ${typeof command}`;
-    }
-    command = command.toString();
-    command = command.replace(/current_slice./g, 'this.');
-    command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
-    prob = Math.abs(Number(prob));
-    let i = vars.i ? vars.i : this.current_iteration_number;
-    let iters = vars.iters ? vars.iters : this.current_total_iterations;
-    let s = this.current_slice_number;
-    let num_slices = this.current_total_slices;
-    if (Math.random() < prob) {
-      eval(global.env + global.vars + utils + command);
-    }
-    return this;
+ sometimes ( prob, command, vars = {} ) {
+  if (typeof command != 'function') {
+    throw `2nd argument must be a function, type found: ${typeof command}`;
   }
+  command = command.toString();
+  command = command.replace(/current_slice./g, 'this.');
+  command = command.slice(command.indexOf("{") + 1, command.lastIndexOf("}"));
+  prob = Math.abs(Number(prob));
+  let i = vars.i ? vars.i : this.current_iteration_number;
+  let iters = vars.iters ? vars.iters : this.current_total_iterations;
+  let s = this.current_slice_number;
+  let num_slices = this.current_total_slices;
+  if (Math.random() < prob) {
+    eval(command);
+  }
+  return this;
+}
 
 butterworthFilter(order, cutoff) {
     let gain = 0;
