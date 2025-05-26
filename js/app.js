@@ -643,7 +643,10 @@ document.body.addEventListener('click', function(event) {
 // listen for mousedown events on the workspaceElement
 workspaceElement.addEventListener('mousedown', (event) => {
     if (isLocked) return;
-    if (event.detail > 1) return;
+    
+    // Prevent double-click events from firing off mouse-down events
+    if (event.detail > 1) return; 
+    
     if (!event.target.closest('.jtk-connector')) {
         selectedConnections.forEach(connection => {
             resetConnectionStyle(connection);
