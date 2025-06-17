@@ -9,7 +9,7 @@ Here is a [walkthrough video](https://www.youtube.com/watch?v=pTv-jCThRCA) as a 
 
 # Getting started
 
-Wax runs entirely in the browser. When you load the web page, the virtual workspace is empty except for two `speaker` devices at the bottom.
+Wax runs entirely in the browser. When you load the web page, the virtual workspace is empty except for two `output` devices at the bottom.
 
 To view a list of all objects, press the "all devices" button. This will list each device along with a link to its below documentation.
 
