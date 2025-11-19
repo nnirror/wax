@@ -79,19 +79,111 @@
                         "boxes": [
                             {
                                 "box": {
-                                    "id": "obj-33",
+                                    "id": "obj-28",
                                     "maxclass": "newobj",
-                                    "numinlets": 2,
-                                    "numoutlets": 1,
-                                    "outlettype": [ "" ],
-                                    "patching_rect": [ 234.4827425479889, 459.31031334400177, 26.206894755363464, 23.0 ],
-                                    "rnbo_classname": "-",
-                                    "rnbo_extra_attributes": {
-                                        "hot": 0
+                                    "numinlets": 1,
+                                    "numoutlets": 3,
+                                    "outlettype": [ "", "", "" ],
+                                    "patching_rect": [ 361.90475845336914, 306.8027181625366, 50.38092964887619, 23.0 ],
+                                    "rnbo_classname": "t",
+                                    "rnbo_serial": 21,
+                                    "rnbo_uniqueid": "t_obj-28",
+                                    "rnboinfo": {
+                                        "needsInstanceInfo": 1,
+                                        "argnames": {
+                                            "out1": {
+                                                "attrOrProp": 1,
+                                                "digest": "Output order 3 (number).",
+                                                "defaultarg": 1,
+                                                "isalias": 0,
+                                                "aliases": [],
+                                                "attachable": 0,
+                                                "isparam": 0,
+                                                "deprecated": 0,
+                                                "touched": 0,
+                                                "outlet": 1,
+                                                "type": "number"
+                                            },
+                                            "out2": {
+                                                "attrOrProp": 1,
+                                                "digest": "Output order 2 (number).",
+                                                "defaultarg": 2,
+                                                "isalias": 0,
+                                                "aliases": [],
+                                                "attachable": 0,
+                                                "isparam": 0,
+                                                "deprecated": 0,
+                                                "touched": 0,
+                                                "outlet": 1,
+                                                "type": "number"
+                                            },
+                                            "out3": {
+                                                "attrOrProp": 1,
+                                                "digest": "Output order 1 (number).",
+                                                "defaultarg": 3,
+                                                "isalias": 0,
+                                                "aliases": [],
+                                                "attachable": 0,
+                                                "isparam": 0,
+                                                "deprecated": 0,
+                                                "touched": 0,
+                                                "outlet": 1,
+                                                "type": "number"
+                                            },
+                                            "triggers": {
+                                                "attrOrProp": 2,
+                                                "digest": "The number of arguments determines the number of outlets. \t\t\t\t\t\tEach outlet sends out either a whole number, float, bang or list, \t\t\t\t\t\tas identified by symbol arguments (i, f, b, l). \t\t\t\t\t\tIf there are no arguments, there are two outlets, both of which send a float.",
+                                                "defaultarg": 1,
+                                                "isalias": 0,
+                                                "aliases": [],
+                                                "settable": 1,
+                                                "attachable": 0,
+                                                "isparam": 0,
+                                                "deprecated": 0,
+                                                "touched": 0,
+                                                "type": "list"
+                                            }
+                                        },
+                                        "inputs": [
+                                            {
+                                                "name": "input",
+                                                "type": [ "bang", "number", "list" ],
+                                                "digest": "input to distribute",
+                                                "hot": 1,
+                                                "docked": 0
+                                            }
+                                        ],
+                                        "outputs": [
+                                            {
+                                                "name": "out1",
+                                                "type": "number",
+                                                "digest": "Output order 3 (number).",
+                                                "defaultarg": 1,
+                                                "docked": 0
+                                            },
+                                            {
+                                                "name": "out2",
+                                                "type": "number",
+                                                "digest": "Output order 2 (number).",
+                                                "defaultarg": 2,
+                                                "docked": 0
+                                            },
+                                            {
+                                                "name": "out3",
+                                                "type": "number",
+                                                "digest": "Output order 1 (number).",
+                                                "defaultarg": 3,
+                                                "docked": 0
+                                            }
+                                        ],
+                                        "helpname": "trigger",
+                                        "aliasOf": "trigger",
+                                        "classname": "t",
+                                        "operator": 0,
+                                        "versionId": 1624904035,
+                                        "changesPatcherIO": 0
                                     },
-                                    "rnbo_serial": 1,
-                                    "rnbo_uniqueid": "-_obj-33",
-                                    "text": "- 1"
+                                    "text": "t i i i"
                                 }
                             },
                             {
@@ -209,7 +301,7 @@
                                     "outlettype": [ "" ],
                                     "patching_rect": [ 288.2758423089981, 426.20686733722687, 55.0, 23.0 ],
                                     "rnbo_classname": "pipe",
-                                    "rnbo_serial": 2,
+                                    "rnbo_serial": 1,
                                     "rnbo_uniqueid": "pipe_obj-25",
                                     "rnboinfo": {
                                         "needsInstanceInfo": 1,
@@ -422,20 +514,20 @@
                             {
                                 "box": {
                                     "id": "obj-19",
-                                    "linecount": 4,
                                     "maxclass": "newobj",
                                     "numinlets": 4,
                                     "numoutlets": 2,
                                     "outlettype": [ "signal", "signal" ],
-                                    "patching_rect": [ 462.06893384456635, 399.367129445076, 71.03447788953781, 66.0 ],
+                                    "patching_rect": [ 462.06893384456635, 399.367129445076, 85.0, 23.0 ],
                                     "rnbo_classname": "wave~",
                                     "rnbo_extra_attributes": {
+                                        "indexmode": "wave",
                                         "channels": 1.0,
                                         "boundmode": "wrap",
                                         "channelmode": "wrap",
                                         "interp": "linear"
                                     },
-                                    "rnbo_serial": 3,
+                                    "rnbo_serial": 5,
                                     "rnbo_uniqueid": "wave~_obj-19",
                                     "rnboinfo": {
                                         "needsInstanceInfo": 1,
@@ -672,7 +764,7 @@
                                         "versionId": 1386487203,
                                         "changesPatcherIO": 0
                                     },
-                                    "text": "wave~ pattern @indexmode 1"
+                                    "text": "wave~ pattern"
                                 }
                             },
                             {
@@ -682,7 +774,7 @@
                                     "numinlets": 1,
                                     "numoutlets": 2,
                                     "outlettype": [ "", "" ],
-                                    "patching_rect": [ 147.48274666070938, 288.2758423089981, 41.0, 23.0 ],
+                                    "patching_rect": [ 147.48274666070938, 431.9727849960327, 41.0, 23.0 ],
                                     "rnbo_classname": "edge~",
                                     "rnbo_serial": 1,
                                     "rnbo_uniqueid": "edge~_obj-17",
@@ -696,7 +788,7 @@
                                     "numinlets": 2,
                                     "numoutlets": 1,
                                     "outlettype": [ "signal" ],
-                                    "patching_rect": [ 147.48274666070938, 252.41377580165863, 42.0, 23.0 ],
+                                    "patching_rect": [ 147.48274666070938, 395.918363571167, 42.0, 23.0 ],
                                     "rnbo_classname": ">~",
                                     "rnbo_serial": 1,
                                     "rnbo_uniqueid": ">~_obj-18",
@@ -712,7 +804,7 @@
                                     "outlettype": [ "" ],
                                     "patching_rect": [ 264.8275680541992, 459.31031334400177, 118.0, 23.0 ],
                                     "rnbo_classname": "translate",
-                                    "rnbo_serial": 2,
+                                    "rnbo_serial": 1,
                                     "rnbo_uniqueid": "translate_obj-16",
                                     "text": "translate samples ms"
                                 }
@@ -724,13 +816,13 @@
                                     "numinlets": 4,
                                     "numoutlets": 1,
                                     "outlettype": [ "" ],
-                                    "patching_rect": [ 174.48274666070938, 497.2413452267647, 109.34482139348984, 23.0 ],
+                                    "patching_rect": [ 174.149658203125, 497.2413452267647, 109.52380847930908, 23.0 ],
                                     "rnbo_classname": "pak",
                                     "rnbo_extra_attributes": {
                                         "list": "",
                                         "length": 0.0
                                     },
-                                    "rnbo_serial": 1,
+                                    "rnbo_serial": 6,
                                     "rnbo_uniqueid": "pak_obj-14",
                                     "rnboinfo": {
                                         "needsInstanceInfo": 1,
@@ -873,7 +965,7 @@
                                         "versionId": 1331432417,
                                         "changesPatcherIO": 0
                                     },
-                                    "text": "pak 0. 0. 1. 1."
+                                    "text": "pak 0. 0. 0.999 1."
                                 }
                             },
                             {
@@ -1056,7 +1148,7 @@
                                     "numinlets": 0,
                                     "numoutlets": 1,
                                     "outlettype": [ "signal" ],
-                                    "patching_rect": [ 147.48274666070938, 211.72412341833115, 156.0, 23.0 ],
+                                    "patching_rect": [ 147.48274666070938, 355.10203742980957, 156.0, 23.0 ],
                                     "rnbo_classname": "in~",
                                     "rnbo_extra_attributes": {
                                         "meta": ""
@@ -1257,7 +1349,7 @@
                                     "numinlets": 0,
                                     "numoutlets": 1,
                                     "outlettype": [ "" ],
-                                    "patching_rect": [ 393.10342133045197, 295.17239356040955, 82.0, 23.0 ],
+                                    "patching_rect": [ 361.90475845336914, 166.66666507720947, 82.0, 23.0 ],
                                     "rnbo_classname": "inport",
                                     "rnbo_extra_attributes": {
                                         "meta": ""
@@ -1529,7 +1621,7 @@
                                     "numinlets": 1,
                                     "numoutlets": 3,
                                     "outlettype": [ "", "", "" ],
-                                    "patching_rect": [ 393.10342133045197, 335.1723908185959, 89.0, 23.0 ],
+                                    "patching_rect": [ 361.90475845336914, 206.80271911621094, 89.0, 23.0 ],
                                     "rnbo_classname": "buffer~",
                                     "rnbo_extra_attributes": {
                                         "meta": "",
@@ -2219,7 +2311,7 @@
                             {
                                 "patchline": {
                                     "destination": [ "obj-3", 0 ],
-                                    "midpoints": [ 471.56893384456635, 479.41415591802433, 761.5, 479.41415591802433 ],
+                                    "midpoints": [ 471.56893384456635, 438.860706114443, 761.5, 438.860706114443 ],
                                     "source": [ "obj-19", 0 ]
                                 }
                             },
@@ -2263,8 +2355,22 @@
                             },
                             {
                                 "patchline": {
-                                    "destination": [ "obj-14", 2 ],
-                                    "source": [ "obj-33", 0 ]
+                                    "destination": [ "obj-16", 0 ],
+                                    "midpoints": [ 387.09522327780724, 385.0, 274.3275680541992, 385.0 ],
+                                    "source": [ "obj-28", 1 ]
+                                }
+                            },
+                            {
+                                "patchline": {
+                                    "destination": [ "obj-25", 0 ],
+                                    "midpoints": [ 371.40475845336914, 386.0, 297.7758423089981, 386.0 ],
+                                    "source": [ "obj-28", 0 ]
+                                }
+                            },
+                            {
+                                "patchline": {
+                                    "destination": [ "obj-9", 0 ],
+                                    "source": [ "obj-28", 2 ]
                                 }
                             },
                             {
@@ -2275,32 +2381,7 @@
                             },
                             {
                                 "patchline": {
-                                    "destination": [ "obj-16", 0 ],
-                                    "midpoints": [ 402.60342133045197, 385.0, 274.3275680541992, 385.0 ],
-                                    "order": 2,
-                                    "source": [ "obj-6", 0 ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "destination": [ "obj-25", 0 ],
-                                    "midpoints": [ 402.60342133045197, 386.0, 297.7758423089981, 386.0 ],
-                                    "order": 1,
-                                    "source": [ "obj-6", 0 ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "destination": [ "obj-33", 0 ],
-                                    "midpoints": [ 402.60342133045197, 384.8800921527436, 243.9827425479889, 384.8800921527436 ],
-                                    "order": 3,
-                                    "source": [ "obj-6", 0 ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "destination": [ "obj-9", 0 ],
-                                    "order": 0,
+                                    "destination": [ "obj-28", 0 ],
                                     "source": [ "obj-6", 0 ]
                                 }
                             },
@@ -2383,14 +2464,6 @@
         "lines": [],
         "parameters": {
             "obj-1": [ "rnbo~", "rnbo~", 0 ],
-            "parameterbanks": {
-                "0": {
-                    "index": 0,
-                    "name": "",
-                    "parameters": [ "-", "-", "-", "-", "-", "-", "-", "-" ],
-                    "buttons": [ "-", "-", "-", "-", "-", "-", "-", "-" ]
-                }
-            },
             "inherited_shortname": 1
         },
         "autosave": 0
