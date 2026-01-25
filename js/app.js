@@ -1502,7 +1502,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
         // devices with inports that start 2 buttons down
         inportContainer.style.paddingTop = '52px';
     }
-    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock','granular','step_trig'].includes(deviceType) == false) {
+    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'newClock', 'clock','granular','step_trig','switch'].includes(deviceType) == false) {
         // devices with inports that start 1 button down
         inportContainer.style.paddingTop = '25px';
     }

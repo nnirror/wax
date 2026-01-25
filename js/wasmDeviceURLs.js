@@ -44,6 +44,10 @@ var wasmDeviceURLs = [
         "displayName": "clock"
     },
     {
+        "fileName": "newClock",
+        "displayName": "newClock"
+    },
+    {
         "fileName": "comb",
         "displayName": "comb"
     },
@@ -104,6 +108,10 @@ var wasmDeviceURLs = [
     {
         "fileName": "ftom",
         "displayName": "ftom"
+    },
+    {
+        "fileName": "gate",
+        "displayName": "gate"
     },
     {
         "fileName": "granular",
@@ -322,6 +330,10 @@ var wasmDeviceURLs = [
         "displayName": "subtract (-)"
     },
     {
+        "fileName": "switch",
+        "displayName": "switch"
+    },
+    {
         "fileName": "toggle",
         "displayName": "toggle"
     },
@@ -332,6 +344,10 @@ var wasmDeviceURLs = [
     {
         "fileName": "tri",
         "displayName": "triangle"
+    },
+    {
+        "fileName": "trigtogate",
+        "displayName": "trigtogate"
     },
     {
         "fileName": "wave",

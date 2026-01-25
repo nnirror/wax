@@ -196,6 +196,9 @@ Folds any values in `input 1` below `minimum` or above `maximum`. If the input v
 ## ftom
 Converts an input value of frequency in `hz` to its corresponding MIDI note number.
 
+## gate
+Routes the input signal to one of the four outputs based on the value `output num` value.
+
 ## granular
 Generates grains lasting `size (ms)` from a loaded audio file, starting at the `position` point, which expects a float between 0 - 1. A new grain will generate every time `trigger` goes above 0.5.
 
@@ -416,6 +419,9 @@ Repeats chunks of the incoming audio signal. Every time a signal connected to `t
 ## subtract
 Subtracts `input 2` from `input 1`.
 
+## switch
+Routes one of the four input signals to the ouput based on the value `input num` value.
+
 ## toggle
 Outputs a 0 when the button is `off` and outputs a 1 when the button is `on`. Click the button to switch states.
 
@@ -424,6 +430,9 @@ Outputs two floats between 0 and 1, corresponding to the selected x/y position i
 
 ## triangle
 Generates a triangle wave between -1 and 1, oscillating at `frequency` and with configurable `slope`.
+
+## trigtogate
+Converts an incoming trigger into a gate signal whose length is based on the `gate lenght (ms)` value.
 
 ## wavetable
 Reads through a loaded audio file like a wavetable, with `phase` values between 0 and 1 selecting a corresponding relative position in the audio file.
