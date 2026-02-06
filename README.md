@@ -239,6 +239,9 @@ Applies a low-pass filter to `input`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff.
 
+## metronome
+An externally syncable clock device with divisible clock and sync outputs. The `tempo (ms)` and `division` inputs determine the rate of the metronome ticks at the `clock` output. The `sync` output can be used as a phasor signal with other devices or sent to the `sync` input of other metronome devices to create copies or different divisions of the same clock signal. 
+
 ## midicc
 Receives MIDI Control Change (CC) messages at the specified CC# on the specified channel. CC values are automatically scaled between 0 and 1.
 

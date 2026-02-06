@@ -44,10 +44,6 @@ var wasmDeviceURLs = [
         "displayName": "clock"
     },
     {
-        "fileName": "newClock",
-        "displayName": "newClock"
-    },
-    {
         "fileName": "comb",
         "displayName": "comb"
     },
@@ -148,6 +144,10 @@ var wasmDeviceURLs = [
     {
         "fileName": "lpf",
         "displayName": "lowpass"
+    },
+    {
+        "fileName": "metronome",
+        "displayName": "metronome"
     },
     {
         "fileName": "midicc",

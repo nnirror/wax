@@ -19,10 +19,6 @@
     "clock": {
         "tempo (ms)": 1000
     },
-    "newClock": {
-        "tempo (ms)": 1000,
-        "division": 1
-    },
     "comb": {
         "delay (ms)": 25,
         "feedback": 0.84
@@ -63,6 +59,10 @@
     "lpf": {
         "cutoff": 1000,
         "q": 0.1
+    },
+        "metronome": {
+        "tempo (ms)": 1000,
+        "division": 1
     },
     "mix": {
         "crossfade": 0.5
