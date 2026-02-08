@@ -335,6 +335,19 @@ body .sliderMin, body .sliderMax, body .rootNote {
         min-height: 0px;
     }
     
+    /* Fix mobile button text wrapping for audio loader buttons */
+    .audioFileLoaderButton {
+        width: 70px !important;
+    }
+    
+    .audioUrlLoaderButton {
+        width: 70px !important;
+    }
+    
+    .audioUrlInput {
+        width: 148px !important;
+    }
+    
     body #ui-container .mobileMenuToggleButton {
         position: fixed;
         top: 1vh;
