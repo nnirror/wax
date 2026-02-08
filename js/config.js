@@ -1,3 +1,3 @@
 const CONFIG = {
-    FILE_URL: 'wasm/wax_devices-o0vyvmwh.zip'
+    FILE_URL: 'wasm/wax_devices-91gqcsa8.zip'
 };
