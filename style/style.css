@@ -626,16 +626,20 @@ mark {
     width: 170px;
 }
 .audioFileName {
-    font-size: 0.8em;
-    margin-top: 4px;
-    margin-left: 11px;
-    margin-bottom: 0;
-    display: inline-block;
     position: absolute;
-    bottom: 4px;
-    left: 60px;
-    max-width: 110px;
-    overflow: hidden;
+    bottom: 0px;
+    left: 154px;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 12px;
+    width: 134px;
+    max-width: calc(100% - 20px);
+    overflow-x: auto;
+    white-space: nowrap;
 }
 #infoDiv {
     position: fixed;
@@ -800,12 +804,16 @@ body .CodeMirror {
     z-index: -1;
 }
 .audioFileLoaderButton {
+    width: 54px;
     margin-top: 10px;
     position: absolute;
     display: inline;
     color: white;
     bottom: 4px;
     background-color: rgb(8, 56, 78);
+}
+.audioUrlLoaderButton {
+    width: 54px;
 }
 .permissionDiv {
     position: fixed;
@@ -836,8 +844,6 @@ body .CodeMirror {
     background: lightgrey;
 }
 .touchpad {
-    width: 200px;
-    height: 200px;
     border: 1px solid black;
     background: grey;
     position: relative;

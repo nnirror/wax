@@ -136,7 +136,8 @@ Applies a band-pass filter to `input`.
 - `q` controls the resonance of the filter at the cutoff. 
 
 ## buffer
-Loads an audio buffer into the workpace so it can be accessed by the `pattern` object via the `sample()` Facet method. 
+- Loads an audio buffer into the workpace so it can be accessed by the `pattern` object via the `sample()` Facet method. 
+- To load an audio file from somewhere on the internet, enter a URL in the text input next to the `load url` button.
 
 ## button
 Outputs a 1 while the button is pressed and otherwise outputs 0.
@@ -196,8 +197,12 @@ Folds any values in `input 1` below `minimum` or above `maximum`. If the input v
 ## ftom
 Converts an input value of frequency in `hz` to its corresponding MIDI note number.
 
+## gate
+Routes the input signal to one of the four outputs based on the value `output num` value.
+
 ## granular
-Generates grains lasting `size (ms)` from a loaded audio file, starting at the `position` point, which expects a float between 0 - 1. A new grain will generate every time `trigger` goes above 0.5.
+- Generates grains lasting `size (ms)` from a loaded audio file, starting at the `position` point, which expects a float between 0 - 1. A new grain will generate every time `trigger` goes above 0.5.
+- To load an audio file from somewhere on the internet, enter a URL in the text input next to the `load url` button.
 
 ## greater
 Computes the boolean representation of whether `input 1` is greater than `input 2`.
@@ -235,6 +240,9 @@ Applies a peak-limiter to `input 1`.
 Applies a low-pass filter to `input`.
 - `cutoff` controls the center frequency of the filter.
 - `q` controls the resonance of the filter at the cutoff.
+
+## metronome
+An externally syncable clock device with divisible clock and sync outputs. The `tempo (ms)` and `division` inputs determine the rate of the metronome ticks at the `clock` output. The `sync` output can be used as a phasor signal with other devices or sent to the `sync` input of other metronome devices to create copies or different divisions of the same clock signal. 
 
 ## midicc
 Receives MIDI Control Change (CC) messages at the specified CC# on the specified channel. CC values are automatically scaled between 0 and 1.
@@ -314,6 +322,7 @@ Applies a time-domain frequency shift effect of `shift amt` to `input`. A `shift
 Plays a loaded audio file at `rate` every time `trigger` goes above 0.5.
 - The `sync` outlet signal is the current playback position normalized between 0 and 1. A nonzero `loop` input will loop file playback.
 - The `start pos` and `end pos` values control the relative start and end point of audio file playback and expect values between 0 and 1.
+- To load an audio file from somewhere on the internet, enter a URL in the text input next to the `load url` button.
 
 ## pluck
 Generates a synthetic string pluck at `frequency` Hz using Karplus-Strong synthesis. `damping` controls how long the string resonates and expects values between 0 and 1.
@@ -416,6 +425,9 @@ Repeats chunks of the incoming audio signal. Every time a signal connected to `t
 ## subtract
 Subtracts `input 2` from `input 1`.
 
+## switch
+Routes one of the four input signals to the ouput based on the value `input num` value.
+
 ## toggle
 Outputs a 0 when the button is `off` and outputs a 1 when the button is `on`. Click the button to switch states.
 
@@ -425,8 +437,12 @@ Outputs two floats between 0 and 1, corresponding to the selected x/y position i
 ## triangle
 Generates a triangle wave between -1 and 1, oscillating at `frequency` and with configurable `slope`.
 
+## trigtogate
+Converts an incoming trigger into a gate signal whose length is based on the `gate lenght (ms)` value.
+
 ## wavetable
 Reads through a loaded audio file like a wavetable, with `phase` values between 0 and 1 selecting a corresponding relative position in the audio file.
+- To load an audio file from somewhere on the internet, enter a URL in the text input next to the `load url` button.
 
 ## wrap
 Wraps any values in `input 1` below `minimum` or above `maximum`. If the input value exceeds `maximum`, the output will be the amount exceeded plus `minimum` . If the input value is below `minimum`, the output will be the amount below subtracted from `maximum`. 

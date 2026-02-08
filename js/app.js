@@ -112,6 +112,7 @@ async function handleExamplesButtonClick(event) {
         'fm_synthesis.zip',
         'microphone.zip',
         'mono_synth.zip',
+        'load_audio_from_URLs.zip',
         'patterns_with_facet.zip',
         'regenerating_parameters.zip',
         'MIDI_input.zip',
@@ -249,8 +250,8 @@ window.onload = async function() {
     
         mousePosition.x = event.pageX;
         mousePosition.y = event.pageY;
-        mousePosition.workspaceX = event.pageX - workspaceRect.left + scrollLeft;
-        mousePosition.workspaceY = event.pageY - workspaceRect.top + scrollTop;
+        mousePosition.workspaceX = event.clientX - workspaceRect.left + scrollLeft;
+        mousePosition.workspaceY = event.clientY - workspaceRect.top + scrollTop;
     
         sendUpdate({
             type: 'cursorMove',
@@ -385,100 +386,128 @@ document.addEventListener('input', function(event) {
 // event listener for window resize when element exceeds edge
 document.addEventListener('DOMContentLoaded', async function() {
     const workspace = document.getElementById('workspace');
-    const edgeThreshold = 50; // distance from edge to trigger expansion
-    const expansionRate = 10; // pixels to expand per interval
-    const scrollRate = 10; // pixels to scroll per interval
-
-    function getEventCoordinates(event) {
-        if (event.touches && event.touches.length > 0) {
-            return { x: event.touches[0].clientX, y: event.touches[0].clientY };
-        } else {
-            return { x: event.clientX, y: event.clientY };
-        }
-    }
+    const edgeThreshold = 50;
+    const expansionRate = 20;
+    const scrollRate = 10;
 
     let expandInterval = null;
     let scrollInterval = null;
+    let isMouseDown = false;
+    
+    function getEventCoordinates(event) {
+        if (event.touches && event.touches.length > 0) {
+            return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        }
+        return { x: event.clientX, y: event.clientY };
+    }
+    
+    let currentMouseX = 0;
+    let currentMouseY = 0;
     
     function checkEdgeAndExpand(event) {
-        if (!isDraggingDevice) {
+        // only expand during sustained mouse/touch down
+        if (!isMouseDown) {
+            stopExpand();
             return;
         }
-        const rect = workspace.getBoundingClientRect();
+        
         const { x: mouseX, y: mouseY } = getEventCoordinates(event);
+        
+        // always update current mouse position
+        currentMouseX = mouseX;
+        currentMouseY = mouseY;
+        
+        startExpansionIfNeeded();
+    }
     
-        let expandX = false;
-        let expandY = false;
-        let scrollX = false;
-        let scrollY = false;
-    
-        const edgeThreshold = 50;
-    
-        // check if the device is near the edge of the visible window
-        if (mouseX >= window.innerWidth - edgeThreshold) {
-            scrollX = true;
-        } else if (mouseX <= edgeThreshold) {
-            scrollX = true;
-        }
-    
-        if (mouseY >= window.innerHeight - edgeThreshold) {
-            scrollY = true;
-        } else if (mouseY <= edgeThreshold) {
-            scrollY = true;
-        }
-    
-        // check if the device is near the edge of the workspace
-        if (mouseX >= rect.right - edgeThreshold) {
-            expandX = true;
-        } else if (mouseX <= rect.left + edgeThreshold) {
-            expandX = true;
-        }
-    
-        if (mouseY >= rect.bottom - edgeThreshold) {
-            expandY = true;
-        } else if (mouseY <= rect.top + edgeThreshold) {
-            expandY = true;
-        }
-    
-        if (expandX || expandY) {
-            if (!expandInterval) {
-                expandInterval = setInterval(() => {
-                    if (expandX) {
-                        workspace.style.width = workspace.offsetWidth + expansionRate + 'px';
+    function startExpansionIfNeeded() {
+        if (!expandInterval) {
+            expandInterval = setInterval(() => {
+                const rect = workspace.getBoundingClientRect();
+                
+                let expandX = false;
+                let expandY = false;
+                let scrollX = false;
+                let scrollY = false;
+                
+                // check conditions every frame
+                if (currentMouseX >= window.innerWidth - edgeThreshold) {
+                    scrollX = true;
+                } else if (currentMouseX <= edgeThreshold) {
+                    scrollX = true;
+                }
+                
+                if (currentMouseY >= window.innerHeight - edgeThreshold) {
+                    scrollY = true;
+                } else if (currentMouseY <= edgeThreshold) {
+                    scrollY = true;
+                }
+                
+                if (currentMouseX >= rect.right - edgeThreshold) {
+                    expandX = true;
+                }
+                if (currentMouseY >= rect.bottom - edgeThreshold) {
+                    expandY = true;
+                }
+                
+                // expand workspace
+                if (expandX) {
+                    workspace.style.width = workspace.offsetWidth + expansionRate + 'px';
+                }
+                if (expandY) {
+                    workspace.style.height = workspace.offsetHeight + expansionRate + 'px';
+                }
+                
+                // update selection rectangle
+                if (selectionDiv && startPoint) {
+                    const newRect = workspaceElement.getBoundingClientRect();
+                    const x = currentMouseX - newRect.left + workspaceElement.scrollLeft;
+                    const y = currentMouseY - newRect.top + workspaceElement.scrollTop;
+                    
+                    selectionDiv.style.left = Math.min(x, startPoint.x) + 'px';
+                    selectionDiv.style.top = Math.min(y, startPoint.y) + 'px';
+                    selectionDiv.style.width = Math.abs(x - startPoint.x) + 'px';
+                    selectionDiv.style.height = Math.abs(y - startPoint.y) + 'px';
+                }
+                
+                // update dragged devices
+                if (isDraggingDevice) {
+                    const selectedDevices = document.querySelectorAll('.selectedNode');
+                    const workspaceRect = workspace.getBoundingClientRect();
+                    
+                    selectedDevices.forEach(device => {
+                        const newLeft = currentMouseX - workspaceRect.left;
+                        const newTop = currentMouseY - workspaceRect.top;
+                        
+                        device.style.left = newLeft + 'px';
+                        device.style.top = newTop + 'px';
+                    });
+                }
+                
+                // handle scrolling
+                if (scrollX) {
+                    if (currentMouseX >= window.innerWidth - edgeThreshold) {
+                        window.scrollBy(scrollRate, 0);
+                    } else if (currentMouseX <= edgeThreshold) {
+                        window.scrollBy(-scrollRate, 0);
                     }
-                    if (expandY) {
-                        workspace.style.height = workspace.offsetHeight + expansionRate + 'px';
+                }
+                if (scrollY) {
+                    if (currentMouseY >= window.innerHeight - edgeThreshold) {
+                        window.scrollBy(0, scrollRate);
+                    } else if (currentMouseY <= edgeThreshold) {
+                        window.scrollBy(0, -scrollRate);
                     }
-                }, 10);
-            }
-        } else {
-            clearInterval(expandInterval);
-            expandInterval = null;
-        }
-    
-        // scroll the window if the device is near the edge of the visible window
-        if (scrollX || scrollY) {
-            if (!scrollInterval) {
-                scrollInterval = setInterval(() => {
-                    if (scrollX) {
-                        if (mouseX >= window.innerWidth - edgeThreshold) {
-                            window.scrollBy(scrollRate, 0);
-                        } else if (mouseX <= edgeThreshold) {
-                            window.scrollBy(-scrollRate, 0);
-                        }
-                    }
-                    if (scrollY) {
-                        if (mouseY >= window.innerHeight - edgeThreshold) {
-                            window.scrollBy(0, scrollRate);
-                        } else if (mouseY <= edgeThreshold) {
-                            window.scrollBy(0, -scrollRate);
-                        }
-                    }
-                }, 20);
-            }
-        } else {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
+                }
+                
+                // stop if no longer near edges
+                if (!expandX && !expandY && !scrollX && !scrollY) {
+                    stopExpand();
+                }
+                
+                // repaint connections
+                jsPlumb.repaintEverything();
+            }, 16);
         }
     }
     
@@ -489,10 +518,55 @@ document.addEventListener('DOMContentLoaded', async function() {
         scrollInterval = null;
     }
     
+    // track mouse/touch state
+    document.addEventListener('mousedown', () => {
+        isMouseDown = true;
+    });
+    
+    document.addEventListener('touchstart', () => {
+        isMouseDown = true;
+    });
+    
+    document.addEventListener('mouseup', (event) => {
+        isMouseDown = false;
+        stopExpand();
+        
+        // If we have an active selection, process it even if mouseup is on HTML
+        if (startPoint && selectionDiv) {
+            // Trigger the same selection logic as the workspace handler
+            selectedConnections = [];
+            jsPlumb.clearDragSelection();
+
+            let nodes = document.querySelectorAll('.node');
+            
+            nodes.forEach((node) => {
+                let rect = node.getBoundingClientRect();
+                let selRect = selectionDiv.getBoundingClientRect();
+                const isOverlapping = rect.right > selRect.left && rect.left < selRect.right &&
+                    rect.bottom > selRect.top && rect.top < selRect.bottom;
+                
+                if (isOverlapping) {
+                    jsPlumb.addToDragSelection(node);
+                    node.classList.add('selectedNode');
+                } else {
+                    node.classList.remove('selectedNode');
+                }
+            });
+            
+            globalCleanupSelection();
+        } else {
+            globalCleanupSelection();
+        }
+    });
+    
+    document.addEventListener('touchend', (event) => {
+        isMouseDown = false;
+        stopExpand();
+        globalCleanupSelection();
+    });
+    
     document.addEventListener('mousemove', checkEdgeAndExpand);
-    document.addEventListener('mouseup', stopExpand);
     document.addEventListener('touchmove', checkEdgeAndExpand);
-    document.addEventListener('touchend', stopExpand);
 
     // prevent automatic scrolling back to the original position
     window.addEventListener('scroll', (event) => {
@@ -545,17 +619,214 @@ let inportsWithConnectedSignals = {};
 let executedTextPatterns = {};
 let selectionDiv = null;
 let startPoint = null;
+let workspaceExpandInterval = null;
+let workspaceCurrentMouseX = 0;
+let workspaceCurrentMouseY = 0;
+
+function globalCleanupSelection() {
+    if (selectionDiv) {
+        try {
+            const workspaceElement = document.getElementById('workspace');
+            if (selectionDiv.parentNode === workspaceElement) {
+                workspaceElement.removeChild(selectionDiv);
+            }
+        } catch (e) {}
+        selectionDiv = null;
+    }
+    startPoint = null;
+    clearInterval(workspaceExpandInterval);
+    workspaceExpandInterval = null;
+}
+
+function globalGetEventCoordinates(event) {
+    if (event.touches && event.touches.length > 0) {
+        return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }
+    return { x: event.clientX, y: event.clientY };
+}
+
+function globalStartExpansionIfNeeded() {
+    const workspace = document.getElementById('workspace');
+    const edgeThreshold = 50;
+    
+    // check if actually near an edge that could trigger expansion/scrolling
+    const rect = workspace.getBoundingClientRect();
+    const nearRightEdge = workspaceCurrentMouseX >= rect.right - edgeThreshold;
+    const nearBottomEdge = workspaceCurrentMouseY >= rect.bottom - edgeThreshold;
+    const nearWindowEdge = workspaceCurrentMouseX >= window.innerWidth - edgeThreshold || 
+                          workspaceCurrentMouseX <= edgeThreshold ||
+                          workspaceCurrentMouseY >= window.innerHeight - edgeThreshold || 
+                          workspaceCurrentMouseY <= edgeThreshold;
+    
+    // only start the expansion system if actually near an edge that needs it
+    if (!nearRightEdge && !nearBottomEdge && !nearWindowEdge) {
+        // if not near any edges, clear existing interval
+        if (workspaceExpandInterval) {
+            clearInterval(workspaceExpandInterval);
+            workspaceExpandInterval = null;
+        }
+        return;
+    }
+    
+    const expansionRate = 5;
+    const scrollRate = 5;
+    
+    if (!workspaceExpandInterval) {
+        workspaceExpandInterval = setInterval(() => {
+            const rect = workspace.getBoundingClientRect();
+            
+            let expandX = false;
+            let expandY = false;
+            let scrollX = false;
+            let scrollY = false;
+            
+            if (workspaceCurrentMouseX >= window.innerWidth - edgeThreshold) {
+                scrollX = true;
+            } else if (workspaceCurrentMouseX <= edgeThreshold) {
+                scrollX = true;
+            }
+            
+            if (workspaceCurrentMouseY >= window.innerHeight - edgeThreshold) {
+                scrollY = true;
+            } else if (workspaceCurrentMouseY <= edgeThreshold) {
+                scrollY = true;
+            }
+            
+            if (workspaceCurrentMouseX >= rect.right - edgeThreshold) {
+                expandX = true;
+            }
+            if (workspaceCurrentMouseY >= rect.bottom - edgeThreshold) {
+                expandY = true;
+            }
+            
+            if (expandX) {
+                workspace.style.width = workspace.offsetWidth + expansionRate + 'px';
+                
+                // move devices if actually at the expanding edge
+                if (isDraggingDevice && workspaceCurrentMouseX >= rect.right - edgeThreshold) {
+                    const selectedDevices = document.querySelectorAll('.selectedNode');
+                    
+                    selectedDevices.forEach(device => {
+                        const currentLeft = parseInt(device.style.left, 10) || 0;
+                        const newLeft = currentLeft + expansionRate;
+                        
+                        // ensure device stays at least half visible at the expanding right edge
+                        const deviceWidth = device.offsetWidth;
+                        const maxLeft = workspace.offsetWidth - (deviceWidth / 2);
+                        
+                        device.style.left = Math.min(newLeft, maxLeft) + 'px';
+                    });
+                }
+            }
+            if (expandY) {
+                workspace.style.height = workspace.offsetHeight + expansionRate + 'px';
+                
+                // move devices if actually at the expanding edge  
+                if (isDraggingDevice && workspaceCurrentMouseY >= rect.bottom - edgeThreshold) {
+                    const selectedDevices = document.querySelectorAll('.selectedNode');
+                    
+                    selectedDevices.forEach(device => {
+                        const currentTop = parseInt(device.style.top, 10) || 0;
+                        const newTop = currentTop + expansionRate;
+                        
+                        // ensure device stays at least half visible at the expanding bottom edge
+                        const deviceHeight = device.offsetHeight;
+                        const maxTop = workspace.offsetHeight - (deviceHeight / 2);
+                        
+                        device.style.top = Math.min(newTop, maxTop) + 'px';
+                    });
+                }
+            }
+            
+            // update selection rectangle if it exists
+            if (selectionDiv && startPoint) {
+                const workspaceElement = document.getElementById('workspace');
+                const newRect = workspaceElement.getBoundingClientRect();
+                const x = workspaceCurrentMouseX - newRect.left + workspaceElement.scrollLeft;
+                const y = workspaceCurrentMouseY - newRect.top + workspaceElement.scrollTop;
+                
+                selectionDiv.style.left = Math.min(x, startPoint.x) + 'px';
+                selectionDiv.style.top = Math.min(y, startPoint.y) + 'px';
+                selectionDiv.style.width = Math.abs(x - startPoint.x) + 'px';
+                selectionDiv.style.height = Math.abs(y - startPoint.y) + 'px';
+            }
+            
+            // only repaint if expanding, not scrolling
+            if (expandX || expandY) {
+                jsPlumb.repaintEverything();
+            }
+            
+            // handle viewport scrolling and keep dragged device with cursor
+            if (scrollX) {
+                let scrollAmount = 0;
+                if (workspaceCurrentMouseX >= window.innerWidth - edgeThreshold) {
+                    window.scrollBy(scrollRate, 0);
+                    scrollAmount = scrollRate;
+                } else if (workspaceCurrentMouseX <= edgeThreshold) {
+                    window.scrollBy(-scrollRate, 0);
+                    scrollAmount = -scrollRate;
+                }
+                
+                // keep dragged device with cursor during horizontal scrolling
+                if (isDraggingDevice && scrollAmount !== 0) {
+                    const selectedDevices = document.querySelectorAll('.selectedNode');
+                    selectedDevices.forEach(device => {
+                        const currentLeft = parseInt(device.style.left, 10) || 0;
+                        const newLeft = currentLeft + scrollAmount;
+                        
+                        // let device follow mouse freely during drag
+                        device.style.left = newLeft + 'px';
+                    });
+                }
+            }
+            if (scrollY) {
+                let scrollAmount = 0;
+                if (workspaceCurrentMouseY >= window.innerHeight - edgeThreshold) {
+                    window.scrollBy(0, scrollRate);
+                    scrollAmount = scrollRate;
+                } else if (workspaceCurrentMouseY <= edgeThreshold) {
+                    window.scrollBy(0, -scrollRate);
+                    scrollAmount = -scrollRate;
+                }
+                
+                // keep dragged device with cursor during vertical scrolling
+                if (isDraggingDevice && scrollAmount !== 0) {
+                    const selectedDevices = document.querySelectorAll('.selectedNode');
+                    selectedDevices.forEach(device => {
+                        const currentTop = parseInt(device.style.top, 10) || 0;
+                        const newTop = currentTop + scrollAmount;
+                        
+                        // let device follow mouse freely during drag
+                        device.style.top = newTop + 'px';
+                    });
+                }
+            }
+            
+            // clear the interval if nothing is happening
+            if (!expandX && !expandY && !scrollX && !scrollY) {
+                clearInterval(workspaceExpandInterval);
+                workspaceExpandInterval = null;
+            }
+        }, 8);
+    }
+}
+
 const evalWorker = new Worker('js/evalWorker.js');
 let defaultValues = null;
 getDefaultValues().then(data => {
     defaultValues = data;
 });
-let handleWorkerMessage = null;
+
+// queue system for worker messages which handles multiple pattern devices
+const workerHandlerQueue = [];
+
 evalWorker.onmessage = (event) => {
-    if (handleWorkerMessage) {
-        handleWorkerMessage(event);
+    if (workerHandlerQueue.length > 0) {
+        const handler = workerHandlerQueue.shift();
+        handler(event);
     }
 };
+
 let isInRoom = false;
 let isLocalAction = false;
 let ws = null;
@@ -582,7 +853,7 @@ jsPlumb.bind("connectionDetached", function(info) {
             } catch (error) {}
             // remove the connection from the list
             sourceDevice.connections = sourceDevice.connections.filter(conn => conn.id !== jsPlumbConnectionId);
-            // Send update to WebSocket server if this is a local action
+            // send update to WebSocket server if this is a local action
             if (!isLocalAction) {
                 sendUpdate({
                     type: 'deleteConnection',
@@ -719,6 +990,7 @@ workspaceElement.addEventListener('mouseup', (event) => {
 
         // check which elements are within the selection div
         let nodes = document.querySelectorAll('.node');
+
         nodes.forEach((node) => {
             let rect = node.getBoundingClientRect();
             if (selectionDiv) {
@@ -765,44 +1037,6 @@ workspaceElement.addEventListener('mouseup', (event) => {
             selectionDiv = null;
         }, 100);
         startPoint = null;
-    }
-});
-
-document.addEventListener('mouseup', (event) => {
-    // check if the event target is a child or instance of device .node
-    let target = event.target;
-    let isNode = false;
-
-    while (target) {
-        if (target.classList && target.classList.contains('node')) {
-            isNode = true;
-            break;
-        }
-        target = target.parentElement;
-    }
-
-    // check if there are any elements with the class 'selectedNode'
-    const selectedNodes = document.getElementsByClassName('selectedNode');
-
-    // clear the drag selection if the target is not a .node and there are no selected nodes
-    if (!isNode && selectedNodes.length == 0) {
-        jsPlumb.clearDragSelection();
-    }
-    else {
-        if ( selectedNodes.length == 1 ) {
-            jsPlumb.clearDragSelection();
-        }
-    }
-    if (isNode && !isDraggingDevice && selectionDiv === null) {
-        let nodeElement = event.target.closest('.node');
-        let nodes = document.querySelectorAll('.node');
-        nodes.forEach((node) => {
-            if (node === nodeElement) return;
-            if (node.classList.contains('selectedNode')) {
-                node.classList.remove('selectedNode');
-            }
-        });
-        jsPlumb.clearDragSelection();
     }
 });
 
@@ -939,6 +1173,41 @@ document.addEventListener('DOMContentLoaded', function() {
     workspace.addEventListener('touchend', handleTouchEnd);
 });
 
+// ensure workspace always matches at least the viewport size
+window.addEventListener('resize', function() {
+    const workspace = document.getElementById('workspace');
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // get current workspace dimensions
+    const currentWidth = workspace.offsetWidth;
+    const currentHeight = workspace.offsetHeight;
+    
+    // ensure workspace is at least the size of the viewport
+    const minWidth = Math.max(currentWidth, viewportWidth);
+    const minHeight = Math.max(currentHeight, viewportHeight);
+    
+    workspace.style.width = minWidth + 'px';
+    workspace.style.height = minHeight + 'px';
+});
+
+// set initial workspace size on load to match viewport
+document.addEventListener('DOMContentLoaded', function() {
+    const workspace = document.getElementById('workspace');
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // set initial size to viewport if not already larger
+    const currentWidth = workspace.offsetWidth;
+    const currentHeight = workspace.offsetHeight;
+    
+    const minWidth = Math.max(currentWidth, viewportWidth);
+    const minHeight = Math.max(currentHeight, viewportHeight);
+    
+    workspace.style.width = minWidth + 'px';
+    workspace.style.height = minHeight + 'px';
+});
+
 // listen for keydown events on the document
 document.addEventListener('keydown', (event) => {
     // check if Delete or Backspace key was pressed
@@ -1042,6 +1311,28 @@ function addMotionDeviceToDropdown(deviceDropdown) {
 function openAwesompleteUI(event) {
     if (isLocked) return;
     deselectAllNodes();
+    
+    // calculate position from event if provided, otherwise use stored mousePosition
+    let uiX, uiY, deviceX, deviceY;
+    
+    if (event) {
+        // calculate coordinates directly from the double-click event
+        const workspaceRect = workspaceElement.getBoundingClientRect();
+        const scrollLeft = workspaceElement.scrollLeft;
+        const scrollTop = workspaceElement.scrollTop;
+        
+        uiX = event.pageX;
+        uiY = event.pageY;
+        deviceX = event.clientX - workspaceRect.left + scrollLeft;
+        deviceY = event.clientY - workspaceRect.top + scrollTop;
+    } else {
+        // fallback to stored mouse position (for keyboard 'n' shortcut)
+        uiX = mousePosition.x;
+        uiY = mousePosition.y;
+        deviceX = mousePosition.workspaceX;
+        deviceY = mousePosition.workspaceY;
+    }
+    
     // get the dropdown element
     var dropdown = document.querySelector('.deviceDropdown');
     
@@ -1059,8 +1350,8 @@ function openAwesompleteUI(event) {
     var div = document.createElement('div');
     div.className = 'awesompleteContainer';
     div.style.position = 'absolute';
-    div.style.left = mousePosition.x + 'px';
-    div.style.top = mousePosition.y + 'px';
+    div.style.left = uiX + 'px';
+    div.style.top = uiY + 'px';
 
     div.appendChild(deviceSelectTextDiv);
 
@@ -1079,8 +1370,8 @@ function openAwesompleteUI(event) {
     input.focus();
 
     let currentPosition = {
-        left: mousePosition.workspaceX,
-        top: mousePosition.workspaceY
+        left: deviceX,
+        top: deviceY
     };
 
     let selectCompleteTriggered = false;
@@ -1192,7 +1483,7 @@ function initializeAwesomplete () {
     document.addEventListener('dblclick', function(event) {
         if ( event.target.id == 'workspace' ) {
             event.preventDefault();
-            openAwesompleteUI();
+            openAwesompleteUI(event);
         }
     });
 }
@@ -1472,6 +1763,15 @@ async function attachOutports(device,deviceDiv) {
 function removeDeviceFromWorkspace(deviceId) {
     const { device, div } = devices[deviceId];
 
+    // clean up touchpad document event listeners if they exist
+    // these are needed because touchpad uses document-level events to track clicks and touches outside of its bounds
+    if (div._touchpadMouseMoveHandler) {
+        document.removeEventListener('mousemove', div._touchpadMouseMoveHandler);
+    }
+    if (div._touchpadTouchMoveHandler) {
+        document.removeEventListener('touchmove', div._touchpadTouchMoveHandler);
+    }
+
     // remove the device div from the workspace
     div.parentNode.removeChild(div);
 
@@ -1483,7 +1783,7 @@ function removeDeviceFromWorkspace(deviceId) {
     // remove the device from storage
     delete devices[deviceId];
 
-    // Send update to WebSocket server if this is a local action
+    // send update to WebSocket server if this is a local action
     if (!isLocalAction) {
         sendUpdate({
             type: 'deleteDevice',
@@ -1502,7 +1802,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
         // devices with inports that start 2 buttons down
         inportContainer.style.paddingTop = '52px';
     }
-    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'clock','granular','step_trig'].includes(deviceType) == false) {
+    else if (['cycle', 'rect', 'tri', 'saw', 'phasor', 'number', 'metronome', 'clock','granular','step_trig','switch'].includes(deviceType) == false) {
         // devices with inports that start 1 button down
         inportContainer.style.paddingTop = '25px';
     }
@@ -1547,7 +1847,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
                 if (document.activeElement !== event.target) {
                     if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
                         scheduleDeviceEvent(device, inport, this.value, deviceId, false);
-                        // Send update to WebSocket server if this is a local action
+                        // send update to WebSocket server if this is a local action
                         if (!isLocalAction) {
                             sendUpdate({
                                 type: 'updateInput',
@@ -1566,7 +1866,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
                     if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
                         scheduleDeviceEvent(device, inport, this.value, deviceId, true);
 
-                        // Send update to WebSocket server if this is a local action
+                        // send update to WebSocket server if this is a local action
                         if (!isLocalAction) {
                             sendUpdate({
                                 type: 'updateInput',
@@ -1585,7 +1885,7 @@ function addInputsForDevice(device, deviceType, deviceId) {
                     if (!inportsWithConnectedSignals[deviceId] || !inportsWithConnectedSignals[deviceId][inport.tag]) {
                         scheduleDeviceEvent(device, inport, this.value, deviceId, false);
 
-                        // Send update to WebSocket server if this is a local action
+                        // send update to WebSocket server if this is a local action
                         if (!isLocalAction) {
                             sendUpdate({
                                 type: 'updateInput',
@@ -1669,8 +1969,13 @@ async function scheduleDeviceEvent(device, inport, value, deviceId, fromRegenBut
                 let float32Array = audioBuffer.getChannelData(0);
                 audioBuffersCopy[name] = Array.from(float32Array);
             }
-            evalWorker.postMessage({ code: value, audioBuffers: audioBuffersCopy });
-            handleWorkerMessage = async (event) => {
+            evalWorker.postMessage({ 
+                code: value, 
+                audioBuffers: audioBuffersCopy
+            });
+            
+            // add the handler to the queue
+            workerHandlerQueue.push(async (event) => {
                 if (event.data.error) {
                     showGrowlNotification(`${event.data.error}`);
                 }
@@ -1689,7 +1994,7 @@ async function scheduleDeviceEvent(device, inport, value, deviceId, fromRegenBut
                     let messageEvent = new RNBO.MessageEvent(RNBO.TimeNow, inport.tag, values);
                     device.scheduleEvent(messageEvent);
                 }
-            };
+            });
         }
         else {
             if (inport.tag !== 'comment') {
@@ -1825,6 +2130,17 @@ document.addEventListener('mouseup', (event) => {
         isDragging = false;
         dragStartButton = null;
     }
+});
+
+document.addEventListener('touchstart', (event) => {
+    // track touch state for workspace expansion
+    isMouseDown = true;
+});
+
+document.addEventListener('touchend', (event) => {
+    // reset touch state
+    isMouseDown = false;
+    stopExpand();
 });
 
 function updateTempLine(mouseX, mouseY) {
@@ -1970,7 +2286,7 @@ async function finishConnection(deviceId, inputIndex) {
                 resizeObserver.observe(patternDeviceDiv);
             }
 
-            // Send update to WebSocket server if this is a local action
+            // send update to WebSocket server if this is a local action
             if (!isLocalAction) {
                 sendUpdate({
                     type: 'makeConnection',
@@ -2067,7 +2383,7 @@ async function createCustomAudioWorkletDevice(workletfile, filename) {
                     // create the device 
                     const device = createMockRNBODevice(context, customNode, [customNode], outlets, inlets, outputs);
 
-                    const deviceDiv = addDeviceToWorkspace(device, filename, false);
+                    const deviceDiv = addDeviceToWorkspace(device, filename, false, devicePosition);
                     applyDeviceStyles(deviceDiv, filename);
 
                     // resolve the promise with the created device element and remove tempNode
@@ -2098,7 +2414,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             if (filename === "motion") {
                 await showMotionPermissionButton();
                 const device = await createMotionDevice(context);
-                deviceDiv = addDeviceToWorkspace(device, "motion", false);
+                deviceDiv = addDeviceToWorkspace(device, "motion", false, devicePosition);
             }
             else if (filename === "mic" || filename === "microphone" || filename === "microphone-input") {
                 filename = "mic";
@@ -2106,7 +2422,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     await startAudio();
                 }
                 const device = await createMicrophoneDevice();
-                deviceDiv = addDeviceToWorkspace(device, "microphone-input", false);
+                deviceDiv = addDeviceToWorkspace(device, "microphone-input", false, devicePosition);
             }
             else if (filename === "scope") {
                 const analyser = context.createAnalyser();
@@ -2115,7 +2431,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 let dataArray = new Uint8Array(bufferLength);
                 const gainNode = context.createGain();
                 const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
-                deviceDiv = addDeviceToWorkspace(device, "scope", false);
+                deviceDiv = addDeviceToWorkspace(device, "scope", false, devicePosition);
             
                 // Create the canvas element for the oscilloscope
                 const canvas = document.createElement('canvas');
@@ -2219,7 +2535,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 let dataArray = new Uint8Array(bufferLength);
                 const gainNode = context.createGain();
                 const device = createMockRNBODevice(context, gainNode, [gainNode], [{ comment: 'output' }], [{ comment: 'input' }]);
-                deviceDiv = addDeviceToWorkspace(device, "spectrogram", false);
+                deviceDiv = addDeviceToWorkspace(device, "spectrogram", false, devicePosition);
             
                 // create the canvas element for the spectrogram
                 const canvas = document.createElement('canvas');
@@ -2299,7 +2615,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 pitchBendSource.offset.value = 0;
                 pitchBendSource.start();
                 const device = createMockRNBODevice(context, pitchBendSource, [pitchBendSource], [{ comment: 'output' }], []);
-                deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false);
+                deviceDiv = addDeviceToWorkspace(device, "midipitchbend", false, devicePosition);
             
                 // create labeled input
                 const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
@@ -2340,7 +2656,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 ccSource.offset.value = 0;
                 ccSource.start();
                 const device = createMockRNBODevice(context, ccSource, [ccSource], [{ comment: 'output' }], []);
-                deviceDiv = addDeviceToWorkspace(device, "midicc", false);
+                deviceDiv = addDeviceToWorkspace(device, "midicc", false, devicePosition);
             
                 // create labeled input for the MIDI channel
                 const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
@@ -2425,7 +2741,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     gateSources
                 );
             
-                deviceDiv = addDeviceToWorkspace(device, "midinote", false);
+                deviceDiv = addDeviceToWorkspace(device, "midinote", false, devicePosition);
             
                 // create labeled input for the MIDI channel
                 const midiChannel = createLabeledInput('MIDI Channel', 'midiChannel', 'midiChannel', 1, {
@@ -2499,9 +2815,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 // create the device
                 const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
                 
-                deviceDiv = addDeviceToWorkspace(device, "toggle", false);
+                deviceDiv = addDeviceToWorkspace(device, "toggle", false, devicePosition);
                 
-                // Store reference to the silence generator
+                // store reference to the silence generator
                 devices[deviceDiv.id].silenceGenerator = silenceGenerator;
                 
                 // create a toggle button
@@ -2548,7 +2864,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                         toggleButton.textContent = 'off';
                     }
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2575,9 +2891,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             
                 // create the device
                 const device = createMockRNBODevice(context, merger, [merger], [{ comment: 'frequency' }, { comment: 'trigger' }], [], 2);
-                deviceDiv = addDeviceToWorkspace(device, "keyboard", false);
+                deviceDiv = addDeviceToWorkspace(device, "keyboard", false, devicePosition);
             
-                // Store references to the silence generator and trigger source
+                // store references to the silence generator and trigger source
                 devices[deviceDiv.id].silenceGenerator = silenceGenerator;
                 devices[deviceDiv.id].triggerSource = triggerSource;
             
@@ -2610,7 +2926,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     triggerSource.offset.setValueAtTime(0, context.currentTime + 0.1); // briefly output 1
                     previousKeyDiv = keyDiv;
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2623,7 +2939,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 const resetKey = (keyDiv) => {
                     keyDiv.style.backgroundColor = keyDiv.dataset.color === 'white' ? 'white' : 'black';
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2755,7 +3071,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     rootNote = parseInt(event.target.value, 10);
                     createKeys();
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2769,7 +3085,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     rootNote = parseInt(event.target.value, 10);
                     createKeys();
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2795,7 +3111,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     octaves = parseInt(event.target.value, 10);
                     createKeys();
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2809,7 +3125,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     octaves = parseInt(event.target.value, 10);
                     createKeys();
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -2825,7 +3141,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 silenceGenerator.start();
                 // create the device
                 const device = createMockRNBODevice(context, silenceGenerator, [silenceGenerator], [{ comment: 'output' }], []);
-                deviceDiv = addDeviceToWorkspace(device, "slider", false);
+                deviceDiv = addDeviceToWorkspace(device, "slider", false, devicePosition);
             
                 // create a slider
                 const slider = document.createElement('input');
@@ -2934,7 +3250,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             
                 // create the device
                 const device = createMockRNBODevice(context, mergerNode, mergerNode, [{ comment: 'output x' }, { comment: 'output y' }], [], 2);
-                deviceDiv = addDeviceToWorkspace(device, "touchpad", false);
+                deviceDiv = addDeviceToWorkspace(device, "touchpad", false, devicePosition);
             
                 // Store references to the silence generators
                 devices[deviceDiv.id].silenceGeneratorX = silenceGeneratorX;
@@ -2961,6 +3277,62 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 inputY.name = 'touchpadY';
                 inputY.id = 'touchpadY';
                 inputY.value = '0';
+                
+                // create width and height controls
+                const widthControl = createLabeledInput('width', 'touchpadWidth', 'touchpadWidth', 200, {
+                    input: { width: '4em', marginLeft: '-20px', marginRight: '20px', minWidth: '4em' }
+                });
+                
+                const heightControl = createLabeledInput('height', 'touchpadHeight', 'touchpadHeight', 200, {
+                    input: { width: '4em', marginLeft: '-20px', marginRight: '20px', minWidth: '4em' }
+                });
+                
+                // function to update touchpad dimensions
+                function updateTouchpadSize() {
+                    const width = Math.max(200, parseInt(widthControl.input.value, 10) || 200);
+                    const height = Math.max(200, parseInt(heightControl.input.value, 10) || 200);
+                    
+                    // enforce minimum values
+                    if (widthControl.input.value < 200) widthControl.input.value = 200;
+                    if (heightControl.input.value < 200) heightControl.input.value = 200;
+                    
+                    touchpad.style.width = width + 'px';
+                    touchpad.style.height = height + 'px';
+                    
+                    const minDeviceWidth = Math.max(260, width + 60);
+                    const minDeviceHeight = Math.max(250, height + 75);
+                    deviceDiv.style.width = minDeviceWidth + 'px';
+                    deviceDiv.style.height = minDeviceHeight + 'px';
+                    
+                    // reposition indicator if values exist
+                    const x = parseFloat(inputX.value) || 0;
+                    const y = parseFloat(inputY.value) || 0;
+                    indicator.style.left = `${x * width}px`;
+                    indicator.style.top = `${(1 - y) * height}px`;
+                    
+                    // send update to WebSocket server
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: widthControl.input.id,
+                        value: widthControl.input.value,
+                        clientId: clientId
+                    });
+                    sendUpdate({
+                        type: 'updateInput',
+                        deviceId: deviceDiv.id,
+                        elementId: heightControl.input.id,
+                        value: heightControl.input.value,
+                        clientId: clientId
+                    });
+                    
+                    // repaint connections when touchpad size changes
+                    jsPlumb.repaintEverything();
+                }
+                
+                // add event listeners to size controls
+                widthControl.input.addEventListener('change', updateTouchpadSize);
+                heightControl.input.addEventListener('change', updateTouchpadSize);
             
                 // find the existing form in the device
                 const form = deviceDiv.querySelector('form');
@@ -2977,96 +3349,223 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 form.appendChild(div);
                 div.appendChild(inputX);
                 div.appendChild(inputY);
+                
+                // create a container for the size controls at the very bottom of the device
+                const sizeControlsDiv = document.createElement('div');
+                sizeControlsDiv.className = 'touchpad-size-controls';
+                sizeControlsDiv.style.position = 'absolute';
+                sizeControlsDiv.style.bottom = '0px';
+                sizeControlsDiv.style.left = '16px';
+                sizeControlsDiv.style.right = '16px';
+                sizeControlsDiv.style.display = 'flex';
+                sizeControlsDiv.style.alignItems = 'center';
+                sizeControlsDiv.style.backgroundColor = 'rgba(203,203,203,0.8)';
+                sizeControlsDiv.style.padding = '5px';
+                sizeControlsDiv.style.borderRadius = '5px';
+                
+                // style the inputs for consistent sizing
+                widthControl.input.style.width = '4em';
+                heightControl.input.style.width = '4em';
+                
+                // add all controls directly with no containers
+                sizeControlsDiv.appendChild(widthControl.label);
+                sizeControlsDiv.appendChild(widthControl.input);
+                sizeControlsDiv.appendChild(heightControl.label);
+                sizeControlsDiv.appendChild(heightControl.input);
+                
+                // add the size controls container to the device div (not the form)
+                deviceDiv.appendChild(sizeControlsDiv);
+                
+                // set initial touchpad size
+                updateTouchpadSize();
             
                 let isDragging = false;
             
                 // add event listeners to the touchpad
                 touchpad.addEventListener('mousedown', (event) => {
                     isDragging = true;
+                    
+                    // immediately position on click
+                    const rect = touchpad.getBoundingClientRect();
+                    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+                        const x = (event.clientX - rect.left) / rect.width;
+                        const y = 1 - (event.clientY - rect.top) / rect.height;
+                        silenceGeneratorX.offset.value = x;
+                        silenceGeneratorY.offset.value = y;
+                        indicator.style.left = `${event.clientX - rect.left}px`;
+                        indicator.style.top = `${event.clientY - rect.top}px`;
+                        inputX.value = x;
+                        inputY.value = y;
+                        
+                        // send update to WebSocket server
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputX.id,
+                            value: inputX.value,
+                            clientId: clientId
+                        });
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputY.id,
+                            value: inputY.value,
+                            clientId: clientId
+                        });
+                    }
+                    
                     event.stopPropagation();
                     event.preventDefault();
                 });
             
-                touchpad.addEventListener('mousemove', (event) => {
+                // global mouse move listener for this touchpad (attached to document)
+                const handleMouseMove = (event) => {
                     if (isDragging) {
                         const rect = touchpad.getBoundingClientRect();
-                        if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
-                            const x = (event.clientX - rect.left) / rect.width;
-                            const y = 1 - (event.clientY - rect.top) / rect.height;
-                            silenceGeneratorX.offset.value = x;
-                            silenceGeneratorY.offset.value = y;
-                            indicator.style.left = `${event.clientX - rect.left}px`;
-                            indicator.style.top = `${event.clientY - rect.top}px`;
-                            inputX.value = x;
-                            inputY.value = y;
-                            
-                            // Send update to WebSocket server
-                            sendUpdate({
-                                type: 'updateInput',
-                                deviceId: deviceDiv.id,
-                                elementId: inputX.id,
-                                value: inputX.value,
-                                clientId: clientId
-                            });
-                            sendUpdate({
-                                type: 'updateInput',
-                                deviceId: deviceDiv.id,
-                                elementId: inputY.id,
-                                value: inputY.value,
-                                clientId: clientId
-                            });
-                        }
+                        
+                        // calculate raw coordinates
+                        let rawX = event.clientX - rect.left;
+                        let rawY = event.clientY - rect.top;
+                        
+                        // clamp coordinates to bounds while allowing continued tracking
+                        const clampedX = Math.max(0, Math.min(rect.width, rawX));
+                        const clampedY = Math.max(0, Math.min(rect.height, rawY));
+                        
+                        // convert to normalized coordinates (0-1)
+                        const x = clampedX / rect.width;
+                        const y = 1 - (clampedY / rect.height);
+                        
+                        // update audio and visual state
+                        silenceGeneratorX.offset.value = x;
+                        silenceGeneratorY.offset.value = y;
+                        indicator.style.left = `${clampedX}px`;
+                        indicator.style.top = `${clampedY}px`;
+                        inputX.value = x;
+                        inputY.value = y;
+                        
+                        // send update to WebSocket server
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputX.id,
+                            value: inputX.value,
+                            clientId: clientId
+                        });
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputY.id,
+                            value: inputY.value,
+                            clientId: clientId
+                        });
+                        
                         event.stopPropagation();
                         event.preventDefault();
                     }
-                });
+                };
+                
+                // store the handler so we can remove it later
+                deviceDiv._touchpadMouseMoveHandler = handleMouseMove;
+                document.addEventListener('mousemove', handleMouseMove);
             
                 document.addEventListener('mouseup', (event) => {
-                    isDragging = false;
+                    if (isDragging) {
+                        isDragging = false;
+                    }
                 });
             
                 touchpad.addEventListener('touchstart', (event) => {
                     isDragging = true;
+                    
+                    // immediately position on touch
+                    const rect = touchpad.getBoundingClientRect();
+                    const touch = event.touches[0];
+                    if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                        const x = (touch.clientX - rect.left) / rect.width;
+                        const y = 1 - (touch.clientY - rect.top) / rect.height;
+                        silenceGeneratorX.offset.value = x;
+                        silenceGeneratorY.offset.value = y;
+                        indicator.style.left = `${touch.clientX - rect.left}px`;
+                        indicator.style.top = `${touch.clientY - rect.top}px`;
+                        inputX.value = x;
+                        inputY.value = y;
+                        
+                        // send update to WebSocket server
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputX.id,
+                            value: inputX.value,
+                            clientId: clientId
+                        });
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputY.id,
+                            value: inputY.value,
+                            clientId: clientId
+                        });
+                    }
+                    
                     event.stopPropagation();
                     event.preventDefault();
                 });
             
-                touchpad.addEventListener('touchmove', (event) => {
+                // global touch move listener for this touchpad (attached to document)
+                const handleTouchMove = (event) => {
                     if (isDragging) {
                         const rect = touchpad.getBoundingClientRect();
                         const touch = event.touches[0];
-                        if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-                            const x = (touch.clientX - rect.left) / rect.width;
-                            const y = 1 - (touch.clientY - rect.top) / rect.height;
-                            silenceGeneratorX.offset.value = x;
-                            silenceGeneratorY.offset.value = y;
-                            indicator.style.left = `${touch.clientX - rect.left}px`;
-                            indicator.style.top = `${touch.clientY - rect.top}px`;
-                            inputX.value = x;
-                            inputY.value = y;
-                            // Send update to WebSocket server
-                            sendUpdate({
-                                type: 'updateInput',
-                                deviceId: deviceDiv.id,
-                                elementId: inputX.id,
-                                value: inputX.value,
-                                clientId: clientId
-                            });
-                            sendUpdate({
-                                type: 'updateInput',
-                                deviceId: deviceDiv.id,
-                                elementId: inputY.id,
-                                value: inputY.value,
-                                clientId: clientId
-                            });
-                        }
+                        
+                        // calculate raw coordinates
+                        let rawX = touch.clientX - rect.left;
+                        let rawY = touch.clientY - rect.top;
+                        
+                        // clamp coordinates to bounds while allowing continued tracking
+                        const clampedX = Math.max(0, Math.min(rect.width, rawX));
+                        const clampedY = Math.max(0, Math.min(rect.height, rawY));
+                        
+                        // convert to normalized coordinates (0-1)
+                        const x = clampedX / rect.width;
+                        const y = 1 - (clampedY / rect.height);
+                        
+                        // update audio and visual state
+                        silenceGeneratorX.offset.value = x;
+                        silenceGeneratorY.offset.value = y;
+                        indicator.style.left = `${clampedX}px`;
+                        indicator.style.top = `${clampedY}px`;
+                        inputX.value = x;
+                        inputY.value = y;
+                        
+                        // send update to WebSocket server
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputX.id,
+                            value: inputX.value,
+                            clientId: clientId
+                        });
+                        sendUpdate({
+                            type: 'updateInput',
+                            deviceId: deviceDiv.id,
+                            elementId: inputY.id,
+                            value: inputY.value,
+                            clientId: clientId
+                        });
+                        
                         event.stopPropagation();
                         event.preventDefault();
                     }
-                });
+                };
+                
+                // store the handler so it can be removed later
+                deviceDiv._touchpadTouchMoveHandler = handleTouchMove;
+                document.addEventListener('touchmove', handleTouchMove);
             
                 document.addEventListener('touchend', (event) => {
-                    isDragging = false;
+                    if (isDragging) {
+                        isDragging = false;
+                    }
                 });
             
                 document.addEventListener('touchcancel', (event) => {
@@ -3076,11 +3575,13 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 document.addEventListener('touchpadStateRecall', (event) => {
                     const x = parseFloat(inputX.value);
                     const y = parseFloat(inputY.value);
-                    const rect = touchpad.getBoundingClientRect();
-                    indicator.style.left = `${x * rect.width}px`;
-                    indicator.style.top = `${(1 - y) * rect.height}px`;
+                    const width = parseInt(widthControl.input.value, 10) || 200;
+                    const height = parseInt(heightControl.input.value, 10) || 200;
+                    indicator.style.left = `${x * width}px`;
+                    indicator.style.top = `${(1 - y) * height}px`;
                     silenceGeneratorX.offset.value = x;
                     silenceGeneratorY.offset.value = y;
+                    updateTouchpadSize();
                 });
             }
             else if (filename === "button") {
@@ -3090,9 +3591,9 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
             
                 // create the device
                 const device = createMockRNBODevice(context, silenceGenerator, silenceGenerator, [{ comment: 'output' }], []);
-                deviceDiv = addDeviceToWorkspace(device, "button", false);
+                deviceDiv = addDeviceToWorkspace(device, "button", false, devicePosition);
             
-                // Store reference to the silence generator
+                // store reference to the silence generator
                 devices[deviceDiv.id].silenceGenerator = silenceGenerator;
             
                 // create a button
@@ -3134,7 +3635,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     button.style.color = 'white';
                     hiddenInput.value = '1';
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -3154,7 +3655,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                     button.style.color = 'black';
                     hiddenInput.value = '0';
             
-                    // Send update to WebSocket server
+                    // send update to WebSocket server
                     sendUpdate({
                         type: 'updateInput',
                         deviceId: deviceDiv.id,
@@ -3171,7 +3672,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 button.addEventListener('touchend', handleButtonUp);
             }
             else if ( filename.startsWith('output') ) {
-                deviceDiv  = addDeviceToWorkspace(null, 'output', true);
+                deviceDiv  = addDeviceToWorkspace(null, 'output', true, devicePosition);
             }
             else {
                 // is a RNBO-generated device
@@ -3207,18 +3708,70 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 }
                 const patcher = jsonFiles[`${filename}`];
                 const device = await RNBO.createDevice({ context, patcher });
-                deviceDiv = addDeviceToWorkspace(device, filename, false);
-                if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' ) {
-                    createAudioLoader(device, context, deviceDiv);
+                deviceDiv = addDeviceToWorkspace(device, filename, false, devicePosition);
+                if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' || filename == 'wavetable' ) {
+                    createAudioLoader(device, context, deviceDiv, filename);
                     if (audioBuffer) {
                         await device.setDataBuffer('buf', audioBuffer.buffer);
                         audioBuffers[audioBuffer.name] = audioBuffer.buffer;
                         deviceDiv.dataset.audioFileName = audioBuffer.name;
+                        
+                        // create container for filename and copy button
+                        const fileNameContainer = createAudioFileNameContainer();
+
                         const fileNameElement = document.createElement('p');
-                        fileNameElement.className = 'audioFileName';
-                        fileNameElement.textContent = `file: ${audioBuffer.name}`;
+                        fileNameElement.innerHTML = `file: ${audioBuffer.name}`;
+                        fileNameElement.style.margin = '0';
+                        fileNameElement.style.fontSize = '12px';
+                        fileNameElement.style.overflowX = 'hidden';
+                        fileNameElement.style.whiteSpace = 'nowrap';
+                        fileNameElement.style.textOverflow = 'ellipsis';
+                        fileNameElement.style.marginRight = '5px';
+
+                        // create copy button
+                        const copyButton = document.createElement('button');
+                        copyButton.textContent = 'copy';
+                        copyButton.type = 'button';
+                        copyButton.style.position = 'absolute';
+                        copyButton.style.right = '0';
+                        copyButton.style.top = '50%';
+                        copyButton.style.transform = 'translateY(-50%)';
+                        copyButton.style.fontSize = '10px';
+                        copyButton.style.padding = '2px 6px';
+                        copyButton.style.border = '0';
+                        copyButton.style.borderRadius = '10px';
+                        copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
+                        copyButton.style.color = 'white';
+                        copyButton.style.cursor = 'pointer';
+                        copyButton.style.transition = 'background-color 0.15s ease';
+                        copyButton.title = 'Copy filename to clipboard';
+
+                        copyButton.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            // visual feedback
+                            copyButton.style.backgroundColor = 'rgb(101, 255, 229)';
+                            copyButton.style.color = 'black';
+                            setTimeout(() => {
+                                copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
+                                copyButton.style.color = 'white';
+                            }, 150);
+                            
+                            copyFilenameToClipboard(audioBuffer.name);
+                        });
+
+                        copyButton.addEventListener('mousedown', (event) => {
+                            event.stopPropagation();
+                        });
+
+                        copyButton.addEventListener('touchstart', (event) => {
+                            event.stopPropagation();
+                        });
+
+                        fileNameContainer.appendChild(fileNameElement);
+                        fileNameContainer.appendChild(copyButton);
+                        
                         const form = deviceDiv.querySelector('form');
-                        form.appendChild(fileNameElement);
+                        form.appendChild(fileNameContainer);
                     }
                 }
             }
@@ -3226,10 +3779,6 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
         // attach the same event handlers to every device div
         deviceDiv.onmousedown = handleDeviceMouseDown;
         deviceDiv.ontouchstart = handleDeviceMouseDown;
-        if ( devicePosition ) {
-            deviceDiv.style.left = devicePosition.left + 'px';
-            deviceDiv.style.top = devicePosition.top + 'px';
-        }
         // apply device-specific styles to the div
         applyDeviceStyles(deviceDiv, filename);
 
@@ -3259,15 +3808,15 @@ function applyDeviceStyles(deviceDiv, filename) {
     const styles = {
         pattern: { width: '32em', height: '120px' },
         number: { height: '80px' },
-        play: { height: '216px' },
-        wave: { width: '14em' },
-        granular: { height: '160px' },
+        play: { width: '15em', height: '240px' },
+        wave: { width: '15em', height: '130px' },
+        granular: { width: '15em', height: '188px' },
+        buffer: { width: '15em', height: '80px' },
         comment: { width: '10em', height: '80px' },
-        buffer: { width: '12em' },
         print: { width: '333px', paddingBottom: '10px', height: '236px' },
         record: { width: '104px', minWidth: '104px' },
         slider: { width: '200px', height: '110px' },
-        touchpad: { width: '260px', height: '250px' },
+        touchpad: { minWidth: '260px', minHeight: '250px' },
         button: { height: '138px' },
         toggle: { height: '138px' },
         output: { width: '140px' },
@@ -3357,17 +3906,160 @@ function showGrowlNotification(message) {
     }, 3000);
 }
 
-function createAudioLoader(device, context, deviceDiv) {
+function createAudioFileNameContainer() {
+    const container = document.createElement('div');
+    container.className = 'audioFileName';
+    container.style.position = 'absolute';
+    container.style.bottom = '3px';
+    container.style.left = '162px';
+    container.style.transform = 'translateX(-50%)';
+    container.style.textAlign = 'center';
+    container.style.background = 'transparent';
+    container.style.border = 'transparent';
+    container.style.borderRadius = '3px';
+    container.style.width = '129px';
+    container.style.maxWidth = 'calc(100% - 20px)';
+    container.style.paddingRight = '40px';
+    return container;
+}
+
+function createAudioLoader(device, context, deviceDiv, deviceType) {
     // create a new file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'audio/wav,audio/mp3,audio/mpeg,audio/*';
 
-    // create a new p element for the file name
-    const fileNameElement = document.createElement('p');
-    fileNameElement.className = 'audioFileName';
+    // create a new container for the file name with default content
+    const fileNameElement = createAudioFileNameContainer();
+    fileNameElement.style.fontSize = '12px';
+    fileNameElement.style.minHeight = '16px'; // ensure consistent height
+    fileNameElement.innerHTML = '&nbsp;';
 
-    // listen for changes
+    // function to update the audio buffer display
+    const updateAudioFileName = (fileName) => {
+        // remove any preexisting elements with class name "audioFileName"
+        const existingElements = deviceDiv.querySelectorAll('.audioFileName');
+        existingElements.forEach(element => element.remove());
+
+        // create container for filename and copy button
+        const fileNameContainer = createAudioFileNameContainer();
+
+        // create a simple text display for the filename (easily copyable)
+        const fileNameDisplay = document.createElement('div');
+        fileNameDisplay.innerHTML = fileName || '&nbsp;';
+        fileNameDisplay.style.fontSize = '12px';
+        fileNameDisplay.style.cursor = 'text';
+        fileNameDisplay.style.userSelect = 'text';
+        fileNameDisplay.style.overflowX = 'hidden';
+        fileNameDisplay.style.whiteSpace = 'nowrap';
+        fileNameDisplay.style.textOverflow = 'ellipsis';
+        fileNameDisplay.style.marginRight = '5px';
+        fileNameDisplay.title = fileName ? `Current buffer: ${fileName} (click to select for copying)` : 'No file loaded';
+
+        // prevent dragging when clicking on filename for copy/paste functionality
+        fileNameDisplay.addEventListener('mousedown', (event) => {
+            event.stopPropagation();
+        });
+        
+        fileNameDisplay.addEventListener('touchstart', (event) => {
+            event.stopPropagation();
+        });
+
+        // create copy button
+        const copyButton = document.createElement('button');
+        copyButton.textContent = 'copy';
+        copyButton.type = 'button';
+        copyButton.style.position = 'absolute';
+        copyButton.style.right = '4px';
+        copyButton.style.top = '50%';
+        copyButton.style.transform = 'translateY(-50%)';
+        copyButton.style.fontSize = '10px';
+        copyButton.style.padding = '2px 6px';
+        copyButton.style.border = '0';
+        copyButton.style.borderRadius = '10px';
+        copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
+        copyButton.style.color = 'white';
+        copyButton.style.cursor = 'pointer';
+        copyButton.style.display = fileName ? 'inline-block' : 'none';
+        copyButton.style.transition = 'background-color 0.15s ease';
+        copyButton.title = 'Copy filename to clipboard';
+
+        copyButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (fileName) {
+                // visual feedback for button tap
+                copyButton.style.backgroundColor = 'rgb(101, 255, 229)';
+                copyButton.style.color = 'black';
+                setTimeout(() => {
+                    copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
+                    copyButton.style.color = 'white';
+                }, 150);
+                
+                copyFilenameToClipboard(fileName);
+            }
+        });
+
+        copyButton.addEventListener('mousedown', (event) => {
+            event.stopPropagation();
+        });
+
+        copyButton.addEventListener('touchstart', (event) => {
+            event.stopPropagation();
+        });
+
+        fileNameContainer.appendChild(fileNameDisplay);
+        fileNameContainer.appendChild(copyButton);
+
+        const form = deviceDiv.querySelector('form');
+        
+        // insert before the URL container if it exists, otherwise append to end
+        const urlContainer = form.querySelector('.audioUrlContainer');
+        if (urlContainer) {
+            form.insertBefore(fileNameContainer, urlContainer);
+        } else {
+            form.appendChild(fileNameContainer);
+        }
+    };
+
+    // function to load audio from URL
+    const loadAudioFromURL = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuf = await context.decodeAudioData(arrayBuffer);
+            
+            // extract filename from URL or use a default name
+            const urlObj = new URL(url);
+            const fileName = urlObj.pathname.split('/').pop() || 'url-audio-file';
+            
+            // store the audio buffer in the global object
+            audioBuffers[fileName] = audioBuf;
+            
+            await device.setDataBuffer('buf', audioBuf);
+            deviceDiv.dataset.audioFileName = fileName;
+            deviceDiv.dataset.audioUrl = url; // save the URL for persistence
+            
+            updateAudioFileName(fileName);
+            
+        } catch (error) {
+            console.error('Error loading audio from URL:', error);
+            let errorMessage = 'Error loading audio from URL';
+            if (error.name === 'EncodingError') {
+                errorMessage = 'Error: Invalid audio format or corrupted file';
+            } else if (error.message.includes('HTTP error')) {
+                errorMessage = `Error: ${error.message}`;
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Error: Network error or CORS issue. The URL may not allow cross-origin requests.';
+            }
+            showGrowlNotification(errorMessage);
+        }
+    };
+
+    // listen for file input changes
     fileInput.addEventListener('change', async (event) => {
         if (event.target.files.length > 0) {
             const file = event.target.files[0];
@@ -3379,36 +4071,90 @@ function createAudioLoader(device, context, deviceDiv) {
             await device.setDataBuffer('buf', audioBuf);
             deviceDiv.dataset.audioFileName = file.name;
 
-            // remove any preexisting elements with class name "audioFileName"
-            const existingElements = deviceDiv.querySelectorAll('.audioFileName');
-            existingElements.forEach(element => element.remove());
-
-            // create a new p element to display the audio file name
-            const fileNameElement = document.createElement('p');
-            fileNameElement.className = 'audioFileName';
-            fileNameElement.textContent = `file: ${file.name}`;
-            const form = deviceDiv.querySelector('form');
-            form.appendChild(fileNameElement);
+            updateAudioFileName(file.name);
         }
     });
 
-    // create a new button
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = 'load file';
-    button.className = 'audioFileLoaderButton';
+    // create URL input field
+    const urlInput = document.createElement('input');
+    urlInput.type = 'url';
+    urlInput.placeholder = 'Enter audio URL';
+    urlInput.className = 'audioUrlInput';
+    urlInput.id = 'audioUrlInput'; // Add ID for easier state saving/restoration
+    urlInput.style.width = '168px';
+    urlInput.style.marginLeft = '5px';
+
+    // create URL load button
+    const urlButton = document.createElement('button');
+    urlButton.type = 'button';
+    urlButton.textContent = 'load url';
+    urlButton.className = 'audioUrlLoaderButton';
+    urlButton.style.backgroundColor = 'rgb(8, 56, 78)';
+    urlButton.style.color = 'white';
+    urlButton.style.marginRight = '5px';
+
+
+
+    // when the URL button is clicked, load audio from the URL
+    urlButton.addEventListener('click', () => {
+        const url = urlInput.value.trim();
+        if (url) {
+            loadAudioFromURL(url);
+        } else {
+            showGrowlNotification('Please enter a valid URL');
+        }
+    });
+
+    // allow loading URL by pressing Enter
+    urlInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            const url = urlInput.value.trim();
+            if (url) {
+                loadAudioFromURL(url);
+            } else {
+                showGrowlNotification('Please enter a valid URL');
+            }
+        }
+    });
+
+    // allow loading URL when focus leaves the input (blur event)
+    urlInput.addEventListener('blur', () => {
+        const url = urlInput.value.trim();
+        if (url) {
+            loadAudioFromURL(url);
+        }
+        // Note: No error notification on blur to avoid annoying users who just click away
+    });
+
+    // create a new button for file loading
+    const fileButton = document.createElement('button');
+    fileButton.type = 'button';
+    fileButton.textContent = 'load file';
+    fileButton.className = 'audioFileLoaderButton';
 
     // when the button is clicked, simulate a click on the file input
-    button.addEventListener('click', () => fileInput.click());
+    fileButton.addEventListener('click', () => fileInput.click());
 
     // select the form inside the deviceDiv
     const form = deviceDiv.querySelector('form');
-    // add the button to the form
-    form.appendChild(button);
+    
+    // create a container for the URL input controls
+    const urlContainer = document.createElement('div');
+    urlContainer.className = 'audioUrlContainer';
+    urlContainer.style.position = 'absolute';
+    urlContainer.style.bottom = '26px';
+    urlContainer.style.left = '10px';
+    urlContainer.style.right = '10px';
+    urlContainer.appendChild(urlButton);
+    urlContainer.appendChild(urlInput);
+    
+    // add the controls to the form - URL controls at the bottom
+    form.appendChild(fileButton);
     form.appendChild(fileNameElement);
+    form.appendChild(urlContainer);
 }
 
-function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false) {
+function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false, devicePosition = null) {
     const count = deviceCounts[deviceType] || 0;
     deviceCounts[deviceType] = count + 1;
     const deviceDiv = document.createElement('div');
@@ -3417,9 +4163,19 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     deviceDiv.className = 'node';
     deviceDiv.innerHTML = isSpeakerChannelDevice ? `<b class="deviceLabel">output</b>` : `<b class="deviceLabel">${getDisplayNameByFileName(deviceType)}</b>`;
     
-    // place the object at the mouse's last position
-    deviceDiv.style.left = mousePosition.x + 'px';
-    deviceDiv.style.top = mousePosition.y + 'px';
+    // place the object at the correct position
+    if (devicePosition) {
+        const navbarHeight = 0;
+        const leftEdgeLimit = 0;
+        deviceDiv.style.left = Math.max(devicePosition.left, leftEdgeLimit) + 'px';
+        deviceDiv.style.top = Math.max(devicePosition.top, navbarHeight) + 'px';
+    } else {
+        // fallback to mouse position for backward compatibility
+        const navbarHeight = 0;
+        const leftEdgeLimit = 0;
+        deviceDiv.style.left = Math.max(mousePosition.x, leftEdgeLimit) + 'px';
+        deviceDiv.style.top = Math.max(mousePosition.y, navbarHeight) + 'px';
+    }
 
     if (!isSpeakerChannelDevice) {
         // create silence generator node
@@ -3647,6 +4403,7 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     workspace.appendChild(deviceDiv);
     // Add a drag event listener to the deviceDiv
     jsPlumb.draggable(deviceDiv, {
+        grid: [5, 5],
         start: function(event) {
             if (isLocked) return false;
             isDraggingDevice = true;
@@ -3655,8 +4412,36 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
         drag: function(event) {
             if (isLocked) return false;
             
+            if (event.e) {
+                const coords = globalGetEventCoordinates(event.e);
+                workspaceCurrentMouseX = coords.x;
+                workspaceCurrentMouseY = coords.y;
+                
+                // only check for expansion if near edges
+                const workspace = document.getElementById('workspace');
+                const edgeThreshold = 50;
+                const rect = workspace.getBoundingClientRect();
+                
+                const nearRightEdge = workspaceCurrentMouseX >= rect.right - edgeThreshold;
+                const nearBottomEdge = workspaceCurrentMouseY >= rect.bottom - edgeThreshold;
+                const nearWindowEdge = workspaceCurrentMouseX >= window.innerWidth - edgeThreshold || 
+                                      workspaceCurrentMouseX <= edgeThreshold ||
+                                      workspaceCurrentMouseY >= window.innerHeight - edgeThreshold || 
+                                      workspaceCurrentMouseY <= edgeThreshold;
+                
+                if (nearRightEdge || nearBottomEdge || nearWindowEdge) {
+                    globalStartExpansionIfNeeded();
+                } else {
+                    // clean up expansion if movement is away from edges
+                    if (workspaceExpandInterval) {
+                        clearInterval(workspaceExpandInterval);
+                        workspaceExpandInterval = null;
+                    }
+                }
+            }
+            
             isLocalAction = false;
-            // Send update to WebSocket server if this is a local action
+            // send update to WebSocket server if this is a local action
             const deviceId = deviceDiv.id;
                 const devicePosition = {
                     left: parseInt(deviceDiv.style.left, 10),
@@ -3676,6 +4461,19 @@ function addDeviceToWorkspace(device, deviceType, isSpeakerChannelDevice = false
     
             const selectedNodes = document.querySelectorAll('.selectedNode');
             selectedNodes.forEach(node => {
+                const navbarHeight = 0; // Account for navbar height
+                const leftEdgeLimit = 0; // Don't go past left edge
+                const currentTop = parseInt(node.style.top, 10) || 0;
+                const currentLeft = parseInt(node.style.left, 10) || 0;
+                
+                // Ensure device doesn't end up under navbar or past left edge
+                if (currentTop < navbarHeight) {
+                    node.style.top = navbarHeight + 'px';
+                }
+                if (currentLeft < leftEdgeLimit) {
+                    node.style.left = leftEdgeLimit + 'px';
+                }
+                
                 const deviceId = node.id;
                 const devicePosition = {
                     left: parseInt(node.style.left, 10),
@@ -3947,7 +4745,8 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
             left: deviceElement.style.left,
             top: deviceElement.style.top,
             inputs: {},
-            audioFileName: deviceElement.dataset.audioFileName
+            audioFileName: deviceElement.dataset.audioFileName,
+            audioUrl: deviceElement.dataset.audioUrl
         };
 
         // save the values of the input elements
@@ -4030,6 +4829,24 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
 }
 
 
+function copyFilenameToClipboard(filename) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(filename);
+    } else {
+        // fallback method for older browsers or unsupported mobile devices
+        const textarea = document.createElement('textarea');
+        textarea.value = filename;
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+        }
+        document.body.removeChild(textarea);
+    }
+}
+
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         return navigator.clipboard.writeText(text).then(function() {
@@ -4076,7 +4893,8 @@ async function getStateForDeviceIds(deviceIds) {
             left: deviceElement.style.left,
             top: deviceElement.style.top,
             inputs: {},
-            audioFileName: deviceElement.dataset.audioFileName
+            audioFileName: deviceElement.dataset.audioFileName,
+            audioUrl: deviceElement.dataset.audioUrl
         };
 
         // save the values of the input elements
@@ -4109,7 +4927,7 @@ async function copySelectedNodes() {
     const deviceStates = await getStateForDeviceIds(deviceIds);
     reconstructDevicesAndConnections(deviceStates, null, true, true);
 
-    // Send update to WebSocket server
+    // send update to WebSocket server
     sendUpdate({
         type: 'duplicateDevices',
         deviceStates: deviceStates,
@@ -4331,7 +5149,20 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                 deviceElement = await createDeviceByName(deviceName, {name: deviceState.audioFileName, buffer: audioBuffer}, devicePosition, reconstructFromDuplicateCommand);
             } else {
                 deviceElement = await createDeviceByName(deviceName, null, devicePosition, reconstructFromDuplicateCommand);
-                showGrowlNotification(`Make sure to load the missing audio file: "${deviceState.audioFileName}", since audio files are not stored with shared state URLs`);
+                // if there's a saved URL, restore it and try to load the audio
+                if (deviceState.audioUrl) {
+                    const urlInput = deviceElement.querySelector('.audioUrlInput');
+                    if (urlInput) {
+                        urlInput.value = deviceState.audioUrl;
+                        // automatically attempt reloading from URL
+                        const urlButton = deviceElement.querySelector('.audioUrlLoaderButton');
+                        if (urlButton) {
+                            urlButton.click();
+                        }
+                    }
+                } else {
+                    showGrowlNotification(`Make sure to load the missing audio file: "${deviceState.audioFileName}", since audio files are not stored with shared state URLs`);
+                }
             }
         } else {
             if (deviceName == 'microphone input') {
@@ -4956,7 +5787,7 @@ function createSequencerUI(deviceDiv) {
                 skipDataInput.value = checkboxValues.join(' ');
                 skipDataInput.dispatchEvent(new Event('change'));
 
-                // Send update to WebSocket server
+                // send update to WebSocket server
                 sendUpdate({
                     type: 'updateInput',
                     deviceId: deviceDiv.id,
@@ -4994,7 +5825,7 @@ function createSequencerUI(deviceDiv) {
             }
         });
 
-        // Send update to WebSocket server
+        // send update to WebSocket server
         sendUpdate({
             type: 'updateInput',
             deviceId: deviceDiv.id,
@@ -5018,7 +5849,7 @@ function createSequencerUI(deviceDiv) {
                 slider.dispatchEvent(new Event('input'));
             });
 
-            // Send update to WebSocket server
+            // send update to WebSocket server
             sendUpdate({
                 type: 'updateInput',
                 deviceId: deviceDiv.id,
@@ -5030,7 +5861,7 @@ function createSequencerUI(deviceDiv) {
     });
 
     driftPercentageInput.addEventListener('change', (event) => {
-        // Send update to WebSocket server
+        // send update to WebSocket server
         sendUpdate({
             type: 'updateInput',
             deviceId: deviceDiv.id,
@@ -5041,7 +5872,7 @@ function createSequencerUI(deviceDiv) {
     });
 
     driftIntensityInput.addEventListener('change', (event) => {
-        // Send update to WebSocket server
+        // send update to WebSocket server
         sendUpdate({
             type: 'updateInput',
             deviceId: deviceDiv.id,
@@ -5121,7 +5952,7 @@ function createQuantizerUI(deviceDiv) {
             scaleDataInput.value = fullScale.join(' ');
             scaleDataInput.dispatchEvent(new Event('change'));
 
-            // Send update to WebSocket server
+            // send update to WebSocket server
             sendUpdate({
                 type: 'updateInput',
                 deviceId: deviceDiv.id,
@@ -5277,6 +6108,35 @@ function updateInput(deviceId, inportTag, value) {
                 const silenceGeneratorY = devices[deviceId].silenceGeneratorY;
                 silenceGeneratorX.offset.value = x;
                 silenceGeneratorY.offset.value = y;
+            }
+        }
+        
+        // special handling for touchpad width and height
+        if (inportTag === 'touchpadWidth' || inportTag === 'touchpadHeight') {
+            const touchpad = deviceDiv.querySelector('.touchpad');
+            const indicator = deviceDiv.querySelector('.touchpadIndicator');
+            const inputX = deviceDiv.querySelector('#touchpadX');
+            const inputY = deviceDiv.querySelector('#touchpadY');
+            const widthInput = deviceDiv.querySelector('#touchpadWidth');
+            const heightInput = deviceDiv.querySelector('#touchpadHeight');
+
+            if (touchpad && indicator && widthInput && heightInput) {
+                const width = parseInt(widthInput.value, 10) || 200;
+                const height = parseInt(heightInput.value, 10) || 200;
+                touchpad.style.width = width + 'px';
+                touchpad.style.height = height + 'px';
+                
+                // update device container size to accommodate the touchpad
+                const minDeviceWidth = Math.max(260, width + 60);
+                const minDeviceHeight = Math.max(250, height + 50);
+                deviceDiv.style.width = minDeviceWidth + 'px';
+                deviceDiv.style.minHeight = minDeviceHeight + 'px';
+                
+                // reposition indicator if values exist
+                const x = parseFloat(inputX.value) || 0;
+                const y = parseFloat(inputY.value) || 0;
+                indicator.style.left = `${x * width}px`;
+                indicator.style.top = `${(1 - y) * height}px`;
             }
         }
 

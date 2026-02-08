@@ -106,6 +106,10 @@ var wasmDeviceURLs = [
         "displayName": "ftom"
     },
     {
+        "fileName": "gate",
+        "displayName": "gate"
+    },
+    {
         "fileName": "granular",
         "displayName": "granular"
     },
@@ -140,6 +144,10 @@ var wasmDeviceURLs = [
     {
         "fileName": "lpf",
         "displayName": "lowpass"
+    },
+    {
+        "fileName": "metronome",
+        "displayName": "metronome"
     },
     {
         "fileName": "midicc",
@@ -322,6 +330,10 @@ var wasmDeviceURLs = [
         "displayName": "subtract (-)"
     },
     {
+        "fileName": "switch",
+        "displayName": "switch"
+    },
+    {
         "fileName": "toggle",
         "displayName": "toggle"
     },
@@ -332,6 +344,10 @@ var wasmDeviceURLs = [
     {
         "fileName": "tri",
         "displayName": "triangle"
+    },
+    {
+        "fileName": "trigtogate",
+        "displayName": "trigtogate"
     },
     {
         "fileName": "wave",

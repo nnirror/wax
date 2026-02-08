@@ -45,6 +45,9 @@
         "minimum": -1,
         "maximum": 1
     },
+    "gate": {
+        "input num": 0
+    },
     "granular": {
         "position": 0,
         "size (ms)": 50
@@ -56,6 +59,10 @@
     "lpf": {
         "cutoff": 1000,
         "q": 0.1
+    },
+        "metronome": {
+        "tempo (ms)": 1000,
+        "division": 1
     },
     "mix": {
         "crossfade": 0.5
@@ -110,8 +117,14 @@
         "memory (ms)": 500,
         "loop": 1
     },
+    "switch": {
+        "input num": 0
+    },
     "tri": {
         "slope": 0.5
+    },
+    "trigtogate": {
+        "gate length (ms)": 10
     },
     "wrap": {
         "minimum": -1,

@@ -310,16 +310,39 @@ rect(frequencies, duration = SAMPLE_RATE, pulseWidth = 0.5, fade_in_and_out = fa
   }
 
  sample(name) {
-    if (!name.endsWith('.wav')) {
-        name += '.wav';
-    }
+    // try exact name first
     let audioBuffer = audioBuffers[name];
     if (audioBuffer) {
         this.data = audioBuffer;
-    } else {
-        throw `No buffer found with the name ${name}`;
+        return this;
     }
-    return this;
+    
+    // try name with .wav extension
+    if (!name.includes('.')) {
+        audioBuffer = audioBuffers[name + '.wav'];
+        if (audioBuffer) {
+            this.data = audioBuffer;
+            return this;
+        }
+    }
+    
+    // comprehensive search through all keys
+    const lowerName = name.toLowerCase();
+    const nameWithoutExt = name.replace(/\.[^/.]+$/, '');
+    
+    for (const key in audioBuffers) {
+        const lowerKey = key.toLowerCase();
+        // check if key matches name without extension
+        if (lowerKey === lowerName || 
+            lowerKey === nameWithoutExt.toLowerCase() ||
+            lowerKey.replace(/\.[^/.]+$/, '') === lowerName ||
+            lowerKey.replace(/\.[^/.]+$/, '') === nameWithoutExt.toLowerCase()) {
+            this.data = audioBuffers[key];
+            return this;
+        }
+    }
+    
+    throw `No buffer found with the name ${name}`;
 }
 
 silence(length) {
