@@ -2356,7 +2356,7 @@ function triggerChangeOnTargetDeviceInputs(targetDeviceId) {
     }
 }
 
-async function createCustomAudioWorkletDevice(workletfile, filename) {
+async function createCustomAudioWorkletDevice(workletfile, filename, devicePosition = null) {
     try {
         await context.audioWorklet.addModule(`js/customWorklets/${workletfile}.js`);
 
@@ -2408,7 +2408,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
 
         // Check if the device has a worklet property
         if (customWorklet && customWorklet.worklet) {
-            deviceDiv = await createCustomAudioWorkletDevice(customWorklet.worklet, filename);
+            deviceDiv = await createCustomAudioWorkletDevice(customWorklet.worklet, filename, devicePosition);
         }
         else {
             if (filename === "motion") {
