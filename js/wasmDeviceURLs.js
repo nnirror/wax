@@ -202,6 +202,10 @@ var wasmDeviceURLs = [
         "displayName": "or (||)"
     },
     {
+        "fileName": "oscreceiver",
+        "displayName": "OSC receiver"
+    },
+    {
         "fileName": "overdrive",
         "displayName": "overdrive"
     },
@@ -216,6 +220,11 @@ var wasmDeviceURLs = [
     {
         "fileName": "phasor",
         "displayName": "phasor"
+    },
+    {
+        "fileName": "phasevocoder",
+        "displayName": "phasevocoder",
+        "worklet": "phasevocoder"
     },
     {
         "fileName": "pitchshift",

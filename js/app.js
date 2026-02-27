@@ -2386,6 +2386,19 @@ async function createCustomAudioWorkletDevice(workletfile, filename, devicePosit
                     const deviceDiv = addDeviceToWorkspace(device, filename, false, devicePosition);
                     applyDeviceStyles(deviceDiv, filename);
 
+                    // add audio loader for buffer-based worklets
+                    if (filename === 'phasevocoder') {
+                        createAudioLoader(device, context, deviceDiv, filename);
+                        
+                        // create a method to pass audio buffers to the worklet
+                        device.setDataBuffer = async (name, buffer) => {
+                            customNode.port.postMessage({
+                                type: 'audioBuffer',
+                                buffer: buffer.getChannelData(0) // send first channel data
+                            });
+                        };
+                    }
+
                     // resolve the promise with the created device element and remove tempNode
                     resolve(deviceDiv);
                     tempNode.disconnect();
@@ -2807,6 +2820,101 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 } else {
                     console.error('MIDI not supported in this browser.');
                 }
+            }
+            else if (filename === "oscreceiver") {
+                const oscSource = context.createConstantSource();
+                oscSource.offset.value = 0;
+                oscSource.start();
+                const device = createMockRNBODevice(context, oscSource, [oscSource], [{ comment: 'output' }], []);
+                deviceDiv = addDeviceToWorkspace(device, "oscreceiver", false, devicePosition);
+
+                // create labeled input for OSC address
+                const oscAddress = createLabeledInput('OSC Address', 'oscAddress', 'oscAddress', 'control', {
+                    input: { width: '120px' }
+                }, { type: 'text' });
+
+                // append the label and input to the device div
+                deviceDiv.appendChild(oscAddress.label);
+                deviceDiv.appendChild(oscAddress.input);
+
+                // create connection status indicator
+                const statusIndicator = document.createElement('div');
+                statusIndicator.style.position = 'absolute';
+                statusIndicator.style.top = '55px';
+                statusIndicator.style.right = '10px';
+                statusIndicator.style.width = '12px';
+                statusIndicator.style.height = '12px';
+                statusIndicator.style.borderRadius = '50%';
+                statusIndicator.style.backgroundColor = 'red';
+                statusIndicator.style.border = '1px solid #333';
+                statusIndicator.title = 'WebSocket connection status';
+                deviceDiv.appendChild(statusIndicator);
+
+                // WebSocket connection for OSC messages
+                let websocket = null;
+                let reconnectTimeout = null;
+                
+                function connectWebSocket() {
+                    try {
+                        websocket = new WebSocket('ws://localhost:6011');
+                        
+                        websocket.onopen = function() {
+                            console.log('OSC WebSocket connected');
+                            clearTimeout(reconnectTimeout);
+                            statusIndicator.style.backgroundColor = 'green';
+                            statusIndicator.title = 'Connected to WebSocket bridge';
+                        };
+                        
+                        websocket.onmessage = function(event) {
+                            try {
+                                const oscMessage = JSON.parse(event.data);
+                                let targetAddress = oscAddress.input.value || 'control';
+                                // prepend forward slash if not present
+                                if (!targetAddress.startsWith('/')) {
+                                    targetAddress = '/' + targetAddress;
+                                }
+                                if (oscMessage.address === targetAddress && oscMessage.args && oscMessage.args.length > 0) {
+                                    let value = oscMessage.args[0];
+                                    if (typeof value === 'number') {
+                                        oscSource.offset.setValueAtTime(value, context.currentTime);
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error parsing OSC message:', error);
+                            }
+                        };
+                        
+                        websocket.onclose = function() {
+                            console.log('OSC WebSocket disconnected, attempting to reconnect...');
+                            statusIndicator.style.backgroundColor = 'red';
+                            statusIndicator.title = 'Disconnected - attempting to reconnect...';
+                            reconnectTimeout = setTimeout(connectWebSocket, 2000);
+                        };
+                        
+                        websocket.onerror = function(error) {
+                            console.error('OSC WebSocket error:', error);
+                            statusIndicator.style.backgroundColor = 'red';
+                            statusIndicator.title = 'Connection error';
+                        };
+                    } catch (error) {
+                        console.error('Failed to create OSC WebSocket connection:', error);
+                        statusIndicator.style.backgroundColor = 'red';
+                        statusIndicator.title = 'Failed to connect';
+                        reconnectTimeout = setTimeout(connectWebSocket, 2000);
+                    }
+                }
+                // cleanup function
+                devices[deviceDiv.id].cleanupOSC = function() {
+                    if (websocket) {
+                        websocket.close();
+                    }
+                    if (reconnectTimeout) {
+                        clearTimeout(reconnectTimeout);
+                    }
+                };
+                
+                // start connection
+                connectWebSocket();
             }
             else if (filename === "toggle") {
                 const silenceGenerator = context.createConstantSource();
@@ -3709,7 +3817,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
                 const patcher = jsonFiles[`${filename}`];
                 const device = await RNBO.createDevice({ context, patcher });
                 deviceDiv = addDeviceToWorkspace(device, filename, false, devicePosition);
-                if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' || filename == 'wavetable' ) {
+                if ( filename == 'wave' ||  filename == 'play' || filename == 'buffer' || filename == 'granular' || filename == 'wavetable' || filename == 'phasevocoder' ) {
                     createAudioLoader(device, context, deviceDiv, filename);
                     if (audioBuffer) {
                         await device.setDataBuffer('buf', audioBuffer.buffer);
@@ -3832,12 +3940,14 @@ function applyDeviceStyles(deviceDiv, filename) {
         keyboard: { width: '410px', height: '186px' },
         midinote: { width: '202px' },
         midicc: { width: '202px', height: '78px' },
+        oscreceiver: { width: '202px', height: '78px' },
         sequencer: { width: '331px', paddingBottom: '14px' },
         scope: { width: '308px', paddingBottom: '10px' },
         spectrogram: { width: '250px', paddingBottom: '10px' },
         step_trig: {width: '14em'},
         quantizer: { width: '549px' },
-        complexity: { width: '150px' }
+        complexity: { width: '150px' },
+        phasevocoder: { width: '15em', height: '100px' }
     };
 
     const style = styles[filename];

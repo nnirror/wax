@@ -293,6 +293,14 @@ Returns `value` as a signal.
 ## or
 Computes the logical OR of `input 1` `input 2`.
 
+## oscreceiver
+Receives OSC (Open Sound Control) messages over a network connection and outputs the first numeric argument as a signal.
+
+**NOTE:** This device requires an OSC-to-Websocket bridge server to be running on your local machine. The bridge server receives OSC messages and transmits them to the browser over a WebSocket connection. The `js/oscWebsocketBridge.js` file is a working example based in NodeJS that receives OSC UDP messages on port 5813 and transmits them to the browser.
+- `OSC Address`: the OSC address pattern to listen for (e.g., "/control", "/synth/freq"). If no forward slash is provided at the beginning, one will be automatically added.
+- When an OSC message is received matching the specified address, the first numeric argument is output as a signal.
+- The connection will automatically reconnect if the WebSocket connection is lost.
+
 ## overdrive
 Overdrives `input` by `amount`, which expects a range of floats 0 - 1. Higher `amount` values produce more distortion.
 
@@ -314,6 +322,10 @@ Generates a customizable wavetable using [Facet](https://github.com/nnirror/face
 
 ## phasor
 Generates a phasor between 0 and 1, oscillating at `frequency`.
+
+## phasevocoder
+Performs phase vocoder analysis and synthesis on a loaded audio buffer using FFT-based processing. The `position` inlet accepts values between 0 and 1 to select the relative playback position in the audio buffer, enabling high-quality time-stretching and position scrubbing through the audio file.
+- To load an audio file from somewhere on the internet, enter a URL in the text input next to the `load url` button.
 
 ## pitchshift
 Applies a time-domain frequency shift effect of `shift amt` to `input`. A `shift amt` of 2 will be twice as high frequency.
