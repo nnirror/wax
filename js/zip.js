@@ -35,10 +35,17 @@ async function zipWasmFiles() {
     // write the zip file to the wasm directory
     fs.writeFileSync(zipFilePath, zipContent);
 
-    // update the config.js file
+    // update the config.js file, preserving existing values
     const configFilePath = path.join(__dirname, 'config.js');
+    let collabServerUrl = '';
+    if (fs.existsSync(configFilePath)) {
+        const existing = fs.readFileSync(configFilePath, 'utf8');
+        const match = existing.match(/COLLAB_SERVER_URL:\s*'([^']*)'/);
+        if (match) collabServerUrl = match[1];
+    }
     const configContent = `const CONFIG = {
-    FILE_URL: 'wasm/${zipFileName}'
+    FILE_URL: 'wasm/${zipFileName}',
+    COLLAB_SERVER_URL: '${collabServerUrl}'
 };`;
     fs.writeFileSync(configFilePath, configContent);
 
