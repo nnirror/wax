@@ -14,17 +14,7 @@ const server = http.createServer((req, res) => {
     res.end();
 });
 
-const wss = new WebSocket.Server({ noServer: true });
-
-server.on('upgrade', (req, socket, head) => {
-    if (req.url === '/ws') {
-        wss.handleUpgrade(req, socket, head, (ws) => {
-            wss.emit('connection', ws, req);
-        });
-    } else {
-        socket.destroy();
-    }
-});
+const wss = new WebSocket.Server({ server });
 
 // store rooms and their states
 const rooms = {};

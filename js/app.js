@@ -243,6 +243,7 @@ window.onload = async function() {
         }
     }
 
+    let lastCursorSend = 0;
     document.addEventListener('mousemove', (event) => {
         const workspaceRect = workspaceElement.getBoundingClientRect();
         const scrollLeft = workspaceElement.scrollLeft;
@@ -252,12 +253,16 @@ window.onload = async function() {
         mousePosition.y = event.pageY;
         mousePosition.workspaceX = event.clientX - workspaceRect.left + scrollLeft;
         mousePosition.workspaceY = event.clientY - workspaceRect.top + scrollTop;
-    
-        sendUpdate({
-            type: 'cursorMove',
-            clientId: clientId,
-            cursorPosition: mousePosition
-        });
+
+        const now = Date.now();
+        if (now - lastCursorSend > 50) {
+            lastCursorSend = now;
+            sendUpdate({
+                type: 'cursorMove',
+                clientId: clientId,
+                cursorPosition: mousePosition
+            });
+        }
     });
     
     // create the info div element
@@ -4133,6 +4138,7 @@ function createAudioLoader(device, context, deviceDiv, deviceType) {
 
     // function to load audio from URL
     const loadAudioFromURL = async (url) => {
+        const wasLocalAction = isLocalAction;
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -4154,6 +4160,17 @@ function createAudioLoader(device, context, deviceDiv, deviceType) {
             deviceDiv.dataset.audioUrl = url; // save the URL for persistence
             
             updateAudioFileName(fileName);
+
+            // propagate the URL to connected clients
+            if (!wasLocalAction) {
+                sendUpdate({
+                    type: 'updateInput',
+                    deviceId: deviceDiv.id,
+                    elementId: 'audioUrlInput',
+                    value: url,
+                    clientId: clientId
+                });
+            }
             
         } catch (error) {
             console.error('Error loading audio from URL:', error);
@@ -6344,6 +6361,18 @@ function updateInput(deviceId, inportTag, value) {
                 element.value = value;
                 const event = new Event('change');
                 element.dispatchEvent(event);
+            }
+        }
+
+        // special handling for audio URL input — trigger actual URL load on receiving clients
+        if (inportTag === 'audioUrlInput') {
+            const urlInput = deviceDiv.querySelector('#audioUrlInput');
+            if (urlInput && value) {
+                urlInput.value = value;
+                const urlButton = deviceDiv.querySelector('.audioUrlLoaderButton');
+                if (urlButton) {
+                    urlButton.click();
+                }
             }
         }
     }
