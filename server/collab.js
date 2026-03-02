@@ -102,6 +102,10 @@ wss.on('connection', (ws) => {
                         if (key !== undefined) {
                             deviceState.inputs[key] = data.value;
                         }
+                        // persist audioUrl at the top level so new room joiners can auto-load it
+                        if (key === 'audioUrlInput') {
+                            deviceState.audioUrl = data.value;
+                        }
                     }
                 }
             }

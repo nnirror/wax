@@ -5291,6 +5291,17 @@ async function reconstructDevicesAndConnections(deviceStates, zip, reconstructFr
                     showGrowlNotification(`Make sure to load the missing audio file: "${deviceState.audioFileName}", since audio files are not stored with shared state URLs`);
                 }
             }
+        } else if (deviceState.audioUrl) {
+            // URL-loaded audio with no local file — create the device then auto-load from URL
+            deviceElement = await createDeviceByName(deviceName, null, devicePosition, reconstructFromDuplicateCommand);
+            const urlInput = deviceElement.querySelector('.audioUrlInput');
+            if (urlInput) {
+                urlInput.value = deviceState.audioUrl;
+                const urlButton = deviceElement.querySelector('.audioUrlLoaderButton');
+                if (urlButton) {
+                    urlButton.click();
+                }
+            }
         } else {
             if (deviceName == 'microphone input') {
                 deviceElement = await createDeviceByName('mic', null, devicePosition, reconstructFromDuplicateCommand);
