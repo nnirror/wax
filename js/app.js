@@ -4849,7 +4849,7 @@ function createButtonForNavBar(text, className, clickHandler) {
     navBar.appendChild(button);
 }
 
-async function getWorkspaceState(saveToFile = false, createShareLink = false) {
+async function getWorkspaceState(saveToFile = false, createShareLink = false, collabOnly = false) {
     let workspaceState = [];
     let zip = new JSZip();
 
@@ -4892,7 +4892,7 @@ async function getWorkspaceState(saveToFile = false, createShareLink = false) {
             deviceState.inputs[textarea.id] = textarea.value;
         }
 
-        if (deviceElement.dataset.audioFileName) {
+        if (deviceElement.dataset.audioFileName && !collabOnly) {
             let audioBuffer = audioBuffers[deviceElement.dataset.audioFileName];
             let wav = audioBufferToWav(audioBuffer);
             let blob = new Blob([wav], { type: 'audio/wav' });
@@ -6112,9 +6112,11 @@ async function sendUpdate(update) {
 
         update.clientId = clientId;
 
-        // include the full workspace state for state-changing events
-        if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(update.type)) {
-            update.newState = await getWorkspaceState(); // Get the current workspace state
+        // include the full workspace state only for structural events (not updateInput)
+        // updateInput messages don't need a full snapshot
+        const structuralEvents = ['addDevice', 'moveDevice', 'deleteDevice', 'makeConnection', 'deleteConnection'];
+        if (structuralEvents.includes(update.type)) {
+            update.newState = await getWorkspaceState(false, false, true);
         }
 
         try {

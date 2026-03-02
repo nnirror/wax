@@ -85,11 +85,23 @@ wss.on('connection', (ws) => {
                 // update the room's last activity timestamp
                 rooms[currentRoom].lastActivity = Date.now();
 
-                // update the base state if this is a state-changing event
-                if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(data.type)) {
+                // update the base state for state-changing events
+                if (['addDevice', 'moveDevice', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(data.type)) {
                     const room = rooms[currentRoom];
                     if (data.newState) {
                         room.baseState = data.newState;
+                    }
+                }
+
+                // apply updateInput deltas directly to baseState so new room joiners get correct values
+                if (data.type === 'updateInput' && rooms[currentRoom].baseState && Array.isArray(rooms[currentRoom].baseState)) {
+                    const room = rooms[currentRoom];
+                    const deviceState = room.baseState.find(d => d.id === data.deviceId);
+                    if (deviceState && deviceState.inputs) {
+                        const key = data.elementId || data.inportTag;
+                        if (key !== undefined) {
+                            deviceState.inputs[key] = data.value;
+                        }
                     }
                 }
             }
