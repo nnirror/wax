@@ -1,0 +1,14 @@
+version: 1.0
+runtime: nodejs18
+build:
+  commands:
+    build:
+      - cd server && npm install
+run:
+  command: node server/collab.js
+  network:
+    port: 8080
+    env: PORT
+  env:
+    - name: PORT
+      value: "8080"

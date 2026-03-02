@@ -1,0 +1,15 @@
+{
+  "name": "wax-collab-server",
+  "version": "1.0.0",
+  "description": "WebSocket collaboration server for Wax",
+  "main": "collab.js",
+  "scripts": {
+    "start": "node collab.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

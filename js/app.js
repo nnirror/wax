@@ -6474,7 +6474,7 @@ function initializeWebSocket(roomName = null) {
         }
 
         // create a new WebSocket connection
-        ws = new WebSocket('wss://nnirror.xyz:9314');
+        ws = new WebSocket(CONFIG.COLLAB_SERVER_URL);
 
         ws.onopen = () => {
             console.log('WebSocket connection established');

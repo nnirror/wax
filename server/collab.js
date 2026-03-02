@@ -1,23 +1,19 @@
-const fs = require('fs');
-const https = require('https');
+const http = require('http');
 const WebSocket = require('ws');
 
-// get the certificate and key file paths from command-line arguments
-const certPath = process.argv[2];
-const keyPath = process.argv[3];
+const PORT = process.env.PORT || 8080;
 
-if (!certPath || !keyPath) {
-    console.error('Error: Certificate and key file paths must be provided as command-line arguments.');
-    process.exit(1);
-}
-
-// load SSL/TLS certificates
-const server = https.createServer({
-    cert: fs.readFileSync(certPath),
-    key: fs.readFileSync(keyPath)
+const server = http.createServer((req, res) => {
+    // health check endpoint
+    if (req.method === 'GET' && req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok' }));
+        return;
+    }
+    res.writeHead(404);
+    res.end();
 });
 
-// create WebSocket server on top of the HTTPS server
 const wss = new WebSocket.Server({ server });
 
 // store rooms and their states
@@ -27,12 +23,12 @@ const rooms = {};
 setInterval(() => {
     const now = Date.now();
     for (const [roomName, room] of Object.entries(rooms)) {
-        if (now - room.lastActivity > 15 * 60 * 1000) { // 15 minutes
+        if (now - room.lastActivity > 15 * 60 * 1000) {
             console.log(`Room "${roomName}" has been inactive for 15 minutes. Deleting.`);
             delete rooms[roomName];
         }
     }
-}, 60 * 1000); // run every minute
+}, 60 * 1000);
 
 wss.on('connection', (ws) => {
     console.log('New client connected');
@@ -55,27 +51,26 @@ wss.on('connection', (ws) => {
                 // create the room if it doesn't exist
                 if (!rooms[roomName]) {
                     rooms[roomName] = {
-                        baseState: baseState || {}, // initialize with the provided base state
+                        baseState: baseState || {},
                         clients: new Set(),
                         lastActivity: Date.now(),
                         updateTimeout: null,
-                        pendingState: null // store the latest pending state
+                        pendingState: null
                     };
                     console.log(`Room "${roomName}" created.`);
                 } else {
                     console.log(`Room "${roomName}" already exists.`);
-                    // update the baseState if provided
                     if (baseState && baseState.length > 0) {
                         rooms[roomName].baseState = baseState;
                         console.log(`Room "${roomName}" baseState updated.`);
                     }
                 }
-            
+
                 // join the room
                 currentRoom = roomName;
                 rooms[roomName].clients.add(ws);
                 rooms[roomName].lastActivity = Date.now();
-            
+
                 // send the current base state to the client
                 ws.send(JSON.stringify({ type: 'roomState', baseState: rooms[roomName].baseState }));
                 console.log(`Client joined room "${roomName}".`);
@@ -94,7 +89,6 @@ wss.on('connection', (ws) => {
                 if (['addDevice', 'moveDevice', 'updateInput', 'deleteDevice', 'makeConnection', 'deleteConnection'].includes(data.type)) {
                     const room = rooms[currentRoom];
                     if (data.newState) {
-                        // update the baseState with the newState
                         room.baseState = data.newState;
                     }
                 }
@@ -116,6 +110,6 @@ wss.on('connection', (ws) => {
     });
 });
 
-server.listen(9314, () => {
-    console.log('WebSocket server is running on wss://nnirror.xyz:9314');
+server.listen(PORT, () => {
+    console.log(`WebSocket server running on port ${PORT}`);
 });
