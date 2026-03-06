@@ -2361,7 +2361,7 @@ function triggerChangeOnTargetDeviceInputs(targetDeviceId) {
     }
 }
 
-async function createCustomAudioWorkletDevice(workletfile, filename, devicePosition = null) {
+async function createCustomAudioWorkletDevice(workletfile, filename, devicePosition = null, audioBuffer = null) {
     try {
         await context.audioWorklet.addModule(`js/customWorklets/${workletfile}.js`);
 
@@ -2369,7 +2369,7 @@ async function createCustomAudioWorkletDevice(workletfile, filename, devicePosit
         const tempNode = new AudioWorkletNode(context, `${workletfile}`);
 
         return new Promise((resolve, reject) => {
-            tempNode.port.onmessage = (event) => {
+            tempNode.port.onmessage = async (event) => {
                 if (event.data.type === 'config') {
                     const { inputs, outputs, inputNames, outputNames } = event.data;
                     // create the node with the correct inputs/outputs for this device
@@ -2402,6 +2402,14 @@ async function createCustomAudioWorkletDevice(workletfile, filename, devicePosit
                                 buffer: buffer.getChannelData(0) // send first channel data
                             });
                         };
+
+                        // if an audio buffer was provided (like when loading a zip), load it now
+                        if (audioBuffer) {
+                            await device.setDataBuffer('buf', audioBuffer.buffer);
+                            audioBuffers[audioBuffer.name] = audioBuffer.buffer;
+                            deviceDiv.dataset.audioFileName = audioBuffer.name;
+                            updateAudioFileName(deviceDiv, audioBuffer.name);
+                        }
                     }
 
                     // resolve the promise with the created device element and remove tempNode
@@ -2426,7 +2434,7 @@ async function createDeviceByName(filename, audioBuffer = null, devicePosition =
 
         // Check if the device has a worklet property
         if (customWorklet && customWorklet.worklet) {
-            deviceDiv = await createCustomAudioWorkletDevice(customWorklet.worklet, filename, devicePosition);
+            deviceDiv = await createCustomAudioWorkletDevice(customWorklet.worklet, filename, devicePosition, audioBuffer);
         }
         else {
             if (filename === "motion") {
@@ -4038,6 +4046,72 @@ function createAudioFileNameContainer() {
     return container;
 }
 
+function updateAudioFileName(deviceDiv, fileName) {
+    const existingElements = deviceDiv.querySelectorAll('.audioFileName');
+    existingElements.forEach(element => element.remove());
+
+    const fileNameContainer = createAudioFileNameContainer();
+
+    const fileNameDisplay = document.createElement('div');
+    fileNameDisplay.innerHTML = fileName || '&nbsp;';
+    fileNameDisplay.style.fontSize = '12px';
+    fileNameDisplay.style.cursor = 'text';
+    fileNameDisplay.style.userSelect = 'text';
+    fileNameDisplay.style.overflowX = 'hidden';
+    fileNameDisplay.style.whiteSpace = 'nowrap';
+    fileNameDisplay.style.textOverflow = 'ellipsis';
+    fileNameDisplay.style.marginRight = '5px';
+    fileNameDisplay.title = fileName ? `Current buffer: ${fileName} (click to select for copying)` : 'No file loaded';
+
+    fileNameDisplay.addEventListener('mousedown', (event) => { event.stopPropagation(); });
+    fileNameDisplay.addEventListener('touchstart', (event) => { event.stopPropagation(); });
+
+    const copyButton = document.createElement('button');
+    copyButton.textContent = 'copy';
+    copyButton.type = 'button';
+    copyButton.style.position = 'absolute';
+    copyButton.style.right = '4px';
+    copyButton.style.top = '50%';
+    copyButton.style.transform = 'translateY(-50%)';
+    copyButton.style.fontSize = '10px';
+    copyButton.style.padding = '2px 6px';
+    copyButton.style.border = '0';
+    copyButton.style.borderRadius = '10px';
+    copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
+    copyButton.style.color = 'white';
+    copyButton.style.cursor = 'pointer';
+    copyButton.style.display = fileName ? 'inline-block' : 'none';
+    copyButton.style.transition = 'background-color 0.15s ease';
+    copyButton.title = 'Copy filename to clipboard';
+
+    copyButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (fileName) {
+            copyButton.style.backgroundColor = 'rgb(101, 255, 229)';
+            copyButton.style.color = 'black';
+            setTimeout(() => {
+                copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
+                copyButton.style.color = 'white';
+            }, 150);
+            copyFilenameToClipboard(fileName);
+        }
+    });
+
+    copyButton.addEventListener('mousedown', (event) => { event.stopPropagation(); });
+    copyButton.addEventListener('touchstart', (event) => { event.stopPropagation(); });
+
+    fileNameContainer.appendChild(fileNameDisplay);
+    fileNameContainer.appendChild(copyButton);
+
+    const form = deviceDiv.querySelector('form');
+    const urlContainer = form ? form.querySelector('.audioUrlContainer') : null;
+    if (urlContainer) {
+        form.insertBefore(fileNameContainer, urlContainer);
+    } else if (form) {
+        form.appendChild(fileNameContainer);
+    }
+}
+
 function createAudioLoader(device, context, deviceDiv, deviceType) {
     // create a new file input element
     const fileInput = document.createElement('input');
@@ -4051,90 +4125,7 @@ function createAudioLoader(device, context, deviceDiv, deviceType) {
     fileNameElement.innerHTML = '&nbsp;';
 
     // function to update the audio buffer display
-    const updateAudioFileName = (fileName) => {
-        // remove any preexisting elements with class name "audioFileName"
-        const existingElements = deviceDiv.querySelectorAll('.audioFileName');
-        existingElements.forEach(element => element.remove());
-
-        // create container for filename and copy button
-        const fileNameContainer = createAudioFileNameContainer();
-
-        // create a simple text display for the filename (easily copyable)
-        const fileNameDisplay = document.createElement('div');
-        fileNameDisplay.innerHTML = fileName || '&nbsp;';
-        fileNameDisplay.style.fontSize = '12px';
-        fileNameDisplay.style.cursor = 'text';
-        fileNameDisplay.style.userSelect = 'text';
-        fileNameDisplay.style.overflowX = 'hidden';
-        fileNameDisplay.style.whiteSpace = 'nowrap';
-        fileNameDisplay.style.textOverflow = 'ellipsis';
-        fileNameDisplay.style.marginRight = '5px';
-        fileNameDisplay.title = fileName ? `Current buffer: ${fileName} (click to select for copying)` : 'No file loaded';
-
-        // prevent dragging when clicking on filename for copy/paste functionality
-        fileNameDisplay.addEventListener('mousedown', (event) => {
-            event.stopPropagation();
-        });
-        
-        fileNameDisplay.addEventListener('touchstart', (event) => {
-            event.stopPropagation();
-        });
-
-        // create copy button
-        const copyButton = document.createElement('button');
-        copyButton.textContent = 'copy';
-        copyButton.type = 'button';
-        copyButton.style.position = 'absolute';
-        copyButton.style.right = '4px';
-        copyButton.style.top = '50%';
-        copyButton.style.transform = 'translateY(-50%)';
-        copyButton.style.fontSize = '10px';
-        copyButton.style.padding = '2px 6px';
-        copyButton.style.border = '0';
-        copyButton.style.borderRadius = '10px';
-        copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
-        copyButton.style.color = 'white';
-        copyButton.style.cursor = 'pointer';
-        copyButton.style.display = fileName ? 'inline-block' : 'none';
-        copyButton.style.transition = 'background-color 0.15s ease';
-        copyButton.title = 'Copy filename to clipboard';
-
-        copyButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            if (fileName) {
-                // visual feedback for button tap
-                copyButton.style.backgroundColor = 'rgb(101, 255, 229)';
-                copyButton.style.color = 'black';
-                setTimeout(() => {
-                    copyButton.style.backgroundColor = 'rgb(8, 56, 78)';
-                    copyButton.style.color = 'white';
-                }, 150);
-                
-                copyFilenameToClipboard(fileName);
-            }
-        });
-
-        copyButton.addEventListener('mousedown', (event) => {
-            event.stopPropagation();
-        });
-
-        copyButton.addEventListener('touchstart', (event) => {
-            event.stopPropagation();
-        });
-
-        fileNameContainer.appendChild(fileNameDisplay);
-        fileNameContainer.appendChild(copyButton);
-
-        const form = deviceDiv.querySelector('form');
-        
-        // insert before the URL container if it exists, otherwise append to end
-        const urlContainer = form.querySelector('.audioUrlContainer');
-        if (urlContainer) {
-            form.insertBefore(fileNameContainer, urlContainer);
-        } else {
-            form.appendChild(fileNameContainer);
-        }
-    };
+    const updateAudioFileNameLocal = (fileName) => updateAudioFileName(deviceDiv, fileName);
 
     // function to load audio from URL
     const loadAudioFromURL = async (url) => {
@@ -4159,7 +4150,7 @@ function createAudioLoader(device, context, deviceDiv, deviceType) {
             deviceDiv.dataset.audioFileName = fileName;
             deviceDiv.dataset.audioUrl = url; // save the URL for persistence
             
-            updateAudioFileName(fileName);
+            updateAudioFileNameLocal(fileName);
 
             // propagate the URL to connected clients
             if (!wasLocalAction) {
@@ -4198,7 +4189,7 @@ function createAudioLoader(device, context, deviceDiv, deviceType) {
             await device.setDataBuffer('buf', audioBuf);
             deviceDiv.dataset.audioFileName = file.name;
 
-            updateAudioFileName(file.name);
+            updateAudioFileNameLocal(file.name);
         }
     });
 
